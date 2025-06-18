@@ -4,13 +4,59 @@ import { Dialog } from 'primereact/dialog';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import PatientRegistrationForm from './PatientRegistrationForm';
+import { PanelMenu } from 'primereact/panelmenu';
 import AppointmentRegistrationForm from './AppointmentRegistrationForm';
+import 'primeicons/primeicons.css';
 
 const initialAppointments = [
   { id: 1, time: '09:00 AM', patient: 'Juan Pérez', reason: 'Consulta General' },
   { id: 2, time: '10:30 AM', patient: 'Ana Gómez', reason: 'Revisión Dental' },
 ];
 
+// Modelo de items para el PanelMenu, estructurado correctamente.
+const items = [
+  {
+    label: 'Menú Principal',
+    icon: 'pi pi-fw pi-bars', // Icono para la cabecera del panel
+    items: [ // Elementos dentro de este panel
+      {
+        label: 'Home',
+        icon: 'pi pi-fw pi-home',
+        // command: () => { console.log('Home clicked'); } // Ejemplo de acción al hacer clic
+      },
+      {
+        label: 'Pacientes',
+        icon: 'pi pi-fw pi-users',
+        // command: () => { console.log('Pacientes clicked'); }
+      },
+      {
+        label: 'Facturación',
+        icon: 'pi pi-fw pi-money-bill', // Icono más específico para facturación
+        // command: () => { console.log('Facturación clicked'); }
+      },
+      {
+        label: 'Autorización',
+        icon: 'pi pi-fw pi-check-square',
+        // command: () => { console.log('Autorización clicked'); }
+      },
+      {
+        label: 'Medicos',
+        icon: 'pi pi-fw pi-user-md', // Icono para médicos
+        // command: () => { console.log('Medicos clicked'); }
+      },
+      {
+        label: 'Usuarios',
+        icon: 'pi pi-fw pi-id-card', // Icono para gestión de usuarios/perfiles
+        // command: () => { console.log('Usuarios clicked'); }
+      },
+      {
+        label: 'Aseguradora',
+        icon: 'pi pi-fw pi-shield', // Icono para aseguradoras
+        // command: () => { console.log('Aseguradora clicked'); }
+      }
+    ]
+  }
+];
 export default function Dashboard({ onLogout }) {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
@@ -35,7 +81,7 @@ export default function Dashboard({ onLogout }) {
         <h1 className="text-3xl font-bold">Panel del Centro Médico</h1>
         <Button label="Cerrar Sesión" icon="pi pi-sign-out" className="p-button-danger" onClick={onLogout} />
       </header>
-
+<PanelMenu model={items} className="w-full md:w-20rem" />  
       <div className="grid">
         <div className="col-12 md:col-8">
           <div className="card">
