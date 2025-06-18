@@ -1,4 +1,9 @@
 #root {
+  --primary-blue: #007bff;
+  --dark-blue: #003366; 
+  --white: #ffffff;   
+  --black: #000000; 
+
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
@@ -39,4 +44,39 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.app-navbar {
+  background-color: var(--dark-blue);
+  color: var(--white);
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.app-navbar-logo {
+  color: var(--primary-blue); /* Usar el azul para el logo */
+  font-weight: bold;
+  font-size: 1.2em;
+  box-sizing: border-box;
+}
+
+.app-navbar-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+.app-navbar-item {
+  margin-right: 20px;
+  cursor: pointer;
+  color: var(--white); /* Texto blanco en el navbar */
+}
+
+.app-navbar-item:last-child {
+  margin-right: 0;
 }
