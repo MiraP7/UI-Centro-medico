@@ -11,6 +11,8 @@ import 'primeicons/primeicons.css';
 import 'primereact/resources/themes/lara-light-indigo/theme.css'; // Asegúrate de tener tu tema
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
+import '/src/App.css';// Asegúrate de tener tu archivo CSS global
+import PatientView from '/src/Views/PatientView';
 
 const initialAppointments = [
   { id: 1, time: '09:00 AM', patient: 'Juan Pérez', reason: 'Consulta General' },
@@ -21,7 +23,7 @@ const initialAppointments = [
   { id: 6, time: '01:00 PM', patient: 'Laura Díaz', reason: 'Terapia física' },
   { id: 7, time: '01:30 PM', patient: 'Roberto Soto', reason: 'Consulta dermatológica' },
   { id: 8, time: '02:00 PM', patient: 'Sofía Castro', reason: 'Seguimiento' },
-  { id: 9, time: '02:30 PM', patient: 'Miguel Torres', reason: 'Limpieza dental' },
+  { id: 9, time: '02:30 PM', patient: 'Miguel Torres', reason: 'Endocrino' },
   { id: 10, time: '03:00 PM', patient: 'Elena Vargas', reason: 'Ecografía' },
   { id: 11, time: '03:30 PM', patient: 'Gabriel Ramos', reason: 'Rehabilitación' },
   { id: 12, time: '04:00 PM', patient: 'Daniela Morales', reason: 'Chequeo pediátrico' },
@@ -47,6 +49,7 @@ export default function Dashboard({ onLogout }) {
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [appointments, setAppointments] = useState(initialAppointments);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [showPatientView, setshowPatientView] = useState(false);
 
   const handlePatientRegistered = (newPatient) => {
     console.log('Paciente Registrado:', newPatient);
@@ -67,10 +70,10 @@ export default function Dashboard({ onLogout }) {
         baseZIndex={9999}
         className="w-20rem"
         // Fondo del Sidebar para que coincida con el azul marino si lo deseas
-        style={{ backgroundColor: COLOR_AZUL_MARINO }}
+        style={{ backgroundColor: COLOR_AZUL_CLARO }}
       >
         {/* Título para el Sidebar, fuera del PanelMenu */}
-        <h3 className="mb-3 pl-3 text-2xl font-semibold" style={{ color: COLOR_BLANCO }}>Menú Principal</h3>
+        <h3 className="mb-3 pl-3 text-2xl font-semibold" style={{ color: COLOR_BLANCO, textAlign: 'center' }}>Menú Principal</h3>
         {/*
                     Para los items del PanelMenu, aplicar estilos en línea a cada item
                     es complicado. La mejor forma es usar CSS global para sobreescribir las clases de PrimeReact.
@@ -103,7 +106,7 @@ export default function Dashboard({ onLogout }) {
         <div className="col-12 md:col-8">
           {/* Card de Citas */}
           <div className="card shadow-1 border-round-md">
-            <h2 className="text-xl font-semibold mb-3">Citas del Día</h2>
+            <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas del Día</h2>
             <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
               paginator
               rows={10}
@@ -120,26 +123,31 @@ export default function Dashboard({ onLogout }) {
         <div className="col-12 md:col-4">
           {/* Card de Acciones Rápidas */}
           <div className="card shadow-1 border-round-md">
-            <h2 className="text-xl font-semibold mb-3">Acciones Rápidas</h2>
+            <h2 className="text-xl font-semibold mb-3" style={{ textAlign: 'center' }}>Acciones Rápidas</h2>
             <div className="flex flex-column gap-3">
               {/* Botones de Acciones Rápidas - Estilo homologado */}
-              <Button label="Registrar Paciente" icon="pi pi-user-plus" className="p-button-success p-button-raised p-button-sm" />
-              <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-button-sm" />
+              <Button label="Registrar Paciente" icon="pi pi-user-plus" className="p-button-success p-button-raised p-button-sm" onClick={() => setShowPatientModal(true)} />
+              <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-button-sm" onClick={() => setShowAppointmentModal(true)} />
             </div>
           </div>
         </div>
       </div>
 
-      <Dialog header="Registrar Nuevo Paciente" visible={showPatientModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowPatientModal(false)} modal>
+      <Dialog header="Registrar Paciente" visible={showPatientModal} style={{ width: '50vw', minWidth: '350px', }} onHide={() => setShowPatientModal(false)} modal>
         <PatientRegistrationForm onPatientRegistered={handlePatientRegistered} onCancel={() => setShowPatientModal(false)} />
       </Dialog>
 
-      <Dialog header="Registrar Nueva Cita" visible={showAppointmentModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowAppointmentModal(false)} modal>
+      <Dialog header="Registrar Cita" visible={showAppointmentModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowAppointmentModal(false)} modal>
         <AppointmentRegistrationForm
           onAppointmentRegistered={handleAppointmentRegistered}
           onCancel={() => setShowAppointmentModal(false)}
         />
       </Dialog>
+
+      <Dialog header="Registrar Paciente" visible={showPatientView} style={{ width: '50vw', minWidth: '350px', }} onHide={() => setShowPatientModal(false)} modal>
+        <PatientView onCancel={() => setshowPatientView(false)} />
+      </Dialog>
+
     </div>
   );
 }
