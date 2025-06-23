@@ -3,8 +3,8 @@ import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
-import PatientRegistrationForm from './PatientRegistrationForm';
 import { PanelMenu } from 'primereact/panelmenu';
+import PatientRegistrationForm from './PatientRegistrationForm';
 import AppointmentRegistrationForm from './AppointmentRegistrationForm';
 import { Sidebar } from 'primereact/sidebar';
 import 'primeicons/primeicons.css';
@@ -34,22 +34,13 @@ const COLOR_AZUL_MARINO = '#2c3e50'; // Puedes ajustar este valor
 const COLOR_AZUL_CLARO = '#3498db'; // Puedes ajustar este valor
 const COLOR_BLANCO = '#ffffff';
 
-const items = [
-  { label: 'Home', icon: 'pi pi-fw pi-home' },
-  { label: 'Pacientes', icon: 'pi pi-fw pi-users' },
-  { label: 'Facturación', icon: 'pi pi-fw pi-money-bill' },
-  { label: 'Autorización', icon: 'pi pi-fw pi-check-square' },
-  { label: 'Medicos', icon: 'pi pi-fw pi-user-md' },
-  { label: 'Usuarios', icon: 'pi pi-fw pi-id-card' },
-  { label: 'Aseguradora', icon: 'pi pi-fw pi-shield' }
-];
-
 export default function Dashboard({ onLogout }) {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [appointments, setAppointments] = useState(initialAppointments);
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [showPatientView, setshowPatientView] = useState(false);
+  // Estado para controlar la visibilidad de la vista de pacientes en el Dialog
+  const [showPatientViewModal, setShowPatientViewModal] = useState(false); // Renombrado para mayor claridad
 
   const handlePatientRegistered = (newPatient) => {
     console.log('Paciente Registrado:', newPatient);
@@ -62,6 +53,24 @@ export default function Dashboard({ onLogout }) {
     setShowAppointmentModal(false);
   };
 
+  // Definición de los ítems del PanelMenu
+  const items = [
+    { label: 'Home', icon: 'pi pi-fw pi-home' },
+    {
+      label: 'Pacientes',
+      icon: 'pi pi-fw pi-users',
+      command: () => { // <--- ¡Aquí está el cambio clave!
+        setShowPatientViewModal(true); // Abre el Dialog de PatientView
+        setSidebarVisible(false); // Cierra el Sidebar después de hacer clic
+      }
+    },
+    { label: 'Facturación', icon: 'pi pi-fw pi-money-bill' },
+    { label: 'Autorización', icon: 'pi pi-fw pi-check-square' },
+    { label: 'Medicos', icon: 'pi pi-fw pi-user-md' },
+    { label: 'Usuarios', icon: 'pi pi-fw pi-id-card' },
+    { label: 'Aseguradora', icon: 'pi pi-fw pi-shield' }
+  ];
+
   return (
     <div className="p-4">
       {/* Sidebar para el PanelMenu */}
@@ -69,42 +78,25 @@ export default function Dashboard({ onLogout }) {
         showCloseIcon={true}
         baseZIndex={9999}
         className="w-20rem"
-        // Fondo del Sidebar para que coincida con el azul marino si lo deseas
         style={{ backgroundColor: COLOR_AZUL_CLARO }}
       >
-        {/* Título para el Sidebar, fuera del PanelMenu */}
         <h3 className="mb-3 pl-3 text-2xl font-semibold" style={{ color: COLOR_BLANCO, textAlign: 'center' }}>Menú Principal</h3>
-        {/*
-                    Para los items del PanelMenu, aplicar estilos en línea a cada item
-                    es complicado. La mejor forma es usar CSS global para sobreescribir las clases de PrimeReact.
-                    Por ahora, PanelMenu usa los colores de tu tema activo.
-                    Si necesitas colores específicos aquí, necesitarías un archivo CSS personalizado.
-                    Ejemplo de cómo se vería un CSS global si lo crearas:
-                    .p-panelmenu .p-menuitem-link { color: #ffffff !important; }
-                    .p-panelmenu .p-menuitem-link .p-menuitem-icon { color: #3498db !important; }
-                    .p-panelmenu .p-menuitem-link:hover { background-color: #3f5e7a !important; } // Tono más claro del azul marino
-                */}
         <PanelMenu model={items} className="w-full sidebar-panelmenu" />
       </Sidebar>
 
       {/* HEADER REDISEÑADO */}
-      <header style={{ backgroundColor: COLOR_AZUL_MARINO }} // Fondo Azul Marino
+      <header style={{ backgroundColor: COLOR_AZUL_MARINO }}
         className="flex align-items-center justify-content-between p-3 shadow-2 mb-4 border-round-md">
         <div className="flex align-items-center gap-3">
-          {/* Botón para abrir el Sidebar - color blanco para contraste */}
           <Button icon="pi pi-bars" className="p-button-text p-button-plain p-button-lg" style={{ color: COLOR_BLANCO }} onClick={() => setSidebarVisible(true)} />
-
-          {/* Logo/Icono y Título - Blanco para contraste, icono en azul claro */}
           <i className="pi pi-heart-fill" style={{ color: COLOR_AZUL_CLARO, fontSize: '2.5rem' }}></i>
           <h1 className="text-4xl font-bold m-0" style={{ color: COLOR_BLANCO }}>Health State</h1>
         </div>
-        {/* Botón de Cerrar Sesión - Se mantiene en rojo */}
         <Button label="Cerrar Sesión" icon="pi pi-sign-out" className="p-button-danger p-button-sm" onClick={onLogout} />
       </header>
 
       <div className="grid">
         <div className="col-12 md:col-8">
-          {/* Card de Citas */}
           <div className="card shadow-1 border-round-md">
             <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas del Día</h2>
             <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
@@ -121,11 +113,9 @@ export default function Dashboard({ onLogout }) {
           </div>
         </div>
         <div className="col-12 md:col-4">
-          {/* Card de Acciones Rápidas */}
           <div className="card shadow-1 border-round-md">
             <h2 className="text-xl font-semibold mb-3" style={{ textAlign: 'center' }}>Acciones Rápidas</h2>
             <div className="flex flex-column gap-3">
-              {/* Botones de Acciones Rápidas - Estilo homologado */}
               <Button label="Registrar Paciente" icon="pi pi-user-plus" className="p-button-success p-button-raised p-button-sm" onClick={() => setShowPatientModal(true)} />
               <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-button-sm" onClick={() => setShowAppointmentModal(true)} />
             </div>
@@ -133,10 +123,12 @@ export default function Dashboard({ onLogout }) {
         </div>
       </div>
 
-      <Dialog header="Registrar Paciente" visible={showPatientModal} style={{ width: '50vw', minWidth: '350px', }} onHide={() => setShowPatientModal(false)} modal>
+      {/* Dialog para Registrar Paciente */}
+      <Dialog header="Registrar Paciente" visible={showPatientModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowPatientModal(false)} modal>
         <PatientRegistrationForm onPatientRegistered={handlePatientRegistered} onCancel={() => setShowPatientModal(false)} />
       </Dialog>
 
+      {/* Dialog para Registrar Cita */}
       <Dialog header="Registrar Cita" visible={showAppointmentModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowAppointmentModal(false)} modal>
         <AppointmentRegistrationForm
           onAppointmentRegistered={handleAppointmentRegistered}
@@ -144,8 +136,16 @@ export default function Dashboard({ onLogout }) {
         />
       </Dialog>
 
-      <Dialog header="Registrar Paciente" visible={showPatientView} style={{ width: '50vw', minWidth: '350px', }} onHide={() => setShowPatientModal(false)} modal>
-        <PatientView onCancel={() => setshowPatientView(false)} />
+      {/* Dialog para la Vista de Pacientes (PatientView) */}
+      <Dialog
+        header="Gestión de Pacientes" // Encabezado más apropiado
+        visible={showPatientViewModal} // Controlado por el nuevo estado
+        style={{ width: '80vw', minWidth: '700px', height: '80vh' }} // Ajusta el tamaño según necesites para la tabla
+        onHide={() => setShowPatientViewModal(false)} // Cierra este Dialog con su propio estado
+        modal
+      >
+        {/* Pasar el onClose si PatientView necesita cerrar el modal desde dentro */}
+        <PatientView onClose={() => setShowPatientViewModal(false)} />
       </Dialog>
 
     </div>
