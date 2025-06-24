@@ -11,7 +11,7 @@ import 'primeicons/primeicons.css';
 import 'primereact/resources/themes/lara-light-indigo/theme.css'; // Asegúrate de tener tu tema
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
-import '/src/App.css';// Asegúrate de tener tu archivo CSS global
+import '/src/App.css'; // Asegúrate de tener tu archivo CSS global
 import PatientView from '/src/Views/PatientView';
 
 const initialAppointments = [
@@ -39,8 +39,7 @@ export default function Dashboard({ onLogout }) {
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [appointments, setAppointments] = useState(initialAppointments);
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  // Estado para controlar la visibilidad de la vista de pacientes en el Dialog
-  const [showPatientViewModal, setShowPatientViewModal] = useState(false); // Renombrado para mayor claridad
+  const [showPatientViewModal, setShowPatientViewModal] = useState(false);
 
   const handlePatientRegistered = (newPatient) => {
     console.log('Paciente Registrado:', newPatient);
@@ -55,20 +54,45 @@ export default function Dashboard({ onLogout }) {
 
   // Definición de los ítems del PanelMenu
   const items = [
-    { label: 'Home', icon: 'pi pi-fw pi-home' },
+    {
+      label: 'Home',
+      icon: 'pi pi-fw pi-home',
+      // Removed inline style; styling is now handled by App.css
+    },
     {
       label: 'Pacientes',
       icon: 'pi pi-fw pi-users',
-      command: () => { // <--- ¡Aquí está el cambio clave!
-        setShowPatientViewModal(true); // Abre el Dialog de PatientView
-        setSidebarVisible(false); // Cierra el Sidebar después de hacer clic
-      }
+      command: () => {
+        setShowPatientViewModal(true);
+        setSidebarVisible(false);
+      },
+      // Removed inline style; styling is now handled by App.css
     },
-    { label: 'Facturación', icon: 'pi pi-fw pi-money-bill' },
-    { label: 'Autorización', icon: 'pi pi-fw pi-check-square' },
-    { label: 'Medicos', icon: 'pi pi-fw pi-user-md' },
-    { label: 'Usuarios', icon: 'pi pi-fw pi-id-card' },
-    { label: 'Aseguradora', icon: 'pi pi-fw pi-shield' }
+    {
+      label: 'Facturación',
+      icon: 'pi pi-fw pi-money-bill',
+      // Removed inline style; styling is now handled by App.css
+    },
+    {
+      label: 'Autorización',
+      icon: 'pi pi-fw pi-check-square',
+      // Removed inline style; styling is now handled by App.css
+    },
+    {
+      label: 'Medicos',
+      icon: 'pi pi-fw pi-user-md',
+      // Removed inline style; styling is now handled by App.css
+    },
+    {
+      label: 'Usuarios',
+      icon: 'pi pi-fw pi-id-card',
+      // Removed inline style; styling is now handled by App.css
+    },
+    {
+      label: 'Aseguradora',
+      icon: 'pi pi-fw pi-shield',
+      // Removed inline style; styling is now handled by App.css
+    }
   ];
 
   return (
@@ -78,9 +102,10 @@ export default function Dashboard({ onLogout }) {
         showCloseIcon={true}
         baseZIndex={9999}
         className="w-20rem"
-        style={{ backgroundColor: COLOR_AZUL_CLARO }}
+        style={{ backgroundColor: COLOR_AZUL_MARINO }}
       >
         <h3 className="mb-3 pl-3 text-2xl font-semibold" style={{ color: COLOR_BLANCO, textAlign: 'center' }}>Menú Principal</h3>
+        {/* The className "sidebar-panelmenu" is crucial here for your CSS to work */}
         <PanelMenu model={items} className="w-full sidebar-panelmenu" />
       </Sidebar>
 
@@ -138,13 +163,12 @@ export default function Dashboard({ onLogout }) {
 
       {/* Dialog para la Vista de Pacientes (PatientView) */}
       <Dialog
-        header="Gestión de Pacientes" // Encabezado más apropiado
-        visible={showPatientViewModal} // Controlado por el nuevo estado
-        style={{ width: '80vw', minWidth: '700px', height: '80vh' }} // Ajusta el tamaño según necesites para la tabla
-        onHide={() => setShowPatientViewModal(false)} // Cierra este Dialog con su propio estado
+        header="Gestión de Pacientes"
+        visible={showPatientViewModal}
+        style={{ width: '80vw', minWidth: '700px', height: '80vh' }}
+        onHide={() => setShowPatientViewModal(false)}
         modal
       >
-        {/* Pasar el onClose si PatientView necesita cerrar el modal desde dentro */}
         <PatientView onClose={() => setShowPatientViewModal(false)} />
       </Dialog>
 
