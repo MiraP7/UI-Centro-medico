@@ -23,7 +23,7 @@ const initialAppointments = [
   { id: 6, time: '01:00 PM', patient: 'Laura Díaz', reason: 'Terapia física' },
   { id: 7, time: '01:30 PM', patient: 'Roberto Soto', reason: 'Consulta dermatológica' },
   { id: 8, time: '02:00 PM', patient: 'Sofía Castro', reason: 'Seguimiento' },
-  { id: 9, time: '02:30 PM', patient: 'Miguel Torres', reason: 'Endocrino' },
+  { id: 9, time: '02:30 PM', patient: 'Miguel Torres', reason: 'Endocrinología' },
   { id: 10, time: '03:00 PM', patient: 'Elena Vargas', reason: 'Ecografía' },
   { id: 11, time: '03:30 PM', patient: 'Gabriel Ramos', reason: 'Rehabilitación' },
   { id: 12, time: '04:00 PM', patient: 'Daniela Morales', reason: 'Chequeo pediátrico' },

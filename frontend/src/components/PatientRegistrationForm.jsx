@@ -3,7 +3,9 @@ import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
 import { Message } from 'primereact/message';
-import { RadioButton } from 'primereact/radiobutton'; // Import RadioButton
+import { Dropdown } from 'primereact/dropdown';
+import { Checkbox } from 'primereact/checkbox';
+import { InputMask } from 'primereact/inputmask';
 
 import 'primeicons/primeicons.css';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
@@ -18,7 +20,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
         dob: null, // Date object
         phone: '',
         email: '',
-        Sex: '', // Will store 'M' or 'F'
+        Sex: null, // Initialize to null for dropdown to show placeholder
         address: '',
         PolicyID: '',
         arsID: '',
@@ -26,6 +28,13 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
 
     const [loading, setLoading] = useState(false);
     const [apiMessage, setApiMessage] = useState(null);
+    const [isInsured, setIsInsured] = useState(false); // State for the "Asegurado" checkbox
+
+    // Define the options for the Sex dropdown
+    const sexOptions = [
+        { label: 'Masculino', value: 'M' },
+        { label: 'Femenino', value: 'F' }
+    ];
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -36,17 +45,43 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
         setFormData(prev => ({ ...prev, dob: e.value }));
     };
 
-    // Specific handler for RadioButton as its onChange returns { originalEvent, value, checked }
+    // Handler for the Dropdown component
     const handleSexChange = (e) => {
         setFormData(prev => ({ ...prev, Sex: e.value }));
+    };
+
+    // Handler for the Checkbox component
+    const handleInsuredChange = (e) => {
+        setIsInsured(e.checked);
+        // When checkbox is unchecked, clear PolicyID and arsID for safety
+        if (!e.checked) {
+            setFormData(prev => ({ ...prev, PolicyID: '', arsID: '' }));
+        }
+    };
+
+    // Handler to set cursor position to the beginning on focus
+    const handleFocus = (e) => {
+        // Only set cursor to 0,0 if the input value is empty or primarily composed of mask characters
+        // This is particularly important for InputMask where '0' might be a valid starting char
+        if (!e.target.value || e.target.value.replace(/[^a-zA-Z0-9]/g, '') === '') {
+            setTimeout(() => { // Use setTimeout to ensure this runs after InputMask's internal logic
+                e.target.setSelectionRange(0, 0);
+            }, 0);
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Validaciones básicas del lado del cliente
+        // Basic client-side validations
         if (!formData.name || !formData.lastName || !formData.dni || !formData.Sex) {
             setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Nombre, Apellido, DNI y Sexo son obligatorios.' });
+            return;
+        }
+
+        // Validate PolicyID and arsID only if isInsured is true
+        if (isInsured && (!formData.PolicyID || !formData.arsID)) {
+            setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'ID de Póliza y ID de Aseguradora son obligatorios para pacientes asegurados.' });
             return;
         }
 
@@ -57,16 +92,16 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
 
         const patientDataToSend = {
             nombre: formData.name,
-            // Si tu API espera 'apellido' en lugar de 'lastName', asegúrate de mapearlo correctamente
-            apellido: formData.lastName, // Assuming API expects 'apellido' or similar
+            apellido: formData.lastName,
             fechaNacimiento: formattedDob,
-            sexo: formData.Sex, // 'M' or 'F'
+            sexo: formData.Sex, // 'M' or 'F' selected from dropdown
             direccion: formData.address,
             telefono: formData.phone,
             cedula: formData.dni,
             email: formData.email,
-            polizaId: formData.PolicyID,
-            aseguradoraId: formData.arsID,
+            // Only send PolicyID and arsID if the patient is insured
+            polizaId: isInsured ? formData.PolicyID : null, // Send null or undefined if not insured
+            aseguradoraId: isInsured ? formData.arsID : null, // Send null or undefined if not insured
         };
 
         try {
@@ -93,12 +128,12 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
                     dob: null,
                     phone: '',
                     email: '',
-                    Sex: '', // Reset Sex field
+                    Sex: null, // Reset Sex field to null for dropdown
                     address: '',
                     PolicyID: '',
                     arsID: '',
                 });
-
+                setIsInsured(false); // Reset insured checkbox
             } else {
                 const errorData = await response.json();
                 const errorMessage = errorData.message || 'Error desconocido al registrar paciente.';
@@ -123,71 +158,106 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
             )}
 
             <div className="field col-12 md:col-6">
-                <label htmlFor="name">Nombre</label>
-                <InputText id="name" name="name" value={formData.name} onChange={handleChange} required />
+                <label htmlFor="name" style={{ fontWeight: 'bold' }}>Nombre</label>
+                <InputText id="name" name="name" value={formData.name} onChange={handleChange} onFocus={handleFocus} required />
             </div>
             <div className="field col-12 md:col-6">
-                <label htmlFor="lastName">Apellido</label>
-                <InputText id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} required />
+                <label htmlFor="lastName" style={{ fontWeight: 'bold' }}>Apellido</label>
+                <InputText id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} onFocus={handleFocus} required />
             </div>
             <div className="field col-12 md:col-6">
-                <label htmlFor="dni">DNI/Cédula</label>
-                <InputText id="dni" name="dni" value={formData.dni} onChange={handleChange} required />
+                <label htmlFor="dni" style={{ fontWeight: 'bold' }}>DNI/Cédula</label>
+                <InputMask
+                    id="dni"
+                    name="dni"
+                    value={formData.dni}
+                    onChange={handleChange}
+                    mask="999-9999999-9" // Dominican Republic Cédula format
+                    placeholder="999-9999999-9"
+                    onFocus={handleFocus} // Add onFocus handler here
+                    required
+                />
             </div>
 
-            {/* Sexo como Radio Buttons */}
+            {/* Sexo como Dropdown */}
             <div className="field col-12 md:col-6">
-                <label htmlFor="sex">Sexo</label>
-                <div className="flex flex-wrap gap-3">
-                    <div className="flex align-items-center">
-                        <RadioButton
-                            inputId="sexM"
-                            name="Sex"
-                            value="M"
-                            onChange={handleSexChange}
-                            checked={formData.Sex === 'M'}
-                            required
-                        />
-                        <label htmlFor="sexM" className="ml-2">Masculino</label>
-                    </div>
-                    <div className="flex align-items-center">
-                        <RadioButton
-                            inputId="sexF"
-                            name="Sex"
-                            value="F"
-                            onChange={handleSexChange}
-                            checked={formData.Sex === 'F'}
-                            required
-                        />
-                        <label htmlFor="sexF" className="ml-2">Femenino</label>
-                    </div>
-                </div>
+                <label htmlFor="Sex" style={{ fontWeight: 'bold' }}>Sexo</label>
+                <Dropdown
+                    id="Sex"
+                    name="Sex"
+                    value={formData.Sex}
+                    options={sexOptions}
+                    onChange={handleSexChange}
+                    placeholder="Seleccione un sexo"
+                    required
+                />
             </div>
 
             <div className="field col-12 md:col-6">
-                <label htmlFor="dob">Fecha de Nacimiento</label>
+                <label htmlFor="dob" style={{ fontWeight: 'bold' }}>Fecha de Nacimiento</label>
                 <Calendar id="dob" name="dob" value={formData.dob} onChange={handleDateChange} dateFormat="dd/mm/yy" showIcon />
             </div>
             <div className="field col-12 md:col-6">
-                <label htmlFor="phone">Teléfono</label>
-                <InputText id="phone" name="phone" keyfilter="pnum" value={formData.phone} onChange={handleChange} />
+                <label htmlFor="phone" style={{ fontWeight: 'bold' }}>Teléfono</label>
+                <InputMask
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    mask="(999) 999-9999" // Common phone format for Dominican Republic
+                    placeholder="(999) 999-9999"
+                    onFocus={handleFocus} // Add onFocus handler here
+                />
             </div>
             <div className="field col-12 md:col-6">
-                <label htmlFor="email">Correo Electrónico</label>
-                <InputText id="email" name="email" type="email" value={formData.email} onChange={handleChange} />
+                <label htmlFor="email" style={{ fontWeight: 'bold' }}>Correo Electrónico</label>
+                <InputText id="email" name="email" type="email" value={formData.email} onChange={handleChange} onFocus={handleFocus} />
             </div>
-            <div className="field col-12 md:col-6">
-                <label htmlFor="address">Dirección</label>
-                <InputText id="address" name="address" value={formData.address} onChange={handleChange} />
+            <div className="field col-12"> {/* Full width for address */}
+                <label htmlFor="address" style={{ fontWeight: 'bold' }}>Dirección</label>
+                <InputText id="address" name="address" value={formData.address} onChange={handleChange} onFocus={handleFocus} />
             </div>
-            <div className="field col-12 md:col-6">
-                <label htmlFor="arsID">Aseguradora ID</label>
-                <InputText id="arsID" name="arsID" value={formData.arsID} onChange={handleChange} />
+
+            {/* Asegurado Checkbox */}
+            <div className="field col-12 mt-3">
+                <div className="flex align-items-center">
+                    <Checkbox
+                        inputId="isInsured"
+                        name="isInsured"
+                        onChange={handleInsuredChange}
+                        checked={isInsured}
+                    />
+                    <label htmlFor="isInsured" className="ml-2" style={{ fontWeight: 'bold' }}>Asegurado</label>
+                </div>
             </div>
-            <div className="field col-12 md:col-6">
-                <label htmlFor="PolicyID">Poliza ID</label>
-                <InputText id="PolicyID" name="PolicyID" value={formData.PolicyID} onChange={handleChange} />
-            </div>
+
+            {/* Conditional Rendering for PolicyID and ArsID fields */}
+            {isInsured && (
+                <>
+                    <div className="field col-12 md:col-6">
+                        <label htmlFor="arsID" style={{ fontWeight: 'bold' }}>Aseguradora ID</label>
+                        <InputText
+                            id="arsID"
+                            name="arsID"
+                            value={formData.arsID}
+                            onChange={handleChange}
+                            onFocus={handleFocus} // Add onFocus handler here
+                            required={isInsured} // Still required when visible
+                        />
+                    </div>
+                    <div className="field col-12 md:col-6">
+                        <label htmlFor="PolicyID" style={{ fontWeight: 'bold' }}>Poliza ID</label>
+                        <InputText
+                            id="PolicyID"
+                            name="PolicyID"
+                            value={formData.PolicyID}
+                            onChange={handleChange}
+                            onFocus={handleFocus} // Add onFocus handler here
+                            required={isInsured} // Still required when visible
+                        />
+                    </div>
+                </>
+            )}
 
             <div className="col-12 flex justify-content-end gap-2 mt-4">
                 <Button type="button" label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={onCancel} disabled={loading} />
