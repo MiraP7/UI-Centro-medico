@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Definición de colores principales de la aplicación */
+:root {
+  --app-color-azul-marino: #1a365d;
+  /* Tu azul oscuro actual del sidebar */
+  --app-color-azul-claro: #3498db;
+  /* Un azul claro de ejemplo para resaltar, ajusta si tienes uno específico */
+  --app-color-blanco-suave: #f4f7f9;
+  /* Tu color de fondo del body */
+  --app-color-texto-oscuro: #2d3748;
+  /* Tu color de texto principal */
+  --app-color-blanco: #ffffff;
+  /* Blanco puro para contraste en fondos oscuros */
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--app-color-blanco-suave);
+  /* Usando la variable */
+  margin: 0;
+  color: var(--app-color-texto-oscuro);
+  /* Usando la variable */
+}
+
+/* Clases para el layout principal */
+.main-layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Nota: el sidebar que tenías aquí es para un layout fijo.
+   Para el Sidebar de PrimeReact que colapsa, los estilos se aplicarán directamente a él.
+   Mantengo estas clases por si las usas en otras partes.
+*/
+.sidebar {
+  width: 260px;
+  background-color: var(--app-color-azul-marino);
+  /* Usando la variable */
+  color: var(--app-color-blanco);
+  /* Blanco puro para texto en fondo oscuro */
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.content-area {
+  flex-grow: 1;
+  padding: 2.5rem;
+  overflow-y: auto;
+}
+
+/* Estilos para el Modal (Popup) */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  width: 90%;
+  max-width: 800px;
+}
+
+/* Diseño de 2 columnas para el formulario */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* --- ESTILOS INTEGRADAS DEL HEADER Y SIDEBAR --- */
+
+/* Estilo del Sidebar de PrimeReact para que el fondo sea azul marino */
+/* La clase 'w-20rem' es de PrimeFlex, asegúrate de que se aplique en el JSX del Sidebar */
+.p-sidebar.p-sidebar-active.w-20rem {
+  /* Añadido .p-sidebar-active para mayor especificidad */
+  background-color: var(--app-color-azul-marino) !important;
+}
+
+/* Título "Menú Principal" dentro del Sidebar de PrimeReact */
+/* Ajuste el selector para que apunte al h3 dentro del .p-sidebar-content si es necesario */
+.p-sidebar .p-sidebar-content h3 {
+  color: var(--app-color-blanco) !important;
+  margin-top: 0;
+  /* Asegura que no haya margen superior indeseado */
+  margin-bottom: 1.5rem;
+  /* Espaciado con los items del menú */
+}
+
+/* Estilo de los elementos del PanelMenu */
+/* La clase 'sidebar-panelmenu' se aplica directamente al componente PanelMenu en el JSX */
+.sidebar-panelmenu {
+  /* El fondo del PanelMenu debe ser transparente para que se vea el fondo del Sidebar */
+  background-color: transparent !important;
+}
+
+/* Fondo de los paneles individuales dentro del PanelMenu (pueden ser blancos por defecto) */
+.sidebar-panelmenu .p-panelmenu-panel {
+  background-color: transparent !important;
+}
+
+/* Texto de los elementos del menú (Home, Pacientes, etc.) */
+.sidebar-panelmenu .p-menuitem-link .p-menuitem-text {
+  color: var(--app-color-blanco) !important;
+  /* Texto blanco por defecto */
+  font-weight: 500;
+  /* Un poco más de peso para la legibilidad */
+}
+
+/* Iconos de los elementos del menú */
+.sidebar-panelmenu .p-menuitem-link .p-menuitem-icon {
+  color: var(--app-color-azul-claro) !important;
+  /* Iconos en azul claro por defecto */
+}
+
+/* Efecto HOVER: Fondo del elemento del PanelMenu al pasar el ratón */
+.sidebar-panelmenu .p-menuitem-link:not(.p-disabled):hover {
+  background-color: var(--app-color-azul-claro) !important;
+  /* Fondo azul claro al hover */
+  border-radius: 6px;
+  /* Borde redondeado al hover */
+}
+
+/* Efecto HOVER: Color del texto al pasar el ratón (sobre el fondo azul claro) */
+.sidebar-panelmenu .p-menuitem-link:not(.p-disabled):hover .p-menuitem-text,
+.sidebar-panelmenu .p-menuitem-link:not(.p-disabled):hover .p-menuitem-icon {
+  color: var(--app-color-azul-marino) !important;
+  /* Texto e icono en azul marino al hover */
+}
+
+/* Estilo para el item activo/seleccionado (si lo implementas con React Router Link, por ejemplo) */
+/* Si usas NavLink de react-router-dom, la clase sería .router-link-active */
+/*
+.sidebar-panelmenu .p-menuitem-link.router-link-active {
+    background-color: var(--app-color-azul-claro) !important;
+    color: var(--app-color-azul-marino) !important;
+    border-left: 4px solid var(--app-color-blanco) !important; // Un borde a la izquierda para destacar
+}
+.sidebar-panelmenu .p-menuitem-link.router-link-active .p-menuitem-text,
+.sidebar-panelmenu .p-menuitem-link.router-link-active .p-menuitem-icon {
+    color: var(--app-color-azul-marino) !important;
+}
+*/
