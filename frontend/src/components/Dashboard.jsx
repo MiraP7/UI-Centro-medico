@@ -13,6 +13,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
 import '/src/App.css'; // Asegúrate de tener tu archivo CSS global
 import PatientView from '/src/Views/PatientView';
+import FacturacionView from '/src/Views/FacturacionView';
 
 const initialAppointments = [
   { id: 1, time: '09:00 AM', patient: 'Juan Pérez', reason: 'Consulta General' },
@@ -40,6 +41,7 @@ export default function Dashboard({ onLogout }) {
   const [appointments, setAppointments] = useState(initialAppointments);
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [showPatientViewModal, setShowPatientViewModal] = useState(false);
+  const [showFacturacionViewModal, setShowFacturacionViewModal] = useState(false);
 
   const handlePatientRegistered = (newPatient) => {
     console.log('Paciente Registrado:', newPatient);
@@ -71,7 +73,10 @@ export default function Dashboard({ onLogout }) {
     {
       label: 'Facturación',
       icon: 'pi pi-fw pi-money-bill',
-      // Removed inline style; styling is now handled by App.css
+      command: () => { // ADDED COMMAND FOR FACTURACION
+        setShowFacturacionViewModal(true); // Set state to true to open modal
+        setSidebarVisible(false); // Close sidebar after clicking
+      },
     },
     {
       label: 'Autorización',
@@ -170,6 +175,17 @@ export default function Dashboard({ onLogout }) {
         modal
       >
         <PatientView onClose={() => setShowPatientViewModal(false)} />
+      </Dialog>
+
+      {/* NEW: Dialog para la Vista de Facturación (FacturacionView) */}
+      <Dialog
+        header="Módulo de Facturación"
+        visible={showFacturacionViewModal}
+        style={{ width: '90vw', minWidth: '800px', height: '90vh' }}
+        onHide={() => setShowFacturacionViewModal(false)}
+        modal
+      >
+        <FacturacionView onClose={() => setShowFacturacionViewModal(false)} />
       </Dialog>
 
     </div>
