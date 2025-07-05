@@ -1,0 +1,107 @@
+/* Definición de variables de color para mantener la consistencia */
+:root {
+  --primary-blue: #007bff;
+  --dark-blue: #003366;
+  --white: #ffffff;
+  --soft-white-bg: #f4f7f9;
+  --error-red: #ef4444;
+  --text-gray: #607d8b;
+  --focus-shadow: rgba(52, 152, 219, 0.25);
+}
+
+/* Contenedor principal de la pantalla de login */
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
+
+/* Capa semitransparente sobre la imagen de fondo usando un pseudo-elemento */
+.login-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.2); /* Blanco semitransparente */
+  z-index: 0;
+}
+
+/* Tarjeta del formulario de login */
+.login-card {
+  background-color: var(--white);
+  position: relative; /* Para que esté por encima de la capa ::before */
+  z-index: 1;
+}
+
+/* Cabecera del formulario (icono y títulos) */
+.login-header {
+  text-align: center;
+  margin-bottom: 2.5rem; /* Equivalente a mb-5 */
+}
+
+.login-header .pi-heart-fill {
+  color: var(--primary-blue);
+  font-size: 3.5rem;
+}
+
+.login-header h2 {
+  color: var(--dark-blue);
+}
+
+.login-header p {
+  color: var(--text-gray);
+}
+
+/* Estilos para el formulario */
+.login-form label {
+  color: var(--dark-blue);
+}
+
+/* Estilos para los inputs de PrimeReact (InputText y Password) */
+.login-form .p-inputtext,
+.login-form .p-password-input { /* .p-password-input es la clase del input dentro del componente Password */
+  border-color: var(--primary-blue);
+  color: var(--dark-blue);
+  transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  outline: none;
+}
+
+/* Efecto hover para los inputs */
+.login-form .p-inputtext:hover,
+.login-form .p-password-input:hover {
+  border-color: var(--dark-blue);
+}
+
+/* Efecto focus para los inputs */
+.login-form .p-inputtext:focus,
+.login-form .p-password-input:focus {
+  border-color: var(--primary-blue);
+  box-shadow: 0 0 0 0.2rem var(--focus-shadow);
+}
+
+/* Estilo para el mensaje de error */
+.login-error {
+  color: var(--error-red);
+  text-align: center; /* Centramos el texto de error */
+}
+
+/* Estilo para el botón de envío */
+.login-button.p-button {
+  background-color: var(--primary-blue);
+  border-color: var(--primary-blue);
+  color: var(--white);
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+/* Efecto hover para el botón */
+.login-button.p-button:hover {
+  background-color: var(--dark-blue);
+  border-color: var(--dark-blue);
+}

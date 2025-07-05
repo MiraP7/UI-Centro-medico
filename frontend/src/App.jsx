@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
+import Login from "./pages/auth/Login.jsx";
+import Dashboard from "./components/Dashboard.jsx";
 
 // Estilos de PrimeReact y PrimeFlex
 import 'primereact/resources/themes/saga-blue/theme.css'; // Puedes cambiar 'saga-blue' por tu tema preferido

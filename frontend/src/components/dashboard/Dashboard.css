@@ -1,0 +1,58 @@
+/* Variables de color para mantener la consistencia */
+:root {
+  --color-azul-marino: #2c3e50;
+  --color-azul-claro: #3498db;
+  --color-blanco: #ffffff;
+}
+
+/* Estilos para el Header */
+.dashboard-header {
+  background-color: var(--color-azul-marino);
+}
+
+.header-logo-icon {
+  color: var(--color-azul-claro);
+  font-size: 2.5rem;
+}
+
+.header-title {
+  color: var(--color-blanco);
+}
+
+.header-menu-button {
+  color: var(--color-blanco) !important; /* !important para sobreescribir estilos de PrimeReact si es necesario */
+}
+
+/* Estilos para el Sidebar */
+.dashboard-sidebar {
+  background-color: var(--color-azul-marino);
+}
+
+.sidebar-title {
+  color: var(--color-blanco);
+  text-align: center;
+}
+
+/* Estilos para el PanelMenu dentro del Sidebar */
+.sidebar-panelmenu .p-panelmenu-header > a {
+  background-color: var(--color-azul-marino);
+  color: var(--color-blanco);
+}
+
+.sidebar-panelmenu .p-panelmenu-header > a:hover {
+  background-color: #46627f; /* Un tono más claro para el hover */
+}
+
+.sidebar-panelmenu .p-menuitem-icon,
+.sidebar-panelmenu .p-menuitem-text {
+  color: var(--color-blanco) !important;
+}
+
+/* Estilos para los títulos de las tarjetas */
+.card-title {
+  text-align: center;
+}
+
+.card-title-appointments {
+  color: var(--color-azul-claro);
+}

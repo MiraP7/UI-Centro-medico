@@ -7,7 +7,7 @@ import { Dialog } from 'primereact/dialog'; // Importa el componente Dialog de P
 
 // Asegúrate de que esta ruta sea correcta y que PatientRegistrationForm
 // sea una exportación por defecto (export default function PatientRegistrationForm...)
-import PatientRegistrationForm from './PatientRegistrationForm';
+import PatientRegistrationForm from '../patient/PatientRegistrationForm.jsx';
 
 export default function AppointmentRegistrationForm({ onAppointmentRegistered, onCancel }) {
     const [selectedPatient, setSelectedPatient] = useState(null);

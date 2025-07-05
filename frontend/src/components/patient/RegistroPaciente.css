@@ -1,0 +1,65 @@
+/* Estilos para el contenedor principal del formulario */
+.registro-paciente-container {
+  font-family: Arial, sans-serif;
+  max-width: 600px;
+  margin: auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra suave para un mejor aspecto */
+}
+
+.registro-paciente-container h2 {
+  text-align: center; /* Centramos el título */
+  color: #333;
+}
+
+/* Estilos para cada grupo de etiqueta + campo (label + input) */
+.form-group {
+  margin-bottom: 15px;
+}
+
+/* Estilos para las etiquetas de los campos */
+.form-group label {
+  display: block; /* Hace que la etiqueta ocupe su propia línea */
+  margin-bottom: 5px; /* Espacio entre la etiqueta y el campo */
+  font-weight: bold;
+  color: #555;
+}
+
+/* Estilos comunes para todos los campos de entrada (input, select) */
+.form-input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box; /* Asegura que el padding no afecte el ancho total */
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+/* Estilo para el botón de envío */
+.submit-btn {
+  width: 100%;
+  padding: 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px; /* Hacemos la letra un poco más grande */
+  transition: background-color 0.3s ease; /* Transición suave para el hover */
+}
+
+/* Efecto hover para el botón */
+.submit-btn:hover {
+  background-color: #0056b3;
+}
+
+/* Estilos para el mensaje de estado (éxito o error) */
+.status-message {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #e7f3fe;
+  border: 1px solid #d0eaff;
+  border-radius: 5px;
+  text-align: center;
+}

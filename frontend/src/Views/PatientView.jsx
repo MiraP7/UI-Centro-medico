@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import PatientModal from '../components/PatientModal.jsx';
-import AppointmentModal from '../components/AppointmentModal.jsx';
+import PatientModal from '../components/patient/PatientModal.jsx';
+import AppointmentModal from '../components/appointment/AppointmentModal.jsx';
 // Importa componentes de PrimeReact para mensajes y spinners (ya que no usaremos DataTable)
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
