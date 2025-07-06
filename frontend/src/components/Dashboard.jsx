@@ -146,7 +146,7 @@ export default function Dashboard({ onLogout }) {
           <div className="card shadow-1 border-round-md">
             <h2 className="text-xl font-semibold mb-3" style={{ textAlign: 'center' }}>Acciones Rápidas</h2>
             <div className="flex flex-column gap-3">
-              <Button label="Registrar Paciente" icon="pi pi-user-plus" className="p-button-success p-button-raised p-button-sm" onClick={() => setShowPatientModal(true)} />
+              {/* <Button label="Registrar Paciente" icon="pi pi-user-plus" className="p-button-success p-button-raised p-button-sm" onClick={() => setShowPatientModal(true)} /> */}
               <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-button-sm" onClick={() => setShowAppointmentModal(true)} />
             </div>
           </div>
@@ -154,9 +154,9 @@ export default function Dashboard({ onLogout }) {
       </div>
 
       {/* Dialog para Registrar Paciente */}
-      <Dialog header="Registrar Paciente" visible={showPatientModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowPatientModal(false)} modal>
+      {/* <Dialog header="Registrar Paciente" visible={showPatientModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowPatientModal(false)} modal>
         <PatientRegistrationForm onPatientRegistered={handlePatientRegistered} onCancel={() => setShowPatientModal(false)} />
-      </Dialog>
+      </Dialog> */}
 
       {/* Dialog para Registrar Cita */}
       <Dialog header="Registrar Cita" visible={showAppointmentModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowAppointmentModal(false)} modal>

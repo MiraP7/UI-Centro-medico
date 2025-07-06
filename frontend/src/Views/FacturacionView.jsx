@@ -6,6 +6,7 @@ import { Message } from 'primereact/message';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
 import FacturaService from '/src/services/FacturaService'; // Importa el servicio de facturas
+import PatientRegistrationForm from '/src/components/PatientRegistrationForm'; // NUEVO: Importa el formulario de registro de pacientes
 
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
@@ -24,6 +25,9 @@ export default function FacturacionView({ onClose }) {
     const [showDetalleDialog, setShowDetalleDialog] = useState(false);
     const [loadingDetalle, setLoadingDetalle] = useState(false);
     const [errorDetalle, setErrorDetalle] = useState(null);
+
+    // NUEVO ESTADO: Para controlar la visibilidad del diálogo de registro de paciente
+    const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
 
     // Fetch all facturas on component mount
     useEffect(() => {
@@ -68,7 +72,14 @@ export default function FacturacionView({ onClose }) {
         setErrorDetalle(null);
     };
 
-    // Template for 'Pagado' column
+    // NUEVA FUNCIÓN: Manejar paciente registrado (solo cierra el modal en esta vista)
+    const handlePatientRegistered = () => {
+        console.log("Paciente registrado desde la vista de facturación.");
+        setShowPatientRegistrationModal(false); // Cierra el modal de registro de paciente
+        // En una aplicación real, podrías querer refrescar la lista de pacientes si es relevante aquí
+    };
+
+    // Template for 'Pagado' column (no changes here, as it's for the main invoice list)
     const pagadoBodyTemplate = (rowData) => {
         return (
             <i className={rowData.pagado ? 'pi pi-check-circle' : 'pi pi-times-circle'}
@@ -77,7 +88,7 @@ export default function FacturacionView({ onClose }) {
         );
     };
 
-    // Template for 'Acciones' column
+    // Template for 'Acciones' column (no changes here)
     const actionBodyTemplate = (rowData) => {
         return (
             <Button
@@ -96,10 +107,51 @@ export default function FacturacionView({ onClose }) {
         return date.toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' });
     };
 
+    // Body template for 'Monto Cubierto por ARS'
+    const montoCubiertoBodyTemplate = (rowData) => {
+        if (rowData.cubierto > 0) {
+            return (
+                <span style={{ color: 'green', fontWeight: 'bold' }}>
+                    ${rowData.cubierto.toFixed(2)}
+                </span>
+            );
+        } else {
+            return (
+                <span style={{ color: 'red' }}>
+                    ${rowData.cubierto.toFixed(2)}
+                </span>
+            );
+        }
+    };
+
+    // Función para manejar el clic del botón de Reporte de Cobertura
+    const handleReporteCoberturaClick = () => {
+        // Aquí puedes agregar la lógica para generar o mostrar el reporte de cobertura
+        console.log("Generando reporte de cobertura...");
+        // Por ejemplo, podrías abrir otro diálogo, redirigir a otra página, o iniciar una descarga.
+        // setshowReporteCoberturaModal(true); // Si tuvieras un modal para el reporte
+    };
+
     return (
         <div className="p-4">
             <div className="flex justify-content-between align-items-center mb-4">
                 <h2>Módulo de Facturación</h2>
+                <div className="flex gap-2"> {/* Contenedor para los botones */}
+                    {/* Botón: Registrar Paciente */}
+                    <Button
+                        label="Registrar Paciente"
+                        icon="pi pi-user-plus"
+                        className="p-button-success p-button-raised"
+                        onClick={() => setShowPatientRegistrationModal(true)}
+                    />
+                    {/* Botón: Reporte de Cobertura (MODIFICADO) */}
+                    <Button
+                        label="Reporte de Cobertura"
+                        icon="pi pi-file" // Icono de reporte (puedes probar 'pi pi-chart-bar' o 'pi pi-file-excel')
+                        className="p-button-info p-button-raised" // Clase para color azul claro
+                        onClick={handleReporteCoberturaClick}
+                    />
+                </div>
             </div>
 
             {loadingFacturas && (
@@ -129,17 +181,15 @@ export default function FacturacionView({ onClose }) {
                     >
                         <Column field="facturaId" header="ID Factura"></Column>
                         <Column field="pacienteNombre" header="Paciente"></Column>
-                        {/* NUEVA COLUMNA: Descripción del Tratamiento Principal */}
-                        <Column field="descripcionTratamientoPrincipal" header="Descripción Tratamiento"></Column>
                         <Column field="fechaEmision" header="Fecha Emisión" body={(rowData) => formatDate(rowData.fechaEmision)}></Column>
                         <Column field="monto" header="Monto Total" body={(rowData) => `$${rowData.monto.toFixed(2)}`}></Column>
-                        <Column field="pagado" header="Pagado" body={pagadoBodyTemplate}></Column>
-                        <Column body={actionBodyTemplate} header="Acciones" exportable={false} style={{ width: '6rem' }}></Column>
+                        {/* <Column field="pagado" header="Pagado" body={pagadoBodyTemplate}></Column> */}
+                        {/* <Column body={actionBodyTemplate} header="Acciones" exportable={false} style={{ width: '6rem' }}></Column> */}
                     </DataTable>
                 </div>
             )}
 
-            {/* Dialog for Factura Details (this part remains unchanged, it already shows treatment descriptions) */}
+            {/* Dialog for Factura Details */}
             <Dialog header={selectedFactura ? `Detalle de Factura #${selectedFactura.facturaId}` : "Detalle de Factura"}
                 visible={showDetalleDialog} style={{ width: '60vw', minWidth: '400px' }} modal onHide={hideDetalleDialog}>
 
@@ -156,13 +206,10 @@ export default function FacturacionView({ onClose }) {
 
                 {!loadingDetalle && !errorDetalle && detalleFactura.length > 0 && (
                     <DataTable value={detalleFactura} emptyMessage="No hay detalles para esta factura.">
-                        <Column field="descripcion" header="Descripción Tratamiento"></Column> {/* Already present here */}
+                        <Column field="descripcion" header="Descripción Tratamiento"></Column>
                         <Column field="fecha" header="Fecha Tratamiento"></Column>
                         <Column field="costo" header="Costo" body={(rowData) => `$${rowData.costo.toFixed(2)}`}></Column>
-                        <Column field="cubierto" header="Cubierto por Seguro" body={(rowData) => (
-                            <i className={rowData.cubierto ? 'pi pi-check-circle' : 'pi pi-times-circle'}
-                                style={{ color: rowData.cubierto ? 'green' : 'red' }}></i>
-                        )}></Column>
+                        <Column field="cubierto" header="Monto Cubierto por ARS" body={montoCubiertoBodyTemplate}></Column>
                     </DataTable>
                 )}
                 {!loadingDetalle && !errorDetalle && detalleFactura.length === 0 && !selectedFactura && (
@@ -171,6 +218,20 @@ export default function FacturacionView({ onClose }) {
                 {!loadingDetalle && !errorDetalle && detalleFactura.length === 0 && selectedFactura && (
                     <Message severity="info" summary="Información" text="No se encontraron detalles para esta factura." className="w-full" />
                 )}
+            </Dialog>
+
+            {/* DIALOG: Para el formulario de registro de paciente */}
+            <Dialog
+                header="Registrar Paciente"
+                visible={showPatientRegistrationModal}
+                style={{ width: '50vw', minWidth: '350px' }}
+                onHide={() => setShowPatientRegistrationModal(false)}
+                modal
+            >
+                <PatientRegistrationForm
+                    onPatientRegistered={handlePatientRegistered}
+                    onCancel={() => setShowPatientRegistrationModal(false)}
+                />
             </Dialog>
 
             {onClose && (
