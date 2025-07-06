@@ -135,7 +135,7 @@ export default function FacturacionView({ onClose }) {
     return (
         <div className="p-4">
             <div className="flex justify-content-between align-items-center mb-4">
-                <h2>Módulo de Facturación</h2>
+                {/* <h2>Módulo de Facturación</h2> */}
                 <div className="flex gap-2"> {/* Contenedor para los botones */}
                     {/* Botón: Registrar Paciente */}
                     <Button

@@ -31,8 +31,8 @@ const initialAppointments = [
 ];
 
 // Definición de los colores para facilitar la referencia
-const COLOR_AZUL_MARINO = '#2c3e50'; // Puedes ajustar este valor
-const COLOR_AZUL_CLARO = '#3498db'; // Puedes ajustar este valor
+const COLOR_AZUL_MARINO = '#2c3e50';
+const COLOR_AZUL_CLARO = '#3498db';
 const COLOR_BLANCO = '#ffffff';
 
 export default function Dashboard({ onLogout }) {
@@ -59,7 +59,12 @@ export default function Dashboard({ onLogout }) {
     {
       label: 'Home',
       icon: 'pi pi-fw pi-home',
-      // Removed inline style; styling is now handled by App.css
+      command: () => { // AÑADIDO: Cierra el sidebar al hacer clic en Home
+        setSidebarVisible(false);
+        // Aquí podrías añadir lógica adicional si "Home" implicara ocultar otros modales abiertos
+        // setShowPatientViewModal(false);
+        // setShowFacturacionViewModal(false);
+      },
     },
     {
       label: 'Pacientes',
@@ -68,35 +73,30 @@ export default function Dashboard({ onLogout }) {
         setShowPatientViewModal(true);
         setSidebarVisible(false);
       },
-      // Removed inline style; styling is now handled by App.css
     },
     {
       label: 'Facturación',
       icon: 'pi pi-fw pi-money-bill',
-      command: () => { // ADDED COMMAND FOR FACTURACION
-        setShowFacturacionViewModal(true); // Set state to true to open modal
-        setSidebarVisible(false); // Close sidebar after clicking
+      command: () => {
+        setShowFacturacionViewModal(true);
+        setSidebarVisible(false);
       },
     },
     {
       label: 'Autorización',
       icon: 'pi pi-fw pi-check-square',
-      // Removed inline style; styling is now handled by App.css
     },
     {
       label: 'Medicos',
       icon: 'pi pi-fw pi-user-md',
-      // Removed inline style; styling is now handled by App.css
     },
     {
       label: 'Usuarios',
       icon: 'pi pi-fw pi-id-card',
-      // Removed inline style; styling is now handled by App.css
     },
     {
       label: 'Aseguradora',
       icon: 'pi pi-fw pi-shield',
-      // Removed inline style; styling is now handled by App.css
     }
   ];
 
@@ -133,7 +133,7 @@ export default function Dashboard({ onLogout }) {
               paginator
               rows={10}
               rowsPerPageOptions={[5, 10, 25, 50]}
-              paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+              paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink PageLinks LastPageLink CurrentPageReport RowsPerPageDropdown"
               currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas"
             >
               <Column field="time" header="Hora"></Column>
@@ -146,6 +146,7 @@ export default function Dashboard({ onLogout }) {
           <div className="card shadow-1 border-round-md">
             <h2 className="text-xl font-semibold mb-3" style={{ textAlign: 'center' }}>Acciones Rápidas</h2>
             <div className="flex flex-column gap-3">
+              {/* El botón de Registrar Paciente está comentado aquí, si lo necesitas, descoméntalo y asegúrate de que showPatientModal y su Dialog estén activos */}
               {/* <Button label="Registrar Paciente" icon="pi pi-user-plus" className="p-button-success p-button-raised p-button-sm" onClick={() => setShowPatientModal(true)} /> */}
               <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-button-sm" onClick={() => setShowAppointmentModal(true)} />
             </div>
@@ -153,10 +154,12 @@ export default function Dashboard({ onLogout }) {
         </div>
       </div>
 
-      {/* Dialog para Registrar Paciente */}
-      {/* <Dialog header="Registrar Paciente" visible={showPatientModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowPatientModal(false)} modal>
+      {/* Dialog para Registrar Paciente (comentado en tu código original, si lo necesitas, descoméntalo) */}
+      {/*
+      <Dialog header="Registrar Paciente" visible={showPatientModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowPatientModal(false)} modal>
         <PatientRegistrationForm onPatientRegistered={handlePatientRegistered} onCancel={() => setShowPatientModal(false)} />
-      </Dialog> */}
+      </Dialog>
+      */}
 
       {/* Dialog para Registrar Cita */}
       <Dialog header="Registrar Cita" visible={showAppointmentModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowAppointmentModal(false)} modal>
@@ -177,7 +180,7 @@ export default function Dashboard({ onLogout }) {
         <PatientView onClose={() => setShowPatientViewModal(false)} />
       </Dialog>
 
-      {/* NEW: Dialog para la Vista de Facturación (FacturacionView) */}
+      {/* Dialog para la Vista de Facturación (FacturacionView) */}
       <Dialog
         header="Módulo de Facturación"
         visible={showFacturacionViewModal}

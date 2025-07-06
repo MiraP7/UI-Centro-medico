@@ -1,23 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import PatientModal from '../components/PatientModal.jsx';
+import PatientRegistrationForm from '/src/components/PatientRegistrationForm';
 import AppointmentModal from '../components/AppointmentModal.jsx';
-// Importa componentes de PrimeReact para mensajes y spinners (ya que no usaremos DataTable)
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Button } from 'primereact/button';
+import { Dialog } from 'primereact/dialog';
 
 // Asegúrate de que los estilos de PrimeReact (básicos y PrimeFlex) estén disponibles
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
-import 'primeflex/primeflex.css'; // Para utilidades de layout (flexbox, spacing, etc.)
+import 'primeflex/primeflex.css';
 
 export default function PatientView({ onClose }) {
     const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const [isPatientModalOpen, setPatientModalOpen] = useState(false);
+    const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
     const [isAppointmentModalOpen, setAppointmentModalOpen] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState(null);
 
@@ -35,26 +35,23 @@ export default function PatientView({ onClose }) {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    // 'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
             });
 
             console.log("Respuesta recibida:", response);
 
             if (response.ok) {
-                const result = await response.json(); // Cambié 'data' a 'result' para evitar confusión
-                console.log("Datos recibidos de la API (estructura completa):", result); // Mostrar la estructura completa
+                const result = await response.json();
+                console.log("Datos recibidos de la API (estructura completa):", result);
 
-                // *** ¡LA CLAVE ESTÁ AQUÍ! ***
-                // Tu API devuelve un objeto con una propiedad 'data' que contiene el array de pacientes.
-                // Accede a 'result.data' para obtener el array.
                 if (result && Array.isArray(result.data)) {
-                    setPatients(result.data); // Asigna el array de pacientes a tu estado
-                    console.log("Pacientes asignados al estado:", result.data); // Confirma que se asigna el array
+                    setPatients(result.data);
+                    console.log("Pacientes asignados al estado:", result.data);
                 } else {
                     setError("Formato de datos inesperado de la API. No se encontró el array de pacientes en 'data'.");
                     console.error("Formato inesperado:", result);
-                    setPatients([]); // Asegura que 'patients' sea un array vacío
+                    setPatients([]);
                 }
 
             } else {
@@ -77,10 +74,13 @@ export default function PatientView({ onClose }) {
         fetchPatients();
     }, []);
 
+    // Función para manejar paciente registrado, similar a FacturacionView
     const handlePatientRegistered = (newPatient) => {
-        console.log('Paciente Registrado desde el modal:', newPatient);
-        setPatientModalOpen(false);
-        fetchPatients(); // Recargar la lista para incluir el nuevo paciente
+        console.log('Paciente Registrado (desde PatientView):', newPatient);
+        // Cierra el modal de registro
+        setShowPatientRegistrationModal(false);
+        // Recarga la lista de pacientes para que el nuevo aparezca
+        fetchPatients();
     };
 
     const renderActionButtons = (patient) => {
@@ -100,12 +100,12 @@ export default function PatientView({ onClose }) {
     return (
         <div className="p-4">
             <div className="flex justify-content-between align-items-center mb-4">
-                <h2>Gestión de Pacientes</h2>
+                {/* Botón: Registrar Paciente - usa el nuevo estado */}
                 <Button
                     label="Registrar Paciente"
                     icon="pi pi-user-plus"
-                    className="p-button-primary"
-                    onClick={() => setPatientModalOpen(true)}
+                    className="p-button-primary" // O p-button-success p-button-raised como en facturación
+                    onClick={() => setShowPatientRegistrationModal(true)} // Abre el Dialog
                 />
             </div>
 
@@ -159,12 +159,21 @@ export default function PatientView({ onClose }) {
                 </div>
             )}
 
-            {isPatientModalOpen && (
-                <PatientModal
-                    onClose={() => setPatientModalOpen(false)}
+            {/* DIALOG: Para el formulario de registro de paciente, similar a FacturacionView */}
+            <Dialog
+                header="Registrar Paciente"
+                visible={showPatientRegistrationModal} // Controlado por el nuevo estado
+                style={{ width: '50vw', minWidth: '350px' }}
+                onHide={() => setShowPatientRegistrationModal(false)} // Cierra el dialog al hacer clic fuera o en la 'x'
+                modal // Asegura que sea un modal y bloquee la interacción con el fondo
+            >
+                {/* Asumiendo que PatientModal ahora es tu formulario de registro, le pasamos las props necesarias */}
+                <PatientRegistrationForm // Si PatientModal.jsx es el formulario, mantenlo así. Si es el Dialog, revisa su contenido.
                     onPatientRegistered={handlePatientRegistered}
+                    onCancel={() => setShowPatientRegistrationModal(false)} // Prop para que el formulario pueda cerrar el dialog
                 />
-            )}
+            </Dialog>
+
             {isAppointmentModalOpen && (
                 <AppointmentModal patient={selectedPatient} onClose={() => setAppointmentModalOpen(false)} />
             )}
