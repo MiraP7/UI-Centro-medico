@@ -137,7 +137,7 @@ export default function PatientView({ onClose }) {
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Email</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Aseguradora</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Póliza ID</th>
-                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Acciones</th>
+                                {/* <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Acciones</th> */}
                             </tr>
                         </thead>
                         <tbody className="p-datatable-tbody">
@@ -151,7 +151,7 @@ export default function PatientView({ onClose }) {
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.email}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.aseguradora}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.polizaId}</td>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{renderActionButtons(patient)}</td>
+                                    {/* <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{renderActionButtons(patient)}</td> */}
                                 </tr>
                             ))}
                         </tbody>
