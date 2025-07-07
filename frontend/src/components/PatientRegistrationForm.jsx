@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Calendar } from 'primereact/calendar';
@@ -10,7 +10,8 @@ import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
 
-export default function PatientRegistrationForm({ onPatientRegistered, onCancel }) {
+// Agregamos `initialData` como una prop
+export default function PatientRegistrationForm({ onPatientRegistered, onCancel, initialData }) {
     const [formData, setFormData] = useState({
         name: '',
         lastName: '',
@@ -36,6 +37,70 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
         { label: 'Masculino', value: 'M' },
         { label: 'Femenino', value: 'F' }
     ];
+
+    // useEffect para inicializar el formulario si hay datos iniciales (para edición)
+    useEffect(() => {
+        if (initialData) {
+            // Función auxiliar para formatear DNI (si viene sin guiones de la API o con formato diferente)
+            const formatDniForForm = (dni) => {
+                if (!dni) return '';
+                // Asumiendo que el DNI de la API es '12345678901' y lo queremos '123-4567890-1'
+                const cleaned = dni.replace(/\D/g, ''); // Elimina cualquier no dígito
+                if (cleaned.length === 11) {
+                    return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 10)}-${cleaned.substring(10, 11)}`;
+                }
+                return dni; // Si no tiene el formato esperado, lo deja como está
+            };
+
+            // Función auxiliar para formatear Teléfono (si viene sin guiones de la API o con formato diferente)
+            const formatPhoneForForm = (phone) => {
+                if (!phone) return '';
+                // Asumiendo que el Teléfono de la API es '8091234567' y lo queremos '809-123-4567'
+                const cleaned = phone.replace(/\D/g, ''); // Elimina cualquier no dígito
+                if (cleaned.length === 10) {
+                    return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 6)}-${cleaned.substring(6, 10)}`;
+                }
+                return phone; // Si no tiene el formato esperado, lo deja como está
+            };
+
+            setFormData({
+                name: initialData.nombre || '',
+                lastName: initialData.apellido || '',
+                // Asegúrate de que la cédula se formatee para el campo si es necesario
+                dni: formatDniForForm(initialData.cedula) || '',
+                // Convierte la fecha a un objeto Date, necesario para el componente Calendar
+                dob: initialData.fechaNacimiento ? new Date(initialData.fechaNacimiento) : null,
+                // Asegúrate de que el teléfono se formatee para el campo si es necesario
+                phone: formatPhoneForForm(initialData.telefono) || '',
+                email: initialData.email || '',
+                sex: initialData.sexo || null,
+                address: initialData.direccion || '',
+                PolicyID: initialData.polizaId || '',
+                arsID: initialData.aseguradoraId || '',
+            });
+            // Determina si está asegurado basándose en si tiene PolicyID o arsID
+            setIsInsured(!!initialData.polizaId || !!initialData.aseguradoraId);
+        } else {
+            // Opcional: Si initialData es nulo (modo creación), asegúrate de que el formulario esté vacío
+            setFormData({
+                name: '',
+                lastName: '',
+                dni: '',
+                dob: null,
+                phone: '',
+                email: '',
+                sex: null,
+                address: '',
+                PolicyID: '',
+                arsID: '',
+            });
+            setIsInsured(false);
+        }
+    }, [initialData]); // Este useEffect se ejecutará cada vez que initialData cambie
+
+
+    // ... el resto de tu código de PatientRegistrationForm (handleChange, handleDniChange, handleSubmit, etc.)
+    // ... no cambia desde la última versión que te di para este archivo, solo el useEffect.
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -164,39 +229,15 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
             ...(isInsured && { aseguradoraId: formData.arsID }),
         };
 
-        try {
-            const response = await fetch('https://localhost:44388/api/Auth/Login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ usuario: localStorage.getItem('usuario'), clave: localStorage.getItem('clave') }), // Envía usuario y contraseña
-            });
-
-            const data = await response.json(); // Parsea la respuesta JSON
-
-            if (response.ok) { // Si la respuesta HTTP es 2xx (OK)
-                if (data.isSuccess) {
-                    localStorage.setItem('authToken', data.token);
-                } else {
-                    // Si la API indica fallo de negocio (isSuccess: false)
-                    setError(data.message || 'Credenciales incorrectas.');
-                }
-            } else {
-                // Si hay un error HTTP (ej. 400, 500)
-                setError(data.message || `Error en el servidor: ${response.statusText}`);
-            }
-        } catch (err) {
-            // Manejo de errores de red o cualquier otro error durante la petición
-            console.error("Error durante generacion de Token:", err);
-            setError('Error durante generacion de Token');
-        } finally {
-            setLoading(false); // Desactiva el estado de carga
-        }
+        // Determinar el método y la URL de la API (POST para crear, PUT para editar)
+        const method = initialData ? 'PUT' : 'POST';
+        const url = initialData
+            ? `https://localhost:44388/api/Paciente/${initialData.pacienteId}` // Endpoint de actualización
+            : 'https://localhost:44388/api/Paciente'; // Endpoint de creación
 
         try {
-            const response = await fetch('https://localhost:44388/api/Paciente', {
-                method: 'POST',
+            const response = await fetch(url, {
+                method: method,
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -206,29 +247,31 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
 
             if (response.ok) {
                 const result = await response.json();
-                setApiMessage({ severity: 'success', summary: 'Éxito', detail: 'Paciente registrado exitosamente!' });
-                console.log('Paciente registrado:', result);
+                setApiMessage({ severity: 'success', summary: 'Éxito', detail: `Paciente ${initialData ? 'actualizado' : 'registrado'} exitosamente!` });
+                console.log(`Paciente ${initialData ? 'actualizado' : 'registrado'}:`, result);
 
-                onPatientRegistered(result);
+                onPatientRegistered(result); // Llama al callback para refrescar la lista
 
-                // Clear the form
-                setFormData({
-                    name: '',
-                    lastName: '',
-                    dni: '',
-                    dob: null,
-                    phone: '',
-                    email: '',
-                    sex: null,
-                    address: '',
-                    PolicyID: '',
-                    arsID: '',
-                });
-                setIsInsured(false);
+                // Limpiar el formulario solo si es una creación
+                if (!initialData) {
+                    setFormData({
+                        name: '',
+                        lastName: '',
+                        dni: '',
+                        dob: null,
+                        phone: '',
+                        email: '',
+                        sex: null,
+                        address: '',
+                        PolicyID: '',
+                        arsID: '',
+                    });
+                    setIsInsured(false);
+                }
             } else {
                 const errorData = await response.json();
-                const errorMessage = errorData.message || 'Error desconocido al registrar paciente.';
-                setApiMessage({ severity: 'error', summary: 'Error', detail: `Fallo en el registro: ${errorMessage}` });
+                const errorMessage = errorData.message || `Error desconocido al ${initialData ? 'actualizar' : 'registrar'} paciente.`;
+                setApiMessage({ severity: 'error', summary: 'Error', detail: `Fallo en el ${initialData ? 'actualización' : 'registro'}: ${errorMessage}` });
                 console.error('Error de API:', response.status, errorData);
             }
         } catch (error) {
@@ -255,7 +298,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
                     value={formData.name}
                     onChange={handleChange}
                     required
-                    placeholder="Ej: Juan" // <-- ADDED PLACEHOLDER HERE
+                    placeholder="Ej: Juan"
                 />
             </div>
             <div className="field col-12 md:col-6">
@@ -266,7 +309,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
                     value={formData.lastName}
                     onChange={handleChange}
                     required
-                    placeholder="Ej: Pérez" // <-- ADDED PLACEHOLDER HERE
+                    placeholder="Ej: Pérez"
                 />
             </div>
 
@@ -277,13 +320,13 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
                     id="dni"
                     name="dni"
                     value={formData.dni}
-                    onChange={handleDniChange} // Use specific handler for DNI
+                    onChange={handleDniChange}
                     required
                     placeholder="Ej: 123-4567890-2"
-                    className={dniError ? 'p-invalid' : ''} // Add p-invalid class if there's an error
-                    maxLength={13} // Max length including dashes
+                    className={dniError ? 'p-invalid' : ''}
+                    maxLength={13}
                 />
-                {dniError && <small className="p-error">{dniError}</small>} {/* Display error message */}
+                {dniError && <small className="p-error">{dniError}</small>}
             </div>
 
             <div className="field col-12 md:col-6">
@@ -311,12 +354,12 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
                     id="phone"
                     name="phone"
                     value={formData.phone}
-                    onChange={handlePhoneChange} // Use specific handler for Phone
+                    onChange={handlePhoneChange}
                     placeholder="Ej: 809-654-2156"
-                    className={phoneError ? 'p-invalid' : ''} // Add p-invalid class if there's an error
-                    maxLength={12} // Max length including dashes
+                    className={phoneError ? 'p-invalid' : ''}
+                    maxLength={12}
                 />
-                {phoneError && <small className="p-error">{phoneError}</small>} {/* Display error message */}
+                {phoneError && <small className="p-error">{phoneError}</small>}
             </div>
 
             <div className="field col-12 md:col-6">
@@ -337,7 +380,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    placeholder="Ej: Calle Principal #123, Sector Centro" // <-- ADDED PLACEHOLDER HERE
+                    placeholder="Ej: Calle Principal #123, Sector Centro"
                 />
             </div>
 
@@ -368,7 +411,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
                 <Button type="button" label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={onCancel} disabled={loading} />
                 <Button
                     type="submit"
-                    label={loading ? "Registrando..." : "Registrar Paciente"}
+                    label={loading ? (initialData ? "Actualizando..." : "Registrando...") : (initialData ? "Actualizar Paciente" : "Registrar Paciente")}
                     icon={loading ? "pi pi-spin pi-spinner" : "pi pi-check"}
                     disabled={loading}
                 />

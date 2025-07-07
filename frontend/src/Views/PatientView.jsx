@@ -5,6 +5,7 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
+// Eliminamos la importación de ConfirmDialog y confirmDialog ya que no se usarán
 
 // Asegúrate de que los estilos de PrimeReact (básicos y PrimeFlex) estén disponibles
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
@@ -20,6 +21,10 @@ export default function PatientView({ onClose }) {
     const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
     const [isAppointmentModalOpen, setAppointmentModalOpen] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState(null);
+
+    // Estado para la edición
+    const [editingPatient, setEditingPatient] = useState(null);
+    const [showEditPatientModal, setShowEditPatientModal] = useState(false);
 
     const handleOpenAppointmentModal = (patient) => {
         setSelectedPatient(patient);
@@ -74,40 +79,71 @@ export default function PatientView({ onClose }) {
         fetchPatients();
     }, []);
 
-    // Función para manejar paciente registrado, similar a FacturacionView
+    // Función para manejar paciente registrado
     const handlePatientRegistered = (newPatient) => {
         console.log('Paciente Registrado (desde PatientView):', newPatient);
-        // Cierra el modal de registro
         setShowPatientRegistrationModal(false);
-        // Recarga la lista de pacientes para que el nuevo aparezca
-        fetchPatients();
+        fetchPatients(); // Recarga la lista
     };
+
+    // Función para manejar paciente editado (ahora es idéntica a handlePatientRegistered en su efecto)
+    const handlePatientEdited = (updatedPatient) => {
+        console.log('Paciente Editado (desde PatientView):', updatedPatient);
+        setShowEditPatientModal(false); // Cierra el modal de edición
+        setEditingPatient(null); // Limpia el paciente en edición
+        fetchPatients(); // Recarga la lista
+    };
+
+    // Función para abrir el modal de edición
+    const handleEditPatient = (patient) => {
+        setEditingPatient(patient); // Establece el paciente que se va a editar
+        setShowEditPatientModal(true); // Abre el modal de edición
+    };
+
+    // Eliminamos la función handleDeletePatient y su importación de ConfirmDialog
 
     const renderActionButtons = (patient) => {
         return (
             <div className="flex flex-wrap gap-2">
-                <Button
+                {/* <Button
                     icon="pi pi-calendar-plus"
                     className="p-button-sm p-button-info"
                     tooltip="Agendar Cita"
                     tooltipOptions={{ position: 'bottom' }}
                     onClick={() => handleOpenAppointmentModal(patient)}
+                /> */}
+                <Button
+                    icon="pi pi-pencil" // Icono de editar
+                    className="p-button-sm p-button-warning" // Estilo para editar
+                    tooltip="Editar Paciente"
+                    tooltipOptions={{ position: 'bottom' }}
+                    onClick={() => handleEditPatient(patient)} // Llama a la función de editar
                 />
+                {/* Eliminamos el botón de eliminar */}
             </div>
         );
     };
 
+    const [apiMessage, setApiMessage] = useState(null); // Para mostrar mensajes de éxito/error de API
+
     return (
         <div className="p-4">
+            {/* Eliminamos <ConfirmDialog /> */}
             <div className="flex justify-content-between align-items-center mb-4">
                 {/* Botón: Registrar Paciente - usa el nuevo estado */}
                 <Button
                     label="Registrar Paciente"
                     icon="pi pi-user-plus"
-                    className="p-button-primary" // O p-button-success p-button-raised como en facturación
-                    onClick={() => setShowPatientRegistrationModal(true)} // Abre el Dialog
+                    className="p-button-primary"
+                    onClick={() => setShowPatientRegistrationModal(true)}
                 />
             </div>
+
+            {apiMessage && (
+                <div className="col-12 mb-3">
+                    <Message severity={apiMessage.severity} summary={apiMessage.summary} text={apiMessage.detail} />
+                </div>
+            )}
 
             {loading && (
                 <div className="flex justify-content-center flex-column align-items-center p-5">
@@ -137,7 +173,7 @@ export default function PatientView({ onClose }) {
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Email</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Aseguradora</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Póliza ID</th>
-                                {/* <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Acciones</th> */}
+                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="p-datatable-tbody">
@@ -151,7 +187,7 @@ export default function PatientView({ onClose }) {
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.email}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.aseguradora}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.polizaId}</td>
-                                    {/* <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{renderActionButtons(patient)}</td> */}
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{renderActionButtons(patient)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -159,19 +195,35 @@ export default function PatientView({ onClose }) {
                 </div>
             )}
 
-            {/* DIALOG: Para el formulario de registro de paciente, similar a FacturacionView */}
+            {/* DIALOG: Para el formulario de registro de paciente */}
             <Dialog
                 header="Registrar Paciente"
-                visible={showPatientRegistrationModal} // Controlado por el nuevo estado
+                visible={showPatientRegistrationModal}
                 style={{ width: '50vw', minWidth: '350px' }}
-                onHide={() => setShowPatientRegistrationModal(false)} // Cierra el dialog al hacer clic fuera o en la 'x'
-                modal // Asegura que sea un modal y bloquee la interacción con el fondo
+                onHide={() => setShowPatientRegistrationModal(false)}
+                modal
             >
-                {/* Asumiendo que PatientModal ahora es tu formulario de registro, le pasamos las props necesarias */}
-                <PatientRegistrationForm // Si PatientModal.jsx es el formulario, mantenlo así. Si es el Dialog, revisa su contenido.
+                <PatientRegistrationForm
                     onPatientRegistered={handlePatientRegistered}
-                    onCancel={() => setShowPatientRegistrationModal(false)} // Prop para que el formulario pueda cerrar el dialog
+                    onCancel={() => setShowPatientRegistrationModal(false)}
                 />
+            </Dialog>
+
+            {/* DIALOG: Para el formulario de edición de paciente */}
+            <Dialog
+                header="Editar Paciente"
+                visible={showEditPatientModal}
+                style={{ width: '50vw', minWidth: '350px' }}
+                onHide={() => { setShowEditPatientModal(false); setEditingPatient(null); }}
+                modal
+            >
+                {editingPatient && ( // Renderiza el formulario solo si hay un paciente para editar
+                    <PatientRegistrationForm
+                        initialData={editingPatient} // Pasa los datos del paciente a editar
+                        onPatientRegistered={handlePatientEdited} // Llama a handlePatientEdited
+                        onCancel={() => { setShowEditPatientModal(false); setEditingPatient(null); }}
+                    />
+                )}
             </Dialog>
 
             {isAppointmentModalOpen && (
