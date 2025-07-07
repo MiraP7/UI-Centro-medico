@@ -53,7 +53,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
     // --- DNI Field Logic ---
     const handleDniChange = (e) => {
         let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
-        
+
         // Apply DNI format: 123-6542156-2
         if (value.length > 3) {
             value = value.substring(0, 3) + '-' + value.substring(3);
@@ -61,7 +61,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
         if (value.length > 11) { // 3 (first part) + 1 (dash) + 7 (second part) + 1 (dash) = 12 characters by this point
             value = value.substring(0, 11) + '-' + value.substring(11);
         }
-        
+
         // Ensure max length (11 digits, including dashes it becomes 13 characters)
         if (value.length > 13) {
             value = value.substring(0, 13);
@@ -165,6 +165,36 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
         };
 
         try {
+            const response = await fetch('https://localhost:44388/api/Auth/Login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ usuario: localStorage.getItem('usuario'), clave: localStorage.getItem('clave') }), // Envía usuario y contraseña
+            });
+
+            const data = await response.json(); // Parsea la respuesta JSON
+
+            if (response.ok) { // Si la respuesta HTTP es 2xx (OK)
+                if (data.isSuccess) {
+                    localStorage.setItem('authToken', data.token);
+                } else {
+                    // Si la API indica fallo de negocio (isSuccess: false)
+                    setError(data.message || 'Credenciales incorrectas.');
+                }
+            } else {
+                // Si hay un error HTTP (ej. 400, 500)
+                setError(data.message || `Error en el servidor: ${response.statusText}`);
+            }
+        } catch (err) {
+            // Manejo de errores de red o cualquier otro error durante la petición
+            console.error("Error durante generacion de Token:", err);
+            setError('Error durante generacion de Token');
+        } finally {
+            setLoading(false); // Desactiva el estado de carga
+        }
+
+        try {
             const response = await fetch('https://localhost:44388/api/Paciente', {
                 method: 'POST',
                 headers: {
@@ -219,11 +249,25 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
 
             <div className="field col-12 md:col-6">
                 <label htmlFor="name">Nombre</label>
-                <InputText id="name" name="name" value={formData.name} onChange={handleChange} required />
+                <InputText
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    required
+                    placeholder="Ej: Juan" // <-- ADDED PLACEHOLDER HERE
+                />
             </div>
             <div className="field col-12 md:col-6">
                 <label htmlFor="lastName">Apellido</label>
-                <InputText id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} required />
+                <InputText
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    required
+                    placeholder="Ej: Pérez" // <-- ADDED PLACEHOLDER HERE
+                />
             </div>
 
             {/* DNI Field with new handling */}
@@ -235,7 +279,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
                     value={formData.dni}
                     onChange={handleDniChange} // Use specific handler for DNI
                     required
-                    placeholder="Ej: 123-6542156-2"
+                    placeholder="Ej: 123-4567890-2"
                     className={dniError ? 'p-invalid' : ''} // Add p-invalid class if there's an error
                     maxLength={13} // Max length including dashes
                 />
@@ -277,11 +321,24 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel 
 
             <div className="field col-12 md:col-6">
                 <label htmlFor="email">Correo Electrónico</label>
-                <InputText id="email" name="email" type="email" value={formData.email} onChange={handleChange} />
+                <InputText
+                    id="email"
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    placeholder="ejemplo@dominio.com"
+                />
             </div>
             <div className="field col-12 md:col-6">
                 <label htmlFor="address">Dirección</label>
-                <InputText id="address" name="address" value={formData.address} onChange={handleChange} />
+                <InputText
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="Ej: Calle Principal #123, Sector Centro" // <-- ADDED PLACEHOLDER HERE
+                />
             </div>
 
             <div className="field col-12 flex align-items-center gap-2">

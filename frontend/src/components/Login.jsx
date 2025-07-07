@@ -47,7 +47,10 @@ export default function Login({ onLoginSuccess }) {
 
       if (response.ok) { // Si la respuesta HTTP es 2xx (OK)
         if (data.isSuccess) {
-          localStorage.setItem('authToken', data.token); // Guarda el token
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('usuario', usuario);
+          localStorage.setItem('clave', clave);
+
           onLoginSuccess(); // Llama a la función de éxito
         } else {
           // Si la API indica fallo de negocio (isSuccess: false)
