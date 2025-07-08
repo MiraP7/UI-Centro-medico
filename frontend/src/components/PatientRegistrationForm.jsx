@@ -10,26 +10,29 @@ import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
 
-// Agregamos `initialData` como una prop
 export default function PatientRegistrationForm({ onPatientRegistered, onCancel, initialData }) {
     const [formData, setFormData] = useState({
         name: '',
         lastName: '',
-        dni: '', // Will store formatted DNI
+        dni: '',
         dob: null,
-        phone: '', // Will store formatted Phone
+        phone: '',
         email: '',
         sex: null,
         address: '',
         PolicyID: '',
-        arsID: '',
+        arsID: null, // Cambiado a null para el Dropdown
     });
 
     const [loading, setLoading] = useState(false);
     const [apiMessage, setApiMessage] = useState(null);
     const [isInsured, setIsInsured] = useState(false);
 
-    // New state for validation errors
+    // Nuevo estado para almacenar las aseguradoras
+    const [insurers, setInsurers] = useState([]);   
+    const [insurersLoading, setInsurersLoading] = useState(false);
+    const [insurersError, setInsurersError] = useState(null);
+
     const [dniError, setDniError] = useState(null);
     const [phoneError, setPhoneError] = useState(null);
 
@@ -38,50 +41,87 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         { label: 'Femenino', value: 'F' }
     ];
 
+    // useEffect para cargar las aseguradoras al montar el componente
+    useEffect(() => {
+        const fetchInsurers = async () => {
+            setInsurersLoading(true);
+            setInsurersError(null);
+            try {
+                const response = await fetch('https://localhost:44388/api/Aseguradora/all', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+                if (response.ok) {
+                    const result = await response.json(); // Cambiado a 'result' para claridad
+                    if (result && Array.isArray(result.data)) { // Accedemos a result.data
+                        // Mapear los datos para que el Dropdown pueda usarlos: { label: nombre, value: id }
+                        const formattedInsurers = result.data.map(insurer => ({
+                            label: insurer.nombre, // Usa la propiedad 'nombre' para mostrar
+                            value: insurer.aseguradoraId // Usa la propiedad 'aseguradoraId' para el valor
+                        }));
+                        setInsurers(formattedInsurers);
+                        console.log("Aseguradoras cargadas y formateadas correctamente", formattedInsurers);
+                    } else {
+                        setInsurersError("Formato de datos inesperado de la API. No se encontró el array de Aseguradora en 'data'.");
+                        console.error("Formato inesperado:", result);
+                        setInsurers([]);
+                    }
+                } else {
+                    const errorData = await response.json();
+                    setInsurersError(errorData.message || 'Error al cargar las aseguradoras.');
+                    console.error('Error al cargar aseguradoras:', response.status, errorData);
+                }
+            } catch (error) {
+                setInsurersError('No se pudo conectar para cargar las aseguradoras. Verifique su conexión.');
+                console.error('Error de red al cargar aseguradoras:', error);
+            } finally {
+                setInsurersLoading(false);
+            }
+        };
+
+        fetchInsurers();
+    }, []); // Se ejecuta una sola vez al montar el componente
+
     // useEffect para inicializar el formulario si hay datos iniciales (para edición)
     useEffect(() => {
         if (initialData) {
-            // Función auxiliar para formatear DNI (si viene sin guiones de la API o con formato diferente)
             const formatDniForForm = (dni) => {
                 if (!dni) return '';
-                // Asumiendo que el DNI de la API es '12345678901' y lo queremos '123-4567890-1'
-                const cleaned = dni.replace(/\D/g, ''); // Elimina cualquier no dígito
+                const cleaned = dni.replace(/\D/g, '');
                 if (cleaned.length === 11) {
                     return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 10)}-${cleaned.substring(10, 11)}`;
                 }
-                return dni; // Si no tiene el formato esperado, lo deja como está
+                return dni;
             };
 
-            // Función auxiliar para formatear Teléfono (si viene sin guiones de la API o con formato diferente)
             const formatPhoneForForm = (phone) => {
                 if (!phone) return '';
-                // Asumiendo que el Teléfono de la API es '8091234567' y lo queremos '809-123-4567'
-                const cleaned = phone.replace(/\D/g, ''); // Elimina cualquier no dígito
+                const cleaned = phone.replace(/\D/g, '');
                 if (cleaned.length === 10) {
                     return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 6)}-${cleaned.substring(6, 10)}`;
                 }
-                return phone; // Si no tiene el formato esperado, lo deja como está
+                return phone;
             };
 
             setFormData({
                 name: initialData.nombre || '',
                 lastName: initialData.apellido || '',
-                // Asegúrate de que la cédula se formatee para el campo si es necesario
                 dni: formatDniForForm(initialData.cedula) || '',
-                // Convierte la fecha a un objeto Date, necesario para el componente Calendar
                 dob: initialData.fechaNacimiento ? new Date(initialData.fechaNacimiento) : null,
-                // Asegúrate de que el teléfono se formatee para el campo si es necesario
                 phone: formatPhoneForForm(initialData.telefono) || '',
                 email: initialData.email || '',
                 sex: initialData.sexo || null,
                 address: initialData.direccion || '',
                 PolicyID: initialData.polizaId || '',
-                arsID: initialData.aseguradoraId || '',
+                // Para arsID, si initialData.aseguradoraId existe, lo usamos.
+                // Como es un dropdown que espera un ID directamente, lo asignamos.
+                arsID: initialData.aseguradoraId || null,
             });
-            // Determina si está asegurado basándose en si tiene PolicyID o arsID
             setIsInsured(!!initialData.polizaId || !!initialData.aseguradoraId);
         } else {
-            // Opcional: Si initialData es nulo (modo creación), asegúrate de que el formulario esté vacío
             setFormData({
                 name: '',
                 lastName: '',
@@ -92,15 +132,11 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                 sex: null,
                 address: '',
                 PolicyID: '',
-                arsID: '',
+                arsID: null, // Aseguradora ID vuelve a null para creación
             });
             setIsInsured(false);
         }
-    }, [initialData]); // Este useEffect se ejecutará cada vez que initialData cambie
-
-
-    // ... el resto de tu código de PatientRegistrationForm (handleChange, handleDniChange, handleSubmit, etc.)
-    // ... no cambia desde la última versión que te di para este archivo, solo el useEffect.
+    }, [initialData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -115,98 +151,87 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         setFormData(prev => ({ ...prev, dob: e.value }));
     };
 
-    // --- DNI Field Logic ---
-    const handleDniChange = (e) => {
-        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    // Nuevo manejador para el Dropdown de aseguradoras
+    const handleInsurerChange = (e) => {
+        setFormData(prev => ({ ...prev, arsID: e.value }));
+    };
 
-        // Apply DNI format: 123-6542156-2
+    const handleDniChange = (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+
         if (value.length > 3) {
             value = value.substring(0, 3) + '-' + value.substring(3);
         }
-        if (value.length > 11) { // 3 (first part) + 1 (dash) + 7 (second part) + 1 (dash) = 12 characters by this point
+        if (value.length > 11) {
             value = value.substring(0, 11) + '-' + value.substring(11);
         }
 
-        // Ensure max length (11 digits, including dashes it becomes 13 characters)
         if (value.length > 13) {
             value = value.substring(0, 13);
         }
 
         setFormData(prev => ({ ...prev, dni: value }));
-
-        // Clear error as user types
         if (dniError) setDniError(null);
     };
 
-    // --- Phone Field Logic ---
     const handlePhoneChange = (e) => {
-        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        let value = e.target.value.replace(/\D/g, '');
 
-        // Apply phone format: 809-654-2156
         if (value.length > 3) {
             value = value.substring(0, 3) + '-' + value.substring(3);
         }
-        if (value.length > 7) { // 3 (area code) + 1 (dash) + 3 (middle part) + 1 (dash) = 8 characters by this point
+        if (value.length > 7) {
             value = value.substring(0, 7) + '-' + value.substring(7);
         }
 
-        // Ensure max length (10 digits, including dashes it becomes 12 characters)
         if (value.length > 12) {
             value = value.substring(0, 12);
         }
 
         setFormData(prev => ({ ...prev, phone: value }));
-
-        // Clear error as user types
         if (phoneError) setPhoneError(null);
     };
 
-    // Manejador para el checkbox "Asegurado"
     const handleIsInsuredChange = (e) => {
         const checked = e.checked;
         setIsInsured(checked);
-        // Si se desmarca "Asegurado", limpiar los campos relacionados
         if (!checked) {
-            setFormData(prev => ({ ...prev, PolicyID: '', arsID: '' }));
+            setFormData(prev => ({ ...prev, PolicyID: '', arsID: null })); // arsID a null
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Reset all specific field errors
         setDniError(null);
         setPhoneError(null);
         setApiMessage(null);
 
-        // Basic client-side validations
         if (!formData.name || !formData.lastName || !formData.dni || !formData.sex) {
             setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Nombre, Apellido, DNI y Sexo son obligatorios.' });
             return;
         }
 
-        // --- DNI Validation during Submission ---
-        const dniRegex = /^\d{3}-\d{7}-\d{1}$/; // 123-6542156-2 (11 digits total)
-        const cleanedDni = formData.dni.replace(/-/g, ''); // Remove dashes for length check
+        const dniRegex = /^\d{3}-\d{7}-\d{1}$/;
+        const cleanedDni = formData.dni.replace(/-/g, '');
         if (!dniRegex.test(formData.dni) || cleanedDni.length !== 11) {
-            setDniError('El DNI debe tener el formato 123-6542156-2 y 11 dígitos numéricos.');
+            setDniError('El DNI debe tener el formato 123-4567890-2 y 11 dígitos numéricos.');
             setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, corrija el formato del DNI.' });
             return;
         }
 
-        // --- Phone Validation during Submission ---
-        const phoneRegex = /^\d{3}-\d{3}-\d{4}$/; // 809-654-2156 (10 digits total)
-        const cleanedPhone = formData.phone.replace(/-/g, ''); // Remove dashes for length check
+        const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
+        const cleanedPhone = formData.phone.replace(/-/g, '');
         if (formData.phone && (!phoneRegex.test(formData.phone) || cleanedPhone.length !== 10)) {
             setPhoneError('El Teléfono debe tener el formato 809-654-2156 y 10 dígitos numéricos.');
             setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, corrija el formato del Teléfono.' });
             return;
         }
 
-        // Conditional validations for arsID and PolicyID
         if (isInsured) {
-            if (!formData.arsID || !formData.PolicyID) {
-                setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Si el paciente está asegurado, Aseguradora ID y Póliza ID son obligatorios.' });
+            // Validar que arsID (la selección del dropdown) no sea null y PolicyID no esté vacío
+            if (formData.arsID === null || formData.PolicyID === '') {
+                setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Si el paciente está asegurado, Aseguradora y Póliza ID son obligatorios.' });
                 return;
             }
         }
@@ -222,18 +247,18 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
             fechaNacimiento: formattedDob,
             sexo: formData.sex,
             direccion: formData.address,
-            telefono: cleanedPhone, // Send cleaned phone number to API
-            cedula: cleanedDni, // Send cleaned DNI to API
+            telefono: cleanedPhone,
+            cedula: cleanedDni,
             email: formData.email,
+            // Solo incluir polizaId y aseguradoraId si isInsured es true
             ...(isInsured && { polizaId: formData.PolicyID }),
-            ...(isInsured && { aseguradoraId: formData.arsID }),
+            ...(isInsured && { aseguradoraId: formData.arsID }), // arsID ya es el ID
         };
 
-        // Determinar el método y la URL de la API (POST para crear, PUT para editar)
         const method = initialData ? 'PUT' : 'POST';
         const url = initialData
-            ? `https://localhost:44388/api/Paciente/${initialData.pacienteId}` // Endpoint de actualización
-            : 'https://localhost:44388/api/Paciente'; // Endpoint de creación
+            ? `https://localhost:44388/api/Paciente/${initialData.pacienteId}`
+            : 'https://localhost:44388/api/Paciente';
 
         try {
             const response = await fetch(url, {
@@ -250,9 +275,8 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                 setApiMessage({ severity: 'success', summary: 'Éxito', detail: `Paciente ${initialData ? 'actualizado' : 'registrado'} exitosamente!` });
                 console.log(`Paciente ${initialData ? 'actualizado' : 'registrado'}:`, result);
 
-                onPatientRegistered(result); // Llama al callback para refrescar la lista
+                onPatientRegistered(result);
 
-                // Limpiar el formulario solo si es una creación
                 if (!initialData) {
                     setFormData({
                         name: '',
@@ -264,7 +288,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                         sex: null,
                         address: '',
                         PolicyID: '',
-                        arsID: '',
+                        arsID: null,
                     });
                     setIsInsured(false);
                 }
@@ -313,7 +337,6 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                 />
             </div>
 
-            {/* DNI Field with new handling */}
             <div className="field col-12 md:col-6">
                 <label htmlFor="dni">DNI/Cédula</label>
                 <InputText
@@ -347,7 +370,6 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                 <Calendar id="dob" name="dob" value={formData.dob} onChange={handleDateChange} dateFormat="dd/mm/yy" showIcon />
             </div>
 
-            {/* Phone Field with new handling */}
             <div className="field col-12 md:col-6">
                 <label htmlFor="phone">Teléfono</label>
                 <InputText
@@ -397,8 +419,22 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
             {isInsured && (
                 <>
                     <div className="field col-12 md:col-6">
-                        <label htmlFor="arsID">Aseguradora ID</label>
-                        <InputText id="arsID" name="arsID" value={formData.arsID} onChange={handleChange} required={isInsured} />
+                        <label htmlFor="arsID">Aseguradora</label>
+                        <Dropdown
+                            id="arsID"
+                            name="arsID"
+                            value={formData.arsID}
+                            options={insurers} // Las opciones con { label: nombre, value: id }
+                            onChange={handleInsurerChange}
+                            placeholder={insurersLoading ? "Cargando aseguradoras..." : "Seleccione una aseguradora"}
+                            optionLabel="label" // Propiedad del objeto que se mostrará en el dropdown
+                            optionValue="value" // Propiedad del objeto que se usará como valor
+                            required={isInsured}
+                            disabled={insurersLoading}
+                            className={insurersError ? 'p-invalid' : ''}
+                        />
+                        {insurersError && <small className="p-error">{insurersError}</small>}
+                        {insurersLoading && <small>Cargando aseguradoras...</small>}
                     </div>
                     <div className="field col-12 md:col-6">
                         <label htmlFor="PolicyID">Poliza ID</label>
