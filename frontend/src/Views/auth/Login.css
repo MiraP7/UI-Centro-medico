@@ -1,0 +1,15 @@
+.login-container article {
+    padding: 20px;
+    margin: 5px;
+    border-radius: 50px;
+}
+
+.login-container article section {
+    height: 400px;
+}
+
+.login-container .logo {
+    font-weight: 900;
+    background-color: #151b92;
+    color: white;
+}
