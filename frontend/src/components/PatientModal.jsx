@@ -8,12 +8,10 @@ export default function PatientModal({ onClose }) {
         <h2>Registrar Nuevo Paciente</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-grid">
-            {/* Columna 1 */}
             <div>
               <div><label>Nombre</label><input type="text" required /></div>
               <div><label>Fecha de Nacimiento</label><input type="date" required /></div>
             </div>
-            {/* Columna 2 */}
             <div>
               <div><label>Apellido</label><input type="text" required /></div>
               <div><label>Sexo</label><select><option>Masculino</option></select></div>

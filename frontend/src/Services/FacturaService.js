@@ -45,20 +45,20 @@ class FacturaService {
             },
         ];
         this.detalleFacturasData = {
-            101: [ // Detalle para FacturaId 101
-                { detalleId: 1, tratamientoId: 1, descripcion: 'Consulta General', fecha: '2025-06-20', costo: 50.00, cubierto: 30.00 }, // CAMBIADO
-                { detalleId: 2, tratamientoId: 2, descripcion: 'Análisis de Sangre', fecha: '2025-06-20', costo: 100.00, cubierto: 0.00 }, // CAMBIADO
+            101: [
+                { detalleId: 1, tratamientoId: 1, descripcion: 'Consulta General', fecha: '2025-06-20', costo: 50.00, cubierto: 30.00 },
+                { detalleId: 2, tratamientoId: 2, descripcion: 'Análisis de Sangre', fecha: '2025-06-20', costo: 100.00, cubierto: 0.00 },
             ],
-            102: [ // Detalle para FacturaId 102
-                { detalleId: 3, tratamientoId: 3, descripcion: 'Extracción Dental', fecha: '2025-06-24', costo: 150.00, cubierto: 120.00 }, // CAMBIADO
-                { detalleId: 4, tratamientoId: 4, descripcion: 'Radiografía', fecha: '2025-06-24', costo: 50.00, cubierto: 25.00 }, // CAMBIADO
+            102: [
+                { detalleId: 3, tratamientoId: 3, descripcion: 'Extracción Dental', fecha: '2025-06-24', costo: 150.00, cubierto: 120.00 },
+                { detalleId: 4, tratamientoId: 4, descripcion: 'Radiografía', fecha: '2025-06-24', costo: 50.00, cubierto: 25.00 },
             ],
-            103: [ // Detalle para FacturaId 103
-                { detalleId: 5, tratamientoId: 5, descripcion: 'Vacuna Antigripal', fecha: '2025-06-26', costo: 85.50, cubierto: 85.50 }, // CAMBIADO
+            103: [
+                { detalleId: 5, tratamientoId: 5, descripcion: 'Vacuna Antigripal', fecha: '2025-06-26', costo: 85.50, cubierto: 85.50 },
             ],
-            104: [ // Detalle para FacturaId 104
-                { detalleId: 6, tratamientoId: 6, descripcion: 'Cirugía Menor', fecha: '2025-06-27', costo: 250.00, cubierto: 150.00 }, // CAMBIADO
-                { detalleId: 7, tratamientoId: 7, descripcion: 'Sutura', fecha: '2025-06-27', costo: 50.00, cubierto: 40.00 }, // CAMBIADO
+            104: [
+                { detalleId: 6, tratamientoId: 6, descripcion: 'Cirugía Menor', fecha: '2025-06-27', costo: 250.00, cubierto: 150.00 },
+                { detalleId: 7, tratamientoId: 7, descripcion: 'Sutura', fecha: '2025-06-27', costo: 50.00, cubierto: 40.00 },
             ],
         };
     }
@@ -67,7 +67,7 @@ class FacturaService {
         return new Promise(resolve => {
             setTimeout(() => {
                 resolve(this.facturasData);
-            }, 500); // Simulate network delay
+            }, 500);
         });
     }
 
@@ -80,7 +80,7 @@ class FacturaService {
                 } else {
                     reject(new Error('Detalles de factura no encontrados.'));
                 }
-            }, 300); // Simulate network delay
+            }, 300);
         });
     }
 }

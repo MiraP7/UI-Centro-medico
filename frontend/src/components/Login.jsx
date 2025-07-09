@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { InputText } from 'primereact/inputtext';
 import { Button } from 'primereact/button';
 import { Password } from 'primereact/password';
-import { ProgressSpinner } from 'primereact/progressspinner'; // Importa el spinner
+import { ProgressSpinner } from 'primereact/progressspinner';  
 import 'primeicons/primeicons.css';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
 import backgroundImage from './Image.jpg';
 
-// Las URLs de tus imágenes para el fondo
 const BACKGROUND_IMAGE_URL = backgroundImage;
 
 // Definición de los colores
@@ -19,20 +18,20 @@ const COLOR_BLANCO = '#ffffff';
 const COLOR_ROJO_ERROR = '#ef4444';
 
 export default function Login({ onLoginSuccess }) {
-  const [usuario, setUsername] = useState(''); // Deja vacío para que el usuario lo ingrese
-  const [clave, setPassword] = useState(''); // Deja vacío
+  const [usuario, setUsername] = useState('');  
+  const [clave, setPassword] = useState('');  
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false); // Nuevo estado para el indicador de carga
+  const [loading, setLoading] = useState(false);  
 
   const [isUsernameHovered, setIsUsernameHovered] = useState(false);
   const [isPasswordHovered, setIsPasswordHovered] = useState(false);
   const [isUsernameFocused, setIsUsernameFocused] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
-  const handleSubmit = async (e) => { // Hacemos la función asíncrona
+  const handleSubmit = async (e) => {  
     e.preventDefault();
     setError('');
-    setLoading(true); // Activa el estado de carga
+    setLoading(true);  
 
     try {
       const response = await fetch('https://localhost:44388/api/Auth/Login', {
@@ -40,25 +39,24 @@ export default function Login({ onLoginSuccess }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ usuario: usuario, clave: clave }), // Envía usuario y contraseña
+        body: JSON.stringify({ usuario: usuario, clave: clave }),  
       });
 
-      const data = await response.json(); // Parsea la respuesta JSON
+      const data = await response.json();  
 
-      if (response.ok) { // Si la respuesta HTTP es 2xx (OK)
+      if (response.ok) {  
         if (data.isSuccess) {
           localStorage.setItem('authToken', data.token);
           localStorage.setItem('usuario', usuario);
           localStorage.setItem('clave', clave);
 
-          onLoginSuccess(); // Llama a la función de éxito
+          onLoginSuccess();  
         } else {
-          // Si la API indica fallo de negocio (isSuccess: false)
+           
           setError(data.message || 'Credenciales incorrectas. Intente de nuevo.');
         }
       } else {
-        // Si hay un error HTTP (ej. 400, 500)
-        // setError(data.message || `Error en el servidor: ${response.statusText}`);
+         
         setError(data.message || 'Credenciales incorrectas. Intente de nuevo.');
       }
     } catch (err) {
@@ -66,7 +64,7 @@ export default function Login({ onLoginSuccess }) {
       console.error("Error durante el login:", err);
       setError('No se pudo conectar al servidor. Verifique su conexión.');
     } finally {
-      setLoading(false); // Desactiva el estado de carga
+      setLoading(false); 
     }
   };
 
@@ -141,7 +139,7 @@ export default function Login({ onLoginSuccess }) {
               onMouseLeave={() => setIsUsernameHovered(false)}
               onFocus={() => setIsUsernameFocused(true)}
               onBlur={() => setIsUsernameFocused(false)}
-              disabled={loading} // Deshabilita mientras carga
+              disabled={loading}  
             />
           </div>
           <div className="mb-4">
@@ -159,7 +157,7 @@ export default function Login({ onLoginSuccess }) {
               onMouseLeave={() => setIsPasswordHovered(false)}
               onFocus={() => setIsPasswordFocused(true)}
               onBlur={() => setIsPasswordFocused(false)}
-              disabled={loading} // Deshabilita mientras carga
+              disabled={loading}  
             />
           </div>
           {error && <p className="text-xs mb-3" style={{ color: COLOR_ROJO_ERROR }}>{error}</p>}
@@ -170,7 +168,7 @@ export default function Login({ onLoginSuccess }) {
                 <ProgressSpinner style={{ width: '20px', height: '20px' }} strokeWidth="5" fill="var(--surface-ground)" animationDuration=".8s" />
                 <span className="ml-2">Ingresando...</span>
               </div>
-            ) : "Ingresar"} // Muestra spinner y texto de carga
+            ) : "Ingresar"}  
             className="w-full p-button-raised"
             style={{ backgroundColor: COLOR_AZUL_CLARO, borderColor: COLOR_AZUL_CLARO, color: COLOR_BLANCO }}
             onMouseOver={(e) => {
@@ -181,7 +179,7 @@ export default function Login({ onLoginSuccess }) {
               e.currentTarget.style.backgroundColor = COLOR_AZUL_CLARO;
               e.currentTarget.style.borderColor = COLOR_AZUL_CLARO;
             }}
-            disabled={loading} // Deshabilita el botón mientras carga
+            disabled={loading}  
           />
         </form>
       </div>

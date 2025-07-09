@@ -1,19 +1,7 @@
 import React, { useState, useEffect } from 'react';
-
-// YA NO NECESITAMOS IMPORTAR AseguradoraService AQUÍ
-// import AseguradoraService from '/src/services/AseguradoraService'; 
-
-// Importa componentes de PrimeReact
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Button } from 'primereact/button';
-// YA NO NECESITAMOS Dialog AQUÍ
-// import { Dialog } from 'primereact/dialog'; 
-
-// YA NO NECESITAMOS IMPORTAR EL COMPONENTE AseguradoraRegistrationForm AQUÍ
-// import AseguradoraRegistrationForm from '/src/components/AseguradoraRegistrationForm'; 
-
-// Asegúrate de que los estilos de PrimeReact estén disponibles
 import 'primereact/resources/themes/lara-light-indigo/theme.css'; 
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -23,27 +11,19 @@ export default function AseguradoraView({ onClose }) {
     const [aseguradoras, setAseguradoras] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    // YA NO NECESITAMOS apiMessage AQUÍ si no hay acciones que lo generen
-    // const [apiMessage, setApiMessage] = useState(null); 
-
-    // YA NO NECESITAMOS ESTADOS PARA LOS MODALES DE REGISTRO Y EDICIÓN
-    // const [showAseguradoraRegistrationModal, setShowAseguradoraRegistrationModal] = useState(false);
-    // const [editingAseguradora, setEditingAseguradora] = useState(null); 
-    // const [showEditAseguradoraModal, setShowEditAseguradoraModal] = useState(false);
 
     // Función para cargar todas las aseguradoras (AHORA CON PETICIÓN DIRECTA)
     const fetchAseguradoras = async () => {
         setLoading(true);
         setError(null);
         setAseguradoras([]); 
-        // setApiMessage(null); // No necesario si no hay apiMessage
         console.log("Intentando cargar aseguradoras de la API directamente...");
         try {
             const response = await fetch('https://localhost:44388/api/Aseguradora/all', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}` // Descomentar si se necesita autenticación
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
             });
 
@@ -82,18 +62,10 @@ export default function AseguradoraView({ onClose }) {
         }
     };
 
-    // Efecto para cargar aseguradoras al montar el componente
     useEffect(() => {
         fetchAseguradoras();
     }, []); 
 
-    // YA NO NECESITAMOS ESTAS FUNCIONES YA QUE NO HAY FORMULARIOS NI EDICIÓN
-    // const handleAseguradoraRegistered = (newAseguradora) => { /* ... */ };
-    // const handleAseguradoraEdited = (updatedAseguradora) => { /* ... */ };
-    // const handleEditAseguradora = (aseguradora) => { /* ... */ };
-
-    // Función para renderizar los botones de acción por fila
-    // Ahora devuelve null porque no hay acciones en esta vista de solo lectura
     const renderActionButtons = (aseguradora) => {
         return null; 
     };
@@ -101,21 +73,8 @@ export default function AseguradoraView({ onClose }) {
     return (
         <div className="p-4">
             <div className="flex justify-content-between align-items-center mb-4">
-                {/* YA NO HAY BOTÓN DE "REGISTRAR ASEGURADORA" */}
-                {/* <Button
-                    label="Registrar Aseguradora"
-                    icon="pi pi-building" 
-                    className="p-button-primary"
-                    onClick={() => setShowAseguradoraRegistrationModal(true)}
-                /> */}
+    
             </div>
-
-            {/* YA NO MOSTRAMOS apiMessage SI NO SE GENERAN ACCIONES */}
-            {/* {apiMessage && (
-                <div className="col-12 mb-3">
-                    <Message severity={apiMessage.severity} summary={apiMessage.summary} text={apiMessage.detail} />
-                </div>
-            )} */}
 
             {loading && (
                 <div className="flex justify-content-center flex-column align-items-center p-5">
@@ -143,8 +102,6 @@ export default function AseguradoraView({ onClose }) {
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Teléfono</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Email</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Contacto</th>
-                                {/* YA NO HAY COLUMNA DE ACCIONES */}
-                                {/* <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Acciones</th> */}
                             </tr>
                         </thead>
                         <tbody className="p-datatable-tbody">
@@ -156,44 +113,12 @@ export default function AseguradoraView({ onClose }) {
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.telefono}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.email}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.contacto}</td>
-                                    {/* YA NO HAY CELDA DE ACCIONES */}
-                                    {/* <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{renderActionButtons(aseg)}</td> */}
                                 </tr>
                             ))}
                         </tbody>
                     </table>
                 </div>
             )}
-
-            {/* YA NO HAY DIALOGS DE REGISTRO NI EDICIÓN */}
-            {/* <Dialog
-                header="Registrar Aseguradora"
-                visible={showAseguradoraRegistrationModal}
-                style={{ width: '50vw', minWidth: '350px' }}
-                onHide={() => setShowAseguradoraRegistrationModal(false)}
-                modal
-            >
-                <AseguradoraRegistrationForm
-                    onAseguradoraRegistered={handleAseguradoraRegistered}
-                    onCancel={() => setShowAseguradoraRegistrationModal(false)}
-                />
-            </Dialog> */}
-
-            {/* <Dialog
-                header="Editar Aseguradora"
-                visible={showEditAseguradoraModal}
-                style={{ width: '50vw', minWidth: '350px' }}
-                onHide={() => { setShowEditAseguradoraModal(false); setEditingAseguradora(null); }}
-                modal
-            >
-                {editingAseguradora && ( 
-                    <AseguradoraRegistrationForm
-                        initialData={editingAseguradora} 
-                        onAseguradoraRegistered={handleAseguradoraEdited} 
-                        onCancel={() => { setShowEditAseguradoraModal(false); setEditingAseguradora(null); }}
-                    />
-                )}
-            </Dialog> */}
 
             {onClose && (
                 <div className="flex justify-content-end mt-4">

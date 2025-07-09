@@ -1,23 +1,18 @@
 import React, { useState } from 'react';
-//"npm run dev" en la terminal para ver en local host 
-// Componente de React para el formulario de registro de pacientes
 const RegistroPaciente = () => {
-  // Se utiliza el hook useState para gestionar el estado del formulario.
-  // La estructura del estado inicial coincide con el modelo de datos del backend para la entidad 'Pacientes'.
-  // Fuentes: diccionario_de_datos_con_descripcion.docx, Acta de Constitucion del Proyecto - HeathState.pdf
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
     fechaNacimiento: '',
-    sexo: 'M', // Valor por defecto
+    sexo: 'M', 
     direccion: '',
     telefono: '',
     email: '',
-    aseguradoraID: null, // Podría venir de otra llamada a la API
+    aseguradoraID: null, 
     numeroPoliza: ''
   });
 
-  const [mensaje, setMensaje] = useState(''); // Para mostrar mensajes de éxito o error
+  const [mensaje, setMensaje] = useState(''); 
 
   // Manejador para actualizar el estado cuando el usuario escribe en un campo del formulario
   const handleChange = (e) => {
@@ -30,27 +25,21 @@ const RegistroPaciente = () => {
 
   // Manejador para enviar el formulario al backend
   const handleSubmit = async (e) => {
-    e.preventDefault(); // Previene el comportamiento por defecto del formulario
+    e.preventDefault(); 
     setMensaje('Enviando datos...');
 
-    // La comunicación con la aseguradora se realiza vía API.
-    // Fuente: Alcance del Proyecto, Chat de WhatsApp
     try {
-      // Se asume que el endpoint del backend para crear un paciente es '/api/pacientes' con el método POST.
-      // Esta es una convención común en APIs RESTful de .NET.
       const response = await fetch('/api/pacientes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData), // Convierte el estado del formulario a un string JSON
+        body: JSON.stringify(formData), 
       });
 
       if (response.ok) {
-        // Si la respuesta es exitosa (ej. status 201 Created)
         const pacienteCreado = await response.json();
         setMensaje(`Paciente ${pacienteCreado.nombre} registrado con éxito con el ID: ${pacienteCreado.pacienteID}`);
-        // Limpiar el formulario
         setFormData({
             nombre: '',
             apellido: '',
@@ -63,17 +52,16 @@ const RegistroPaciente = () => {
             numeroPoliza: ''
         });
       } else {
-        // Si hay un error en la respuesta del servidor
+        
         const errorData = await response.text();
         setMensaje(`Error al registrar el paciente: ${errorData}`);
       }
     } catch (error) {
-      // Si hay un error de red o de otro tipo
+     
       setMensaje(`Error de conexión: ${error.message}`);
     }
   };
 
-  // Estructura JSX del formulario
   return (
     <div style={{ fontFamily: 'Arial, sans-serif', maxWidth: '600px', margin: 'auto', padding: '20px', border: '1px solid #ccc', borderRadius: '10px' }}>
       <h2>Registro de Nuevo Paciente</h2>
@@ -112,7 +100,6 @@ const RegistroPaciente = () => {
         </div>
         <div style={{ marginBottom: '15px' }}>
           <label>ID de Aseguradora:</label>
-          {/* Este campo idealmente sería un <select> poblado con datos de las aseguradoras */}
           <input type="number" name="aseguradoraID" value={formData.aseguradoraID || ''} onChange={handleChange} style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}/>
         </div>
         <div style={{ marginBottom: '15px' }}>
