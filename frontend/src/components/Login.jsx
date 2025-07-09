@@ -58,7 +58,8 @@ export default function Login({ onLoginSuccess }) {
         }
       } else {
         // Si hay un error HTTP (ej. 400, 500)
-        setError(data.message || `Error en el servidor: ${response.statusText}`);
+        // setError(data.message || `Error en el servidor: ${response.statusText}`);
+        setError(data.message || 'Credenciales incorrectas. Intente de nuevo.');
       }
     } catch (err) {
       // Manejo de errores de red o cualquier otro error durante la petición

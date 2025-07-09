@@ -14,6 +14,8 @@ import 'primeflex/primeflex.css';
 import '/src/App.css'; // Asegúrate de tener tu archivo CSS global
 import PatientView from '/src/Views/PatientView';
 import FacturacionView from '/src/Views/FacturacionView';
+// AÑADIDO: Importa AseguradoraView
+import AseguradoraView from '/src/Views/AseguradoraView'; // Asegúrate de que esta ruta sea correcta
 
 const initialAppointments = [
   { id: 1, time: '09:00 AM', patient: 'Juan Pérez', reason: 'Consulta General' },
@@ -42,6 +44,9 @@ export default function Dashboard({ onLogout }) {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [showPatientViewModal, setShowPatientViewModal] = useState(false);
   const [showFacturacionViewModal, setShowFacturacionViewModal] = useState(false);
+  // AÑADIDO: Nuevo estado para controlar la visibilidad del modal de Aseguradoras
+  const [showAseguradoraViewModal, setShowAseguradoraViewModal] = useState(false);
+
 
   const handlePatientRegistered = (newPatient) => {
     console.log('Paciente Registrado:', newPatient);
@@ -54,49 +59,73 @@ export default function Dashboard({ onLogout }) {
     setShowAppointmentModal(false);
   };
 
+  // Función auxiliar para cerrar todos los modales de vista
+  const closeAllViewModals = () => {
+    setShowPatientViewModal(false);
+    setShowFacturacionViewModal(false);
+    setShowAseguradoraViewModal(false);
+    setSidebarVisible(false);
+  };
+
   // Definición de los ítems del PanelMenu
   const items = [
     {
       label: 'Home',
       icon: 'pi pi-fw pi-home',
-      command: () => { // AÑADIDO: Cierra el sidebar al hacer clic en Home
-        setSidebarVisible(false);
-        // Aquí podrías añadir lógica adicional si "Home" implicara ocultar otros modales abiertos
-        // setShowPatientViewModal(false);
-        // setShowFacturacionViewModal(false);
+      command: () => {
+        closeAllViewModals(); // Cierra todos los modales de vista
       },
     },
     {
       label: 'Pacientes',
       icon: 'pi pi-fw pi-users',
       command: () => {
+        closeAllViewModals(); // Cierra todos los modales antes de abrir el de pacientes
         setShowPatientViewModal(true);
-        setSidebarVisible(false);
+       
       },
     },
     {
       label: 'Facturación',
       icon: 'pi pi-fw pi-money-bill',
       command: () => {
+        closeAllViewModals(); // Cierra todos los modales antes de abrir el de facturación
         setShowFacturacionViewModal(true);
-        setSidebarVisible(false);
+     
       },
     },
     {
       label: 'Autorización',
       icon: 'pi pi-fw pi-check-square',
+      command: () => {
+        closeAllViewModals(); // Cierra todos los modales
+        // Lógica para Autorización, si abres un modal, añade su estado y lo controlas aquí
+      }
     },
     {
       label: 'Medicos',
       icon: 'pi pi-fw pi-user-md',
+      command: () => {
+        closeAllViewModals(); // Cierra todos los modales
+        // Lógica para Médicos
+      }
     },
     {
       label: 'Usuarios',
       icon: 'pi pi-fw pi-id-card',
+      command: () => {
+        closeAllViewModals(); // Cierra todos los modales
+        // Lógica para Usuarios
+      }
     },
     {
       label: 'Aseguradora',
       icon: 'pi pi-fw pi-shield',
+      // AÑADIDO: Comando para mostrar el modal de Aseguradoras
+      command: () => {
+        closeAllViewModals(); // Cierra todos los modales antes de abrir el de aseguradoras
+        setShowAseguradoraViewModal(true); // Establece el estado para mostrar el modal de aseguradoras
+      }
     }
   ];
 
@@ -189,6 +218,17 @@ export default function Dashboard({ onLogout }) {
         modal
       >
         <FacturacionView onClose={() => setShowFacturacionViewModal(false)} />
+      </Dialog>
+
+      {/* AÑADIDO: Dialog para la Vista de Aseguradoras (AseguradoraView) */}
+      <Dialog
+        header="Listado de Aseguradoras" // Puedes cambiar el título si lo deseas
+        visible={showAseguradoraViewModal} // Controla la visibilidad con el nuevo estado
+        style={{ width: '70vw', minWidth: '600px', height: '70vh' }} // Ajusta el tamaño según necesites
+        onHide={() => setShowAseguradoraViewModal(false)} // Cierra el modal cuando se hace clic fuera o en el botón de cerrar
+        modal
+      >
+        <AseguradoraView onClose={() => setShowAseguradoraViewModal(false)} />
       </Dialog>
 
     </div>
