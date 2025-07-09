@@ -4,18 +4,16 @@ import { Dialog } from 'primereact/dialog';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { PanelMenu } from 'primereact/panelmenu';
-import PatientRegistrationForm from './PatientRegistrationForm';
 import AppointmentRegistrationForm from './AppointmentRegistrationForm';
 import { Sidebar } from 'primereact/sidebar';
 import 'primeicons/primeicons.css';
-import 'primereact/resources/themes/lara-light-indigo/theme.css'; // Asegúrate de tener tu tema
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
-import '/src/App.css'; // Asegúrate de tener tu archivo CSS global
+import '/src/App.css';
 import PatientView from '/src/Views/PatientView';
 import FacturacionView from '/src/Views/FacturacionView';
-// AÑADIDO: Importa AseguradoraView
-import AseguradoraView from '/src/Views/AseguradoraView'; // Asegúrate de que esta ruta sea correcta
+import AseguradoraView from '/src/Views/AseguradoraView';
 
 const initialAppointments = [
   { id: 1, time: '09:00 AM', patient: 'Juan Pérez', reason: 'Consulta General' },
@@ -44,7 +42,6 @@ export default function Dashboard({ onLogout }) {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [showPatientViewModal, setShowPatientViewModal] = useState(false);
   const [showFacturacionViewModal, setShowFacturacionViewModal] = useState(false);
-  // AÑADIDO: Nuevo estado para controlar la visibilidad del modal de Aseguradoras
   const [showAseguradoraViewModal, setShowAseguradoraViewModal] = useState(false);
 
 
@@ -73,14 +70,14 @@ export default function Dashboard({ onLogout }) {
       label: 'Home',
       icon: 'pi pi-fw pi-home',
       command: () => {
-        closeAllViewModals(); // Cierra todos los modales de vista
+        closeAllViewModals();
       },
     },
     {
       label: 'Pacientes',
       icon: 'pi pi-fw pi-users',
       command: () => {
-        closeAllViewModals(); // Cierra todos los modales antes de abrir el de pacientes
+        closeAllViewModals();
         setShowPatientViewModal(true);
        
       },
@@ -89,7 +86,7 @@ export default function Dashboard({ onLogout }) {
       label: 'Facturación',
       icon: 'pi pi-fw pi-money-bill',
       command: () => {
-        closeAllViewModals(); // Cierra todos los modales antes de abrir el de facturación
+        closeAllViewModals();
         setShowFacturacionViewModal(true);
      
       },
@@ -98,33 +95,29 @@ export default function Dashboard({ onLogout }) {
       label: 'Autorización',
       icon: 'pi pi-fw pi-check-square',
       command: () => {
-        closeAllViewModals(); // Cierra todos los modales
-        // Lógica para Autorización, si abres un modal, añade su estado y lo controlas aquí
+        closeAllViewModals();
       }
     },
     {
       label: 'Medicos',
       icon: 'pi pi-fw pi-user-md',
       command: () => {
-        closeAllViewModals(); // Cierra todos los modales
-        // Lógica para Médicos
+        closeAllViewModals();
       }
     },
     {
       label: 'Usuarios',
       icon: 'pi pi-fw pi-id-card',
       command: () => {
-        closeAllViewModals(); // Cierra todos los modales
-        // Lógica para Usuarios
+        closeAllViewModals(); 
       }
     },
     {
       label: 'Aseguradora',
       icon: 'pi pi-fw pi-shield',
-      // AÑADIDO: Comando para mostrar el modal de Aseguradoras
       command: () => {
-        closeAllViewModals(); // Cierra todos los modales antes de abrir el de aseguradoras
-        setShowAseguradoraViewModal(true); // Establece el estado para mostrar el modal de aseguradoras
+        closeAllViewModals(); 
+        setShowAseguradoraViewModal(true);
       }
     }
   ];
@@ -139,11 +132,10 @@ export default function Dashboard({ onLogout }) {
         style={{ backgroundColor: COLOR_AZUL_MARINO }}
       >
         <h3 className="mb-3 pl-3 text-2xl font-semibold" style={{ color: COLOR_BLANCO, textAlign: 'center' }}>Menú Principal</h3>
-        {/* The className "sidebar-panelmenu" is crucial here for your CSS to work */}
         <PanelMenu model={items} className="w-full sidebar-panelmenu" />
       </Sidebar>
 
-      {/* HEADER REDISEÑADO */}
+      {/* HEADER */}
       <header style={{ backgroundColor: COLOR_AZUL_MARINO }}
         className="flex align-items-center justify-content-between p-3 shadow-2 mb-4 border-round-md">
         <div className="flex align-items-center gap-3">
@@ -175,20 +167,11 @@ export default function Dashboard({ onLogout }) {
           <div className="card shadow-1 border-round-md">
             <h2 className="text-xl font-semibold mb-3" style={{ textAlign: 'center' }}>Acciones Rápidas</h2>
             <div className="flex flex-column gap-3">
-              {/* El botón de Registrar Paciente está comentado aquí, si lo necesitas, descoméntalo y asegúrate de que showPatientModal y su Dialog estén activos */}
-              {/* <Button label="Registrar Paciente" icon="pi pi-user-plus" className="p-button-success p-button-raised p-button-sm" onClick={() => setShowPatientModal(true)} /> */}
               <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-button-sm" onClick={() => setShowAppointmentModal(true)} />
             </div>
           </div>
         </div>
       </div>
-
-      {/* Dialog para Registrar Paciente (comentado en tu código original, si lo necesitas, descoméntalo) */}
-      {/*
-      <Dialog header="Registrar Paciente" visible={showPatientModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowPatientModal(false)} modal>
-        <PatientRegistrationForm onPatientRegistered={handlePatientRegistered} onCancel={() => setShowPatientModal(false)} />
-      </Dialog>
-      */}
 
       {/* Dialog para Registrar Cita */}
       <Dialog header="Registrar Cita" visible={showAppointmentModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowAppointmentModal(false)} modal>
@@ -220,12 +203,12 @@ export default function Dashboard({ onLogout }) {
         <FacturacionView onClose={() => setShowFacturacionViewModal(false)} />
       </Dialog>
 
-      {/* AÑADIDO: Dialog para la Vista de Aseguradoras (AseguradoraView) */}
+      {/* Dialog para la Vista de Aseguradoras (AseguradoraView) */}
       <Dialog
-        header="Listado de Aseguradoras" // Puedes cambiar el título si lo deseas
-        visible={showAseguradoraViewModal} // Controla la visibilidad con el nuevo estado
-        style={{ width: '70vw', minWidth: '600px', height: '70vh' }} // Ajusta el tamaño según necesites
-        onHide={() => setShowAseguradoraViewModal(false)} // Cierra el modal cuando se hace clic fuera o en el botón de cerrar
+        header="Listado de Aseguradoras"
+        visible={showAseguradoraViewModal}
+        style={{ width: '70vw', minWidth: '600px', height: '70vh' }}
+        onHide={() => setShowAseguradoraViewModal(false)}
         modal
       >
         <AseguradoraView onClose={() => setShowAseguradoraViewModal(false)} />
