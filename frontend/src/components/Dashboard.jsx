@@ -101,7 +101,7 @@ export default function Dashboard({ onLogout }) {
   ];
 
   return (
-    <div className="p-4">
+    <div className="">
       {/* Sidebar para el PanelMenu */}
       <Sidebar visible={sidebarVisible} onHide={() => setSidebarVisible(false)}
         showCloseIcon={true}
@@ -116,7 +116,7 @@ export default function Dashboard({ onLogout }) {
 
       {/* HEADER REDISEÑADO */}
       <header style={{ backgroundColor: COLOR_AZUL_MARINO }}
-        className="flex align-items-center justify-content-between p-3 shadow-2 mb-4 border-round-md">
+        className="flex align-items-center justify-content-between p-3 shadow-2 mb-4">
         <div className="flex align-items-center gap-3">
           <Button icon="pi pi-bars" className="p-button-text p-button-plain p-button-lg" style={{ color: COLOR_BLANCO }} onClick={() => setSidebarVisible(true)} />
           <i className="pi pi-heart-fill" style={{ color: COLOR_AZUL_CLARO, fontSize: '2.5rem' }}></i>
@@ -126,12 +126,13 @@ export default function Dashboard({ onLogout }) {
       </header>
 
       <div className="grid">
-        <div className="col-12 md:col-8">
-          <div className="card shadow-1 border-round-md">
+        <div className="col-12 m-3 md:col-8">
+          <div className="card p-3 shadow-1 border-round-md">
             <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas del Día</h2>
             <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
               paginator
               rows={10}
+              className=''
               rowsPerPageOptions={[5, 10, 25, 50]}
               paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink PageLinks LastPageLink CurrentPageReport RowsPerPageDropdown"
               currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas"
