@@ -3,3 +3,29 @@
   padding: 0;
   box-sizing: border-box;
 }
+
+.p-paginator {
+  margin: 5px;
+  padding: 10px;
+}
+
+.p-paginator-current {
+  margin: 20px;
+}
+
+.p-dropdown-label {
+  width: 70px !important;
+  padding: 5px;
+}
+
+.bnt-registrar {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+
+.container-citas {
+  
+}

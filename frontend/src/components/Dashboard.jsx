@@ -125,17 +125,20 @@ export default function Dashboard({ onLogout }) {
         <Button label="Cerrar Sesión" icon="pi pi-sign-out" className="p-button-danger p-button-sm" onClick={onLogout} />
       </header>
 
-      <div className="grid">
-        <div className="col-12 m-3 md:col-8">
-          <div className="card p-3 shadow-1 border-round-md">
+      <div className="grid m-4">
+        <div className="container-citas col-12 ">
+          <div className='bnt-registrar'>
+            <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-2" onClick={() => setShowAppointmentModal(true)} />
+
+          </div>          <div className="card p-2 shadow-1 border-round-md">
             <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas del Día</h2>
             <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
               paginator
-              rows={10}
+              rows={9}
               className=''
               rowsPerPageOptions={[5, 10, 25, 50]}
-              paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink PageLinks LastPageLink CurrentPageReport RowsPerPageDropdown"
-              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas"
+              paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas "
             >
               <Column field="time" header="Hora"></Column>
               <Column field="patient" header="Paciente"></Column>
@@ -143,16 +146,15 @@ export default function Dashboard({ onLogout }) {
             </DataTable>
           </div>
         </div>
-        <div className="col-12 md:col-4">
+        {/* <div className="col-12 md:col-3 p-2 m-2">
           <div className="card shadow-1 border-round-md">
-            <h2 className="text-xl font-semibold mb-3" style={{ textAlign: 'center' }}>Acciones Rápidas</h2>
+            <h2 className="text-xl font-semibold mb-4" style={{ textAlign: 'center' }}>Acciones Rápidas</h2>
             <div className="flex flex-column gap-3">
-              {/* El botón de Registrar Paciente está comentado aquí, si lo necesitas, descoméntalo y asegúrate de que showPatientModal y su Dialog estén activos */}
-              {/* <Button label="Registrar Paciente" icon="pi pi-user-plus" className="p-button-success p-button-raised p-button-sm" onClick={() => setShowPatientModal(true)} /> */}
-              <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-button-sm" onClick={() => setShowAppointmentModal(true)} />
+              <Button label="Registrar Paciente" icon="pi pi-user-plus" className="p-button-success p-button-raised p-button-sm" onClick={() => setShowPatientModal(true)} /> 
+              <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised " onClick={() => setShowAppointmentModal(true)} />
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
 
       {/* Dialog para Registrar Paciente (comentado en tu código original, si lo necesitas, descoméntalo) */}
