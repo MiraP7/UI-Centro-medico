@@ -3,9 +3,9 @@ import { Dropdown } from 'primereact/dropdown';
 import { Calendar } from 'primereact/calendar';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
-import { Dialog } from 'primereact/dialog';  
+import { Dialog } from 'primereact/dialog';
 
- 
+
 import PatientRegistrationForm from './PatientRegistrationForm';
 
 export default function AppointmentRegistrationForm({ onAppointmentRegistered, onCancel }) {
@@ -13,7 +13,7 @@ export default function AppointmentRegistrationForm({ onAppointmentRegistered, o
     const [appointmentDate, setAppointmentDate] = useState(null);
     const [appointmentTime, setAppointmentTime] = useState('');
     const [reason, setReason] = useState('');
-     
+
     const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
 
     // Simulación: en una app real, estos datos vendrían del API  
@@ -34,7 +34,7 @@ export default function AppointmentRegistrationForm({ onAppointmentRegistered, o
     };
 
     const handleCancelPatientRegistration = () => {
-        setShowPatientRegistrationModal(false); 
+        setShowPatientRegistrationModal(false);
     };
 
     const handleSubmit = (e) => {
@@ -59,7 +59,7 @@ export default function AppointmentRegistrationForm({ onAppointmentRegistered, o
                 type="button"
                 label="Registrar Paciente"
                 className="p-button-text"
-                onClick={() => setShowPatientRegistrationModal(true)} 
+                onClick={() => setShowPatientRegistrationModal(true)}
             />
 
             <div className="field col-12">
@@ -80,22 +80,22 @@ export default function AppointmentRegistrationForm({ onAppointmentRegistered, o
             </div>
 
             <div className="col-12 flex justify-content-end gap-2 mt-4">
-                <Button type="button" label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={onCancel} />
-                <Button type="submit" label="Registrar Cita" icon="pi pi-check" />
+                {/* <Button type="button" label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={onCancel} /> */}
+                <Button type="submit" label="Registrar Cita" /> {/* icon="pi pi-check" /> */}
             </div>
 
             {/* Componente Dialog para mostrar PatientRegistrationForm */}
             <Dialog
-                header="Registrar Paciente" 
-                visible={showPatientRegistrationModal} 
-                style={{ width: '50vw' }} 
-                modal 
-                onHide={handleCancelPatientRegistration} 
+                header="Registrar Paciente"
+                visible={showPatientRegistrationModal}
+                style={{ width: '50vw' }}
+                modal
+                onHide={handleCancelPatientRegistration}
             >
                 {/* Renderiza el formulario de registro de paciente dentro del Dialog */}
                 <PatientRegistrationForm
-                    onPatientRegistered={handlePatientRegistered} 
-                    onCancel={handleCancelPatientRegistration} 
+                    onPatientRegistered={handlePatientRegistered}
+                    onCancel={handleCancelPatientRegistration}
                 />
             </Dialog>
         </form>

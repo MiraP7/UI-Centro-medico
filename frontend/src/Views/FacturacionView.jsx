@@ -219,11 +219,11 @@ export default function FacturacionView({ onClose }) {
                 />
             </Dialog>
 
-            {onClose && (
+            {/* {onClose && (
                 <div className="flex justify-content-end mt-4">
                     <Button label="Cerrar Vista" icon="pi pi-times" className="p-button-secondary" onClick={onClose} />
                 </div>
-            )}
+            )} */}
         </div>
     );
 }
