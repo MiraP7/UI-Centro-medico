@@ -14,6 +14,8 @@ import '/src/App.css';
 import PatientView from '/src/Views/PatientView';
 import FacturacionView from '/src/Views/FacturacionView';
 import AseguradoraView from '/src/Views/AseguradoraView';
+// AÑADIDO: Importa MedicoView
+import MedicoView from '/src/Views/MedicoView'; // Asegúrate de que esta ruta sea correcta
 
 const initialAppointments = [
   { id: 1, time: '09:00 AM', patient: 'Juan Pérez', reason: 'Consulta General' },
@@ -43,6 +45,8 @@ export default function Dashboard({ onLogout }) {
   const [showPatientViewModal, setShowPatientViewModal] = useState(false);
   const [showFacturacionViewModal, setShowFacturacionViewModal] = useState(false);
   const [showAseguradoraViewModal, setShowAseguradoraViewModal] = useState(false);
+  // AÑADIDO: Nuevo estado para controlar la visibilidad del modal de Médicos
+  const [showMedicoViewModal, setShowMedicoViewModal] = useState(false);
 
 
   const handlePatientRegistered = (newPatient) => {
@@ -61,6 +65,7 @@ export default function Dashboard({ onLogout }) {
     setShowPatientViewModal(false);
     setShowFacturacionViewModal(false);
     setShowAseguradoraViewModal(false);
+    setShowMedicoViewModal(false); // AÑADIDO: Cierra el modal de médicos
     setSidebarVisible(false);
   };
 
@@ -79,7 +84,7 @@ export default function Dashboard({ onLogout }) {
       command: () => {
         closeAllViewModals();
         setShowPatientViewModal(true);
-       
+
       },
     },
     {
@@ -88,7 +93,7 @@ export default function Dashboard({ onLogout }) {
       command: () => {
         closeAllViewModals();
         setShowFacturacionViewModal(true);
-     
+
       },
     },
     {
@@ -101,22 +106,24 @@ export default function Dashboard({ onLogout }) {
     {
       label: 'Medicos',
       icon: 'pi pi-fw pi-user-md',
+      // AÑADIDO: Comando para mostrar el modal de Médicos
       command: () => {
-        closeAllViewModals();
+        closeAllViewModals(); // Cierra todos los modales antes de abrir el de médicos
+        setShowMedicoViewModal(true); // Establece el estado para mostrar el modal de médicos
       }
     },
     {
       label: 'Usuarios',
       icon: 'pi pi-fw pi-id-card',
       command: () => {
-        closeAllViewModals(); 
+        closeAllViewModals();
       }
     },
     {
       label: 'Aseguradora',
       icon: 'pi pi-fw pi-shield',
       command: () => {
-        closeAllViewModals(); 
+        closeAllViewModals();
         setShowAseguradoraViewModal(true);
       }
     }
@@ -217,6 +224,17 @@ export default function Dashboard({ onLogout }) {
         modal
       >
         <AseguradoraView onClose={() => setShowAseguradoraViewModal(false)} />
+      </Dialog>
+
+      {/* AÑADIDO: Dialog para la Vista de Médicos (MedicoView) */}
+      <Dialog
+        header="Gestión de Médicos" // Título para el modal de médicos
+        visible={showMedicoViewModal} // Controla la visibilidad con el nuevo estado
+        style={{ width: '80vw', minWidth: '700px', height: '80vh' }} // Ajusta el tamaño según necesites
+        onHide={() => setShowMedicoViewModal(false)} // Cierra el modal
+        modal
+      >
+        <MedicoView onClose={() => setShowMedicoViewModal(false)} />
       </Dialog>
 
     </div>
