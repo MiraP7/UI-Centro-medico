@@ -182,7 +182,7 @@ export default function AseguradoraView({ onClose }) {
             <div className="flex justify-content-between align-items-center mb-4">
                 <Button
                     label="Registrar Aseguradora"
-                    icon="pi pi-plus"
+                    // icon="pi pi-plus"
                     className="p-button-primary"
                     onClick={() => setShowAseguradoraRegistrationModal(true)}
                 />
