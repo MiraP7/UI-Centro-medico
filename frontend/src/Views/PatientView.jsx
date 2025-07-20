@@ -5,6 +5,9 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
+// Eliminamos la importación de ConfirmDialog y confirmDialog ya que no se usarán
+
+// Asegúrate de que los estilos de PrimeReact (básicos y PrimeFlex) estén disponibles
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -17,6 +20,8 @@ export default function PatientView({ onClose }) {
     const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
     const [isAppointmentModalOpen, setAppointmentModalOpen] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState(null);
+
+    // Estado para la edición
     const [editingPatient, setEditingPatient] = useState(null);
     const [showEditPatientModal, setShowEditPatientModal] = useState(false);
 
@@ -77,22 +82,24 @@ export default function PatientView({ onClose }) {
     const handlePatientRegistered = (newPatient) => {
         console.log('Paciente Registrado (desde PatientView):', newPatient);
         setShowPatientRegistrationModal(false);
-        fetchPatients(); 
+        fetchPatients(); // Recarga la lista
     };
 
     // Función para manejar paciente editado (ahora es idéntica a handlePatientRegistered en su efecto)
     const handlePatientEdited = (updatedPatient) => {
         console.log('Paciente Editado (desde PatientView):', updatedPatient);
-        setShowEditPatientModal(false);
-        setEditingPatient(null);
-        fetchPatients(); 
+        setShowEditPatientModal(false); // Cierra el modal de edición
+        setEditingPatient(null); // Limpia el paciente en edición
+        fetchPatients(); // Recarga la lista
     };
 
     // Función para abrir el modal de edición
     const handleEditPatient = (patient) => {
-        setEditingPatient(patient); 
-        setShowEditPatientModal(true);
+        setEditingPatient(patient); // Establece el paciente que se va a editar
+        setShowEditPatientModal(true); // Abre el modal de edición
     };
+
+    // Eliminamos la función handleDeletePatient y su importación de ConfirmDialog
 
     const renderActionButtons = (patient) => {
         return (
@@ -105,22 +112,22 @@ export default function PatientView({ onClose }) {
                     onClick={() => handleOpenAppointmentModal(patient)}
                 /> */}
                 <Button
-                    icon="pi pi-pencil"
-                    className="p-button-sm p-button-warning" 
+                    icon="pi pi-pencil" // Icono de editar
+                    className="p-button-sm p-button-warning" // Estilo para editar
                     tooltip="Editar Paciente"
                     tooltipOptions={{ position: 'bottom' }}
-                    onClick={() => handleEditPatient(patient)} 
+                    onClick={() => handleEditPatient(patient)} // Llama a la función de editar
                 />
-                
+                {/* Eliminamos el botón de eliminar */}
             </div>
         );
     };
 
-    const [apiMessage, setApiMessage] = useState(null); 
+    const [apiMessage, setApiMessage] = useState(null); // Para mostrar mensajes de éxito/error de API
 
     return (
         <div className="p-4">
-            
+            {/* Eliminamos <ConfirmDialog /> */}
             <div className="flex justify-content-between align-items-center mb-4">
                
                 <Button
@@ -209,10 +216,10 @@ export default function PatientView({ onClose }) {
                 onHide={() => { setShowEditPatientModal(false); setEditingPatient(null); }}
                 modal
             >
-                {editingPatient && (
+                {editingPatient && ( // Renderiza el formulario solo si hay un paciente para editar
                     <PatientRegistrationForm
-                        initialData={editingPatient}
-                        onPatientRegistered={handlePatientEdited}
+                        initialData={editingPatient} // Pasa los datos del paciente a editar
+                        onPatientRegistered={handlePatientEdited} // Llama a handlePatientEdited
                         onCancel={() => { setShowEditPatientModal(false); setEditingPatient(null); }}
                     />
                 )}

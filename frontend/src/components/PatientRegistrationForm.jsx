@@ -21,13 +21,14 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         sex: null,
         address: '',
         PolicyID: '',
-        arsID: null,
+        arsID: null, // Cambiado a null para el Dropdown
     });
 
     const [loading, setLoading] = useState(false);
     const [apiMessage, setApiMessage] = useState(null);
     const [isInsured, setIsInsured] = useState(false);
 
+    // Nuevo estado para almacenar las aseguradoras
     const [insurers, setInsurers] = useState([]);   
     const [insurersLoading, setInsurersLoading] = useState(false);
     const [insurersError, setInsurersError] = useState(null);
@@ -40,6 +41,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         { label: 'Femenino', value: 'F' }
     ];
 
+    // useEffect para cargar las aseguradoras al montar el componente
     useEffect(() => {
         const fetchInsurers = async () => {
             setInsurersLoading(true);
@@ -53,11 +55,12 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                     }
                 });
                 if (response.ok) {
-                    const result = await response.json(); 
-                    if (result && Array.isArray(result.data)) { 
+                    const result = await response.json(); // Cambiado a 'result' para claridad
+                    if (result && Array.isArray(result.data)) { // Accedemos a result.data
+                        // Mapear los datos para que el Dropdown pueda usarlos: { label: nombre, value: id }
                         const formattedInsurers = result.data.map(insurer => ({
-                            label: insurer.nombre, 
-                            value: insurer.aseguradoraId
+                            label: insurer.nombre, // Usa la propiedad 'nombre' para mostrar
+                            value: insurer.aseguradoraId // Usa la propiedad 'aseguradoraId' para el valor
                         }));
                         setInsurers(formattedInsurers);
                         console.log("Aseguradoras cargadas y formateadas correctamente", formattedInsurers);
@@ -80,8 +83,9 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         };
 
         fetchInsurers();
-    }, []);
+    }, []); // Se ejecuta una sola vez al montar el componente
 
+    // useEffect para inicializar el formulario si hay datos iniciales (para edición)
     useEffect(() => {
         if (initialData) {
             const formatDniForForm = (dni) => {
@@ -112,6 +116,8 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                 sex: initialData.sexo || null,
                 address: initialData.direccion || '',
                 PolicyID: initialData.polizaId || '',
+                // Para arsID, si initialData.aseguradoraId existe, lo usamos.
+                // Como es un dropdown que espera un ID directamente, lo asignamos.
                 arsID: initialData.aseguradoraId || null,
             });
             setIsInsured(!!initialData.polizaId || !!initialData.aseguradoraId);
@@ -126,7 +132,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                 sex: null,
                 address: '',
                 PolicyID: '',
-                arsID: null, 
+                arsID: null, // Aseguradora ID vuelve a null para creación
             });
             setIsInsured(false);
         }
@@ -145,6 +151,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         setFormData(prev => ({ ...prev, dob: e.value }));
     };
 
+    // Nuevo manejador para el Dropdown de aseguradoras
     const handleInsurerChange = (e) => {
         setFormData(prev => ({ ...prev, arsID: e.value }));
     };
@@ -189,7 +196,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         const checked = e.checked;
         setIsInsured(checked);
         if (!checked) {
-            setFormData(prev => ({ ...prev, PolicyID: '', arsID: null })); 
+            setFormData(prev => ({ ...prev, PolicyID: '', arsID: null })); // arsID a null
         }
     };
 
@@ -222,6 +229,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         }
 
         if (isInsured) {
+            // Validar que arsID (la selección del dropdown) no sea null y PolicyID no esté vacío
             if (formData.arsID === null || formData.PolicyID === '') {
                 setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Si el paciente está asegurado, Aseguradora y Póliza ID son obligatorios.' });
                 return;
@@ -242,8 +250,9 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
             telefono: cleanedPhone,
             cedula: cleanedDni,
             email: formData.email,
+            // Solo incluir polizaId y aseguradoraId si isInsured es true
             ...(isInsured && { polizaId: formData.PolicyID }),
-            ...(isInsured && { aseguradoraId: formData.arsID }), 
+            ...(isInsured && { aseguradoraId: formData.arsID }), // arsID ya es el ID
         };
 
         const method = initialData ? 'PUT' : 'POST';
@@ -415,11 +424,11 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                             id="arsID"
                             name="arsID"
                             value={formData.arsID}
-                            options={insurers} 
+                            options={insurers} // Las opciones con { label: nombre, value: id }
                             onChange={handleInsurerChange}
                             placeholder={insurersLoading ? "Cargando aseguradoras..." : "Seleccione una aseguradora"}
-                            optionLabel="label" 
-                            optionValue="value"
+                            optionLabel="label" // Propiedad del objeto que se mostrará en el dropdown
+                            optionValue="value" // Propiedad del objeto que se usará como valor
                             required={isInsured}
                             disabled={insurersLoading}
                             className={insurersError ? 'p-invalid' : ''}

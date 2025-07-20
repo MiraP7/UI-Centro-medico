@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import Login from './components/Login';
+import Login from './Views/auth/Login'; // Asegúrate de que la ruta sea correcta
 import Dashboard from './components/Dashboard';
 import 'primereact/resources/themes/saga-blue/theme.css'; 
 import 'primereact/resources/primereact.min.css';
