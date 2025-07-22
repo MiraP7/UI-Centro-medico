@@ -76,7 +76,7 @@ export default function Login({ onLoginSuccess }) {
       transition: "all 0.2s ease-in-out",
     };
   };
- 
+
   //NOTE: HACER QUE LOS INPUT PRESENTEN UN ERROR SIN SE ENVIAN VACIOS.
   //VERIFICAR LOS COLORES CORRECTOS Y ELEGIR UN NOMBRE PARA EL PROYECTO
   //MEJORAR LAS CARPETAS Y UTILIZAR ARQUITECTURA LIMPIA PARA LA ORGANIZACION
@@ -85,8 +85,8 @@ export default function Login({ onLoginSuccess }) {
   // SACAR LA LOGICA DE NEGOCIO DEL PAGE LOGIN Y UTILIZAR UN SERVICIO
   // CREAR UN .ENV Y VERIFICAR QUE ESTE EN GITIGNORE PARA QUE NO SE SUBA AL REPOSITORIO
   // CREAR UNA VARIABLE PARA LLAMAR EL URL DE LA API PARA PROTEGER LA INFORMACION
-  
-  
+
+
   return (
     <div className="container-login">
       {/* Left Panel - Login Form */}
@@ -205,7 +205,7 @@ export default function Login({ onLoginSuccess }) {
           </div>
 
           <div>
-            <h3 className="brand-name">Hospital Con Fe y Sin Luz</h3>
+            <h3 className="brand-name">Health State</h3>
             <p className="brandSubtitle">Tu salud, nuestro compromiso</p>
           </div>
         </div>

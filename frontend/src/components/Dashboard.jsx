@@ -159,7 +159,7 @@ export default function Dashboard({ onLogout }) {
             <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-2" onClick={() => setShowAppointmentModal(true)} />
 
           </div>          <div className="card p-2 shadow-1 border-round-md">
-            <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas del Día</h2>
+            <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas</h2>
             <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
               paginator
               rows={9}

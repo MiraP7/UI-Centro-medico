@@ -6,7 +6,7 @@ import { Message } from 'primereact/message';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
 import FacturaService from '/src/services/FacturaService';
-import PatientRegistrationForm from '/src/components/PatientRegistrationForm'; 
+import PatientRegistrationForm from '/src/components/PatientRegistrationForm';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -19,13 +19,14 @@ export default function FacturacionView({ onClose }) {
     const [loadingFacturas, setLoadingFacturas] = useState(true);
     const [errorFacturas, setErrorFacturas] = useState(null);
 
-    const [selectedFactura, setSelectedFactura] = useState(null);
+    const [selectedFactura, setSelectedFactura] = useState(null); // Estado para la factura seleccionada
     const [detalleFactura, setDetalleFactura] = useState([]);
     const [showDetalleDialog, setShowDetalleDialog] = useState(false);
     const [loadingDetalle, setLoadingDetalle] = useState(false);
     const [errorDetalle, setErrorDetalle] = useState(null);
     const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
 
+    // Efecto para cargar las facturas al inicio
     useEffect(() => {
         const fetchFacturas = async () => {
             setLoadingFacturas(true);
@@ -43,26 +44,37 @@ export default function FacturacionView({ onClose }) {
         fetchFacturas();
     }, []);
 
-    const loadDetalleFactura = async (factura) => {
-        setSelectedFactura(factura);
-        setLoadingDetalle(true);
-        setErrorDetalle(null);
-        setShowDetalleDialog(true);
-        try {
-            const detalles = await facturaService.getDetalleFacturaByFacturaId(factura.facturaId);
-            setDetalleFactura(detalles);
-        } catch (err) {
-            setErrorDetalle(`Error al cargar detalles: ${err.message}`);
-            console.error("Error fetching factura details:", err);
+    // Nuevo efecto para cargar los detalles cuando selectedFactura cambia
+    useEffect(() => {
+        if (selectedFactura) {
+            // Solo cargar detalles si hay una factura seleccionada y no se está cargando ya
+            const fetchDetalle = async () => {
+                setLoadingDetalle(true);
+                setErrorDetalle(null);
+                setShowDetalleDialog(true); // Abrir el diálogo inmediatamente
+                try {
+                    const detalles = await facturaService.getDetalleFacturaByFacturaId(selectedFactura.facturaId);
+                    setDetalleFactura(detalles);
+                } catch (err) {
+                    setErrorDetalle(`Error al cargar detalles: ${err.message}`);
+                    console.error("Error fetching factura details:", err);
+                    setDetalleFactura([]);
+                } finally {
+                    setLoadingDetalle(false);
+                }
+            };
+            fetchDetalle();
+        } else {
+            // Si selectedFactura es null, cerrar el diálogo y limpiar
+            setShowDetalleDialog(false);
             setDetalleFactura([]);
-        } finally {
-            setLoadingDetalle(false);
+            setErrorDetalle(null);
         }
-    };
+    }, [selectedFactura]); // Este efecto se ejecuta cada vez que selectedFactura cambia
 
     const hideDetalleDialog = () => {
         setShowDetalleDialog(false);
-        setSelectedFactura(null);
+        setSelectedFactura(null); // Limpiar la factura seleccionada al cerrar el diálogo
         setDetalleFactura([]);
         setErrorDetalle(null);
     };
@@ -70,7 +82,7 @@ export default function FacturacionView({ onClose }) {
     const handlePatientRegistered = () => {
         console.log("Paciente registrado desde la vista de facturación.");
         setShowPatientRegistrationModal(false);
-       
+
     };
 
     const pagadoBodyTemplate = (rowData) => {
@@ -88,7 +100,11 @@ export default function FacturacionView({ onClose }) {
                 className="p-button-rounded p-button-text p-button-sm"
                 tooltip="Ver Detalles"
                 tooltipOptions={{ position: 'bottom' }}
-                onClick={() => loadDetalleFactura(rowData)}
+                onClick={(e) => {
+                    // Prevenir que el evento de clic en el botón active también la selección de la fila
+                    e.stopPropagation();
+                    setSelectedFactura(rowData); // Establecer la factura seleccionada y el useEffect la manejará
+                }}
             />
         );
     };
@@ -100,19 +116,22 @@ export default function FacturacionView({ onClose }) {
     };
 
     const montoCubiertoBodyTemplate = (rowData) => {
-        if (rowData.cubierto > 0) {
-            return (
-                <span style={{ color: 'green', fontWeight: 'bold' }}>
-                    ${rowData.cubierto.toFixed(2)}
-                </span>
-            );
-        } else {
-            return (
-                <span style={{ color: 'red' }}>
-                    ${rowData.cubierto.toFixed(2)}
-                </span>
-            );
+        if (rowData.cubierto !== undefined && rowData.cubierto !== null) {
+            if (rowData.cubierto > 0) {
+                return (
+                    <span style={{ color: 'green', fontWeight: 'bold' }}>
+                        ${rowData.cubierto.toFixed(2)}
+                    </span>
+                );
+            } else {
+                return (
+                    <span style={{ color: 'red' }}>
+                        ${rowData.cubierto.toFixed(2)}
+                    </span>
+                );
+            }
         }
+        return '';
     };
 
     const handleReporteCoberturaClick = () => {
@@ -122,20 +141,20 @@ export default function FacturacionView({ onClose }) {
     return (
         <div className="p-4">
             <div className="flex justify-content-between align-items-center mb-4">
-              
-                <div className="flex gap-2"> 
-                  
+
+                <div className="flex gap-2">
+
                     <Button
                         label="Registrar Paciente"
                         icon="pi pi-user-plus"
                         className="p-button-success p-button-raised"
                         onClick={() => setShowPatientRegistrationModal(true)}
                     />
-                   
+
                     <Button
                         label="Reporte de Cobertura"
-                        icon="pi pi-file" 
-                        className="p-button-info p-button-raised" 
+                        icon="pi pi-file"
+                        className="p-button-info p-button-raised"
                         onClick={handleReporteCoberturaClick}
                     />
                 </div>
@@ -162,14 +181,16 @@ export default function FacturacionView({ onClose }) {
                         rowsPerPageOptions={[5, 10, 25]}
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} facturas"
-                        selectionMode="single"
-                        onSelectionChange={(e) => loadDetalleFactura(e.value)}
+                        selectionMode="single" // Habilitar selección de fila única
+                        selection={selectedFactura} // Vincular la selección al estado
+                        onSelectionChange={(e) => setSelectedFactura(e.value)} // Actualizar el estado de selección
                         emptyMessage="No hay facturas."
                     >
                         <Column field="facturaId" header="ID Factura"></Column>
                         <Column field="pacienteNombre" header="Paciente"></Column>
                         <Column field="fechaEmision" header="Fecha Emisión" body={(rowData) => formatDate(rowData.fechaEmision)}></Column>
                         <Column field="monto" header="Monto Total" body={(rowData) => `$${rowData.monto.toFixed(2)}`}></Column>
+                        {/* <Column header="Acciones" body={actionBodyTemplate} exportable={false} style={{ minWidth: '8rem' }}></Column> */}
                     </DataTable>
                 </div>
             )}
@@ -192,9 +213,9 @@ export default function FacturacionView({ onClose }) {
                 {!loadingDetalle && !errorDetalle && detalleFactura.length > 0 && (
                     <DataTable value={detalleFactura} emptyMessage="No hay detalles para esta factura.">
                         <Column field="descripcion" header="Descripción Tratamiento"></Column>
-                        <Column field="fecha" header="Fecha Tratamiento"></Column>
+                        <Column field="fecha" header="Fecha Tratamiento" body={(rowData) => formatDate(rowData.fecha)}></Column>
                         <Column field="costo" header="Costo" body={(rowData) => `$${rowData.costo.toFixed(2)}`}></Column>
-                        <Column field="cubierto" header="Monto Cubierto por ARS" body={montoCubiertoBodyTemplate}></Column>
+                        {/* <Column field="cubierto" header="Cubierto por ARS" body={montoCubiertoBodyTemplate}></Column> */}
                     </DataTable>
                 )}
                 {!loadingDetalle && !errorDetalle && detalleFactura.length === 0 && !selectedFactura && (
@@ -218,12 +239,6 @@ export default function FacturacionView({ onClose }) {
                     onCancel={() => setShowPatientRegistrationModal(false)}
                 />
             </Dialog>
-
-            {/* {onClose && (
-                <div className="flex justify-content-end mt-4">
-                    <Button label="Cerrar Vista" icon="pi pi-times" className="p-button-secondary" onClick={onClose} />
-                </div>
-            )} */}
         </div>
     );
 }
