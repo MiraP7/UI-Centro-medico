@@ -176,7 +176,7 @@ export default function Dashboard({ onLogout }) {
       <Dialog
         header="Gestión de Pacientes"
         visible={showPatientViewModal}
-        style={{ width: '80vw', minWidth: '700px', height: '80vh' }}
+        style={{ width: '90vw', minWidth: '900px', height: '90vh' }}
         onHide={() => setShowPatientViewModal(false)}
         modal
       >
