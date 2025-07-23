@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import PatientRegistrationForm from '/src/components/PatientRegistrationForm';
-import AppointmentModal from '../components/AppointmentModal.jsx';
+// import AppointmentModal from '../components/AppointmentModal.jsx';
 import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Button } from 'primereact/button';
@@ -17,7 +17,6 @@ export default function PatientView({ onClose }) {
     const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
     const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
     const [isAppointmentModalOpen, setAppointmentModalOpen] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState(null);
@@ -26,10 +25,10 @@ export default function PatientView({ onClose }) {
     const [editingPatient, setEditingPatient] = useState(null);
     const [showEditPatientModal, setShowEditPatientModal] = useState(false);
 
-    const handleOpenAppointmentModal = (patient) => {
-        setSelectedPatient(patient);
-        setAppointmentModalOpen(true);
-    };
+    // const handleOpenAppointmentModal = (patient) => {
+    //     setSelectedPatient(patient);
+    //     setAppointmentModalOpen(true);
+    // };
 
     const fetchPatients = async () => {
         setLoading(true);
@@ -130,7 +129,7 @@ export default function PatientView({ onClose }) {
         <div className="p-4">
             {/* Eliminamos <ConfirmDialog /> */}
             <div className="flex justify-content-between align-items-center mb-4">
-                {/* Botón: Registrar Paciente - usa el nuevo estado */}
+
                 <Button
                     label="Registrar Paciente"
                     icon="pi pi-user-plus"
@@ -230,11 +229,11 @@ export default function PatientView({ onClose }) {
                 <AppointmentModal patient={selectedPatient} onClose={() => setAppointmentModalOpen(false)} />
             )}
 
-            {onClose && (
+            {/* {onClose && (
                 <div className="flex justify-content-end mt-4">
                     <Button label="Cerrar Vista" icon="pi pi-times" className="p-button-secondary" onClick={onClose} />
                 </div>
-            )}
+            )} */}
         </div>
     );
 }

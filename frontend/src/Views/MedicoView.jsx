@@ -4,35 +4,38 @@ import { Message } from 'primereact/message';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Toast } from 'primereact/toast';
-import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
+import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'; // Importar ConfirmDialog
 
-import AseguradoraRegistrationForm from '/src/components/AseguradoraRegistrationForm';
+// Importamos el formulario para médicos
+import MedicoRegistrationForm from '/src/components/MedicoRegistrationForm';
 
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 
-export default function AseguradoraView({ onClose }) {
-    const [aseguradoras, setAseguradoras] = useState([]);
+export default function MedicoView({ onClose }) {
+    const [medicos, setMedicos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [apiMessage, setApiMessage] = useState(null);
 
-    const [showAseguradoraRegistrationModal, setShowAseguradoraRegistrationModal] = useState(false);
-    const [editingAseguradora, setEditingAseguradora] = useState(null);
-    const [showEditAseguradoraModal, setShowEditAseguradoraModal] = useState(false);
+    // Estados para los modales de registro y edición
+    const [showMedicoRegistrationModal, setShowMedicoRegistrationModal] = useState(false);
+    const [editingMedico, setEditingMedico] = useState(null);
+    const [showEditMedicoModal, setShowEditMedicoModal] = useState(false);
 
     const toast = useRef(null);
 
-    const fetchAseguradoras = async () => {
+    // Función para cargar todos los médicos
+    const fetchMedicos = async () => {
         setLoading(true);
         setError(null);
-        setAseguradoras([]);
+        setMedicos([]);
         setApiMessage(null);
-        console.log("Intentando cargar aseguradoras de la API directamente...");
+        console.log("Intentando cargar médicos de la API...");
         try {
-            const response = await fetch('https://localhost:44388/api/Aseguradora/all', {
+            const response = await fetch('https://localhost:44388/api/Medico/all', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -46,20 +49,21 @@ export default function AseguradoraView({ onClose }) {
                 const result = await response.json();
                 console.log("Datos recibidos de la API (estructura completa):", result);
 
+                // Asume que la API devuelve los datos directamente como un array o en una propiedad 'data'
                 if (result && Array.isArray(result.data)) {
-                    setAseguradoras(result.data);
-                    console.log("Aseguradoras asignadas al estado:", result.data);
+                    setMedicos(result.data);
+                    console.log("Médicos asignados al estado:", result.data);
                 } else if (Array.isArray(result)) {
-                    setAseguradoras(result);
-                    console.log("Aseguradoras asignadas al estado (directamente):", result);
+                    setMedicos(result);
+                    console.log("Médicos asignados al estado (directamente):", result);
                 } else {
-                    setError("Formato de datos inesperado de la API. No se encontró el array de aseguradoras en 'data' o directamente.");
+                    setError("Formato de datos inesperado de la API. No se encontró el array de médicos en 'data' o directamente.");
                     console.error("Formato inesperado:", result);
-                    setAseguradoras([]);
+                    setMedicos([]);
                 }
             } else {
                 const errorData = await response.json();
-                const errorMessage = `Error al cargar aseguradoras: ${errorData.message || 'Error desconocido del servidor.'}`;
+                const errorMessage = `Error al cargar médicos: ${errorData.message || 'Error desconocido del servidor.'}`;
                 setError(errorMessage);
                 console.error('Error de API (respuesta no OK):', response.status, errorData);
             }
@@ -69,39 +73,42 @@ export default function AseguradoraView({ onClose }) {
             console.error('Error de red o de petición (catch):', err);
         } finally {
             setLoading(false);
-            console.log("Estado de carga de aseguradoras finalizado.");
+            console.log("Estado de carga de médicos finalizado.");
         }
     };
 
     useEffect(() => {
-        fetchAseguradoras();
+        fetchMedicos();
     }, []);
 
-    const handleAseguradoraSaved = (savedAseguradora) => {
-        console.log('Aseguradora guardada (desde AseguradoraView):', savedAseguradora);
-        setShowAseguradoraRegistrationModal(false);
-        setShowEditAseguradoraModal(false);
-        setEditingAseguradora(null);
-        fetchAseguradoras();
+    // Función para manejar el guardado (registro o edición) de un médico
+    const handleMedicoSaved = (savedMedico) => {
+        console.log('Médico guardado (desde MedicoView):', savedMedico);
+        setShowMedicoRegistrationModal(false);
+        setShowEditMedicoModal(false);
+        setEditingMedico(null);
+        fetchMedicos(); // Recarga la lista para reflejar los cambios
     };
 
-    const handleEditAseguradora = (aseguradora) => {
-        setEditingAseguradora(aseguradora);
-        setShowEditAseguradoraModal(true);
+    // Función para abrir el modal de edición con los datos del médico seleccionado
+    const handleEditMedico = (medico) => {
+        setEditingMedico(medico);
+        setShowEditMedicoModal(true);
     };
 
-    const handleDeleteAseguradora = (aseguradoraId) => {
+    // Función para manejar la eliminación de un médico
+    const handleDeleteMedico = (medicoId) => {
         confirmDialog({
-            message: '¿Está seguro de que desea eliminar esta aseguradora? Esta acción no se puede deshacer.',
-            // header: 'Confirmar Eliminación',
-            // icon: 'pi pi-exclamation-triangle',
+            message: '¿Está seguro de que desea eliminar este médico? Esta acción no se puede deshacer.',
+            header: 'Confirmar Eliminación',
+            icon: 'pi pi-exclamation-triangle',
             acceptLabel: 'Sí',
             rejectLabel: 'No',
             accept: async () => {
                 try {
                     setLoading(true);
-                    console.log("Intentando eliminar Aseguradora con ID:", aseguradoraId);
-                    const response = await fetch(`https://localhost:44388/api/Aseguradora/${aseguradoraId}`, {
+                    console.log("Intentando eliminar Médico con ID:", medicoId);
+                    const response = await fetch(`https://localhost:44388/api/Medico/${medicoId}`, {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
@@ -113,39 +120,32 @@ export default function AseguradoraView({ onClose }) {
                     console.log("Estado de la respuesta:", response.status);
 
                     if (response.ok) {
-                        // **CAMBIO CRÍTICO AQUÍ:**
-                        // Verifica si el status es 204 (No Content) o si no hay cuerpo en la respuesta.
-                        if (response.status === 204) {
-                            const successMessage = `Aseguradora con ID ${aseguradoraId} eliminada exitosamente.`;
+                        if (response.status === 204) { // 204 No Content es común para DELETE exitoso
+                            const successMessage = `Médico con ID ${medicoId} eliminado exitosamente.`;
                             toast.current.show({ severity: 'success', summary: 'Eliminado', detail: successMessage, life: 3000 });
                             console.log(successMessage);
-                            fetchAseguradoras(); // Recargar la lista
+                            fetchMedicos();
                         } else {
-                            // Si hay algún otro status OK (ej. 200) y se espera JSON, parsearlo
-                            // Aunque para DELETE, 204 es lo más común y recomendado.
                             const result = await response.json();
-                            const successMessage = result.message || `Aseguradora con ID ${aseguradoraId} eliminada exitosamente.`;
+                            const successMessage = result.message || `Médico con ID ${medicoId} eliminado exitosamente.`;
                             toast.current.show({ severity: 'success', summary: 'Eliminado', detail: successMessage, life: 3000 });
                             console.log(successMessage, result);
-                            fetchAseguradoras();
+                            fetchMedicos();
                         }
                     } else {
-                        // Manejo de errores para respuestas no-OK (ej. 400, 401, 404, 500)
                         let errorData = {};
                         try {
-                            // Intenta parsear el JSON de error si existe
                             errorData = await response.json();
                         } catch (jsonError) {
                             console.warn("La respuesta de error no es JSON o está vacía:", jsonError);
-                            // Si no es JSON, usa el texto de estado de la respuesta
                             errorData.message = response.statusText || 'Error desconocido del servidor.';
                         }
-                        const errorMessage = errorData.message || `Error desconocido al eliminar la aseguradora con ID ${aseguradoraId}. Código de estado: ${response.status}`;
+                        const errorMessage = errorData.message || `Error desconocido al eliminar el médico con ID ${medicoId}. Código de estado: ${response.status}`;
                         toast.current.show({ severity: 'error', summary: 'Error', detail: `Fallo al eliminar: ${errorMessage}`, life: 5000 });
-                        console.error('Error al eliminar aseguradora:', response.status, errorData);
+                        console.error('Error al eliminar médico:', response.status, errorData);
                     }
                 } catch (error) {
-                    toast.current.show({ severity: 'error', summary: 'Error de Conexión', detail: 'No se pudo conectar para eliminar la aseguradora. Verifique su conexión o la URL de la API.', life: 5000 });
+                    toast.current.show({ severity: 'error', summary: 'Error de Conexión', detail: 'No se pudo conectar para eliminar el médico. Verifique su conexión o la URL de la API.', life: 5000 });
                     console.error('Error de red o de petición (catch principal):', error);
                 } finally {
                     setLoading(false);
@@ -154,22 +154,23 @@ export default function AseguradoraView({ onClose }) {
         });
     };
 
-    const renderActionButtons = (aseguradora) => {
+    // Función para renderizar los botones de acción por fila
+    const renderActionButtons = (medico) => {
         return (
             <div className="flex flex-wrap gap-2">
                 <Button
                     icon="pi pi-pencil"
                     className="p-button-sm p-button-warning"
-                    tooltip="Editar Aseguradora"
+                    tooltip="Editar Médico"
                     tooltipOptions={{ position: 'bottom' }}
-                    onClick={() => handleEditAseguradora(aseguradora)}
+                    onClick={() => handleEditMedico(medico)}
                 />
                 <Button
                     icon="pi pi-trash"
                     className="p-button-sm p-button-danger"
-                    tooltip="Eliminar Aseguradora"
+                    tooltip="Eliminar Médico"
                     tooltipOptions={{ position: 'bottom' }}
-                    onClick={() => handleDeleteAseguradora(aseguradora.aseguradoraId)}
+                    onClick={() => handleDeleteMedico(medico.medicoId)}
                 />
             </div>
         );
@@ -178,13 +179,15 @@ export default function AseguradoraView({ onClose }) {
     return (
         <div className="p-4">
             <Toast ref={toast} />
-            <ConfirmDialog />
+            <ConfirmDialog /> {/* ¡Importante! Asegúrate de que ConfirmDialog esté aquí */}
+
             <div className="flex justify-content-between align-items-center mb-4">
+                {/* <h2>Listado de Médicos</h2> */}
                 <Button
-                    label="Registrar Aseguradora"
+                    label="Registrar Médico"
                     // icon="pi pi-plus"
                     className="p-button-primary"
-                    onClick={() => setShowAseguradoraRegistrationModal(true)}
+                    onClick={() => setShowMedicoRegistrationModal(true)}
                 />
             </div>
 
@@ -197,7 +200,7 @@ export default function AseguradoraView({ onClose }) {
             {loading && (
                 <div className="flex justify-content-center flex-column align-items-center p-5">
                     <ProgressSpinner />
-                    <p className="mt-3">Cargando aseguradoras...</p>
+                    <p className="mt-3">Cargando médicos...</p>
                 </div>
             )}
 
@@ -205,34 +208,34 @@ export default function AseguradoraView({ onClose }) {
                 <Message severity="error" summary="Error" text={error} className="mb-3 w-full" />
             )}
 
-            {!loading && !error && aseguradoras.length === 0 && (
-                <Message severity="info" summary="Información" text="No hay aseguradoras registradas." className="mb-3 w-full" />
+            {!loading && !error && medicos.length === 0 && (
+                <Message severity="info" summary="Información" text="No hay médicos registrados." className="mb-3 w-full" />
             )}
 
-            {!loading && !error && aseguradoras.length > 0 && (
+            {!loading && !error && medicos.length > 0 && (
                 <div className="card">
                     <table className="p-datatable p-component p-datatable-sm" style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead className="p-datatable-thead">
                             <tr>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>ID</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Nombre</th>
-                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Dirección</th>
+                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Apellido</th>
+                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Especialidad</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Teléfono</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Email</th>
-                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Contacto</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody className="p-datatable-tbody">
-                            {aseguradoras.map(aseg => (
-                                <tr key={aseg.aseguradoraId || aseg.id}>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.aseguradoraId || aseg.id}</td>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.nombre}</td>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.direccion}</td>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.telefono}</td>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.email}</td>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.contacto}</td>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{renderActionButtons(aseg)}</td>
+                            {medicos.map(med => (
+                                <tr key={med.medicoId || med.id}>
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.medicoId || med.id}</td>
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.nombre}</td>
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.apellido}</td>
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.especialidad}</td>
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.telefono}</td>
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.email}</td>
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{renderActionButtons(med)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -240,32 +243,34 @@ export default function AseguradoraView({ onClose }) {
                 </div>
             )}
 
+            {/* DIALOG: Para el formulario de registro de médico */}
             <Dialog
-                header="Registrar Nueva Aseguradora"
-                visible={showAseguradoraRegistrationModal}
+                header="Registrar Nuevo Médico"
+                visible={showMedicoRegistrationModal}
                 style={{ width: '50vw', minWidth: '350px' }}
-                onHide={() => setShowAseguradoraRegistrationModal(false)}
+                onHide={() => setShowMedicoRegistrationModal(false)}
                 modal
             >
-                <AseguradoraRegistrationForm
-                    onAseguradoraSaved={handleAseguradoraSaved}
-                    onCancel={() => setShowAseguradoraRegistrationModal(false)}
-                    initialData={null}
+                <MedicoRegistrationForm
+                    onMedicoSaved={handleMedicoSaved}
+                    onCancel={() => setShowMedicoRegistrationModal(false)}
+                    initialData={null} // Para registro, no hay datos iniciales
                 />
             </Dialog>
 
+            {/* DIALOG: Para el formulario de edición de médico */}
             <Dialog
-                header="Editar Aseguradora"
-                visible={showEditAseguradoraModal}
+                header="Editar Médico"
+                visible={showEditMedicoModal}
                 style={{ width: '50vw', minWidth: '350px' }}
-                onHide={() => { setShowEditAseguradoraModal(false); setEditingAseguradora(null); }}
+                onHide={() => { setShowEditMedicoModal(false); setEditingMedico(null); }}
                 modal
             >
-                {editingAseguradora && (
-                    <AseguradoraRegistrationForm
-                        initialData={editingAseguradora}
-                        onAseguradoraSaved={handleAseguradoraSaved}
-                        onCancel={() => { setShowEditAseguradoraModal(false); setEditingAseguradora(null); }}
+                {editingMedico && ( // Renderiza el formulario solo si hay un médico para editar
+                    <MedicoRegistrationForm
+                        initialData={editingMedico} // Pasa los datos del médico a editar
+                        onMedicoSaved={handleMedicoSaved}
+                        onCancel={() => { setShowEditMedicoModal(false); setEditingMedico(null); }}
                     />
                 )}
             </Dialog>

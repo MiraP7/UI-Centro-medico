@@ -21,15 +21,14 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         sex: null,
         address: '',
         PolicyID: '',
-        arsID: null, // Cambiado a null para el Dropdown
+        arsID: null,
     });
 
     const [loading, setLoading] = useState(false);
     const [apiMessage, setApiMessage] = useState(null);
     const [isInsured, setIsInsured] = useState(false);
 
-    // Nuevo estado para almacenar las aseguradoras
-    const [insurers, setInsurers] = useState([]);   
+    const [insurers, setInsurers] = useState([]);
     const [insurersLoading, setInsurersLoading] = useState(false);
     const [insurersError, setInsurersError] = useState(null);
 
@@ -55,18 +54,17 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                     }
                 });
                 if (response.ok) {
-                    const result = await response.json(); // Cambiado a 'result' para claridad
-                    if (result && Array.isArray(result.data)) { // Accedemos a result.data
-                        // Mapear los datos para que el Dropdown pueda usarlos: { label: nombre, value: id }
+                    const result = await response.json();
+                    if (result && Array.isArray(result.data)) {
                         const formattedInsurers = result.data.map(insurer => ({
-                            label: insurer.nombre, // Usa la propiedad 'nombre' para mostrar
-                            value: insurer.aseguradoraId // Usa la propiedad 'aseguradoraId' para el valor
+                            label: insurer.nombre,
+                            value: insurer.aseguradoraId // Asegúrate que este valor sea el ID numérico
                         }));
                         setInsurers(formattedInsurers);
-                        console.log("Aseguradoras cargadas y formateadas correctamente", formattedInsurers);
+                        console.log("Aseguradoras cargadas y formateadas correctamente:", formattedInsurers);
                     } else {
                         setInsurersError("Formato de datos inesperado de la API. No se encontró el array de Aseguradora en 'data'.");
-                        console.error("Formato inesperado:", result);
+                        console.error("Formato inesperado de la API de aseguradoras:", result);
                         setInsurers([]);
                     }
                 } else {
@@ -83,28 +81,50 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         };
 
         fetchInsurers();
-    }, []); // Se ejecuta una sola vez al montar el componente
+    }, []);
 
     // useEffect para inicializar el formulario si hay datos iniciales (para edición)
     useEffect(() => {
-        if (initialData) {
-            const formatDniForForm = (dni) => {
-                if (!dni) return '';
-                const cleaned = dni.replace(/\D/g, '');
-                if (cleaned.length === 11) {
-                    return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 10)}-${cleaned.substring(10, 11)}`;
-                }
-                return dni;
-            };
+        const formatDniForForm = (dni) => {
+            if (!dni) return '';
+            const cleaned = String(dni).replace(/\D/g, '');
+            if (cleaned.length === 11) {
+                return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 10)}-${cleaned.substring(10, 11)}`;
+            }
+            return String(dni);
+        };
 
-            const formatPhoneForForm = (phone) => {
-                if (!phone) return '';
-                const cleaned = phone.replace(/\D/g, '');
-                if (cleaned.length === 10) {
-                    return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 6)}-${cleaned.substring(6, 10)}`;
+        const formatPhoneForForm = (phone) => {
+            if (!phone) return '';
+            const cleaned = String(phone).replace(/\D/g, '');
+            if (cleaned.length === 10) {
+                return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 6)}-${cleaned.substring(6, 10)}`;
+            }
+            return String(phone);
+        };
+
+        if (initialData) {
+            console.log("Datos iniciales (initialData):", initialData);
+            console.log("Tipo de initialData.aseguradoraId:", typeof initialData.aseguradoraId, "Valor:", initialData.aseguradoraId);
+
+            // Asegurarse de que el arsID sea un número si no es null
+            let initialArsId = initialData.aseguradoraId !== null && initialData.aseguradoraId !== undefined
+                ? Number(initialData.aseguradoraId)
+                : null;
+
+            // Debugging: Verificar si el initialArsId existe en la lista de aseguradoras cargadas
+            if (initialArsId !== null && insurers.length > 0) {
+                const foundInsurer = insurers.find(insurer => insurer.value === initialArsId);
+                if (!foundInsurer) {
+                    console.warn(`Aseguradora con ID ${initialArsId} de initialData no encontrada en la lista de aseguradoras cargadas.`);
+                    // Opcional: Si el ID no se encuentra, puedes decidir resetearlo a null
+                    // initialArsId = null; 
+                } else {
+                    console.log(`Aseguradora encontrada en la lista:`, foundInsurer);
                 }
-                return phone;
-            };
+            } else if (initialArsId !== null && insurersLoading) {
+                console.log("Aseguradoras aún cargando, se intentará establecer arsID cuando estén disponibles.");
+            }
 
             setFormData({
                 name: initialData.nombre || '',
@@ -116,11 +136,10 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                 sex: initialData.sexo || null,
                 address: initialData.direccion || '',
                 PolicyID: initialData.polizaId || '',
-                // Para arsID, si initialData.aseguradoraId existe, lo usamos.
-                // Como es un dropdown que espera un ID directamente, lo asignamos.
-                arsID: initialData.aseguradoraId || null,
+                arsID: initialArsId, // Usar el ID procesado
             });
-            setIsInsured(!!initialData.polizaId || !!initialData.aseguradoraId);
+            // Activar isInsured si hay datos de póliza o aseguradora
+            setIsInsured(!!initialData.polizaId || (initialData.aseguradoraId !== null && initialData.aseguradoraId !== undefined));
         } else {
             setFormData({
                 name: '',
@@ -132,11 +151,11 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                 sex: null,
                 address: '',
                 PolicyID: '',
-                arsID: null, // Aseguradora ID vuelve a null para creación
+                arsID: null,
             });
             setIsInsured(false);
         }
-    }, [initialData]);
+    }, [initialData, insurers, insurersLoading]); // Añade 'insurersLoading' como dependencia para mejor reactividad
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -151,43 +170,24 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         setFormData(prev => ({ ...prev, dob: e.value }));
     };
 
-    // Nuevo manejador para el Dropdown de aseguradoras
     const handleInsurerChange = (e) => {
         setFormData(prev => ({ ...prev, arsID: e.value }));
     };
 
     const handleDniChange = (e) => {
         let value = e.target.value.replace(/\D/g, '');
-
-        if (value.length > 3) {
-            value = value.substring(0, 3) + '-' + value.substring(3);
-        }
-        if (value.length > 11) {
-            value = value.substring(0, 11) + '-' + value.substring(11);
-        }
-
-        if (value.length > 13) {
-            value = value.substring(0, 13);
-        }
-
+        if (value.length > 3) value = value.substring(0, 3) + '-' + value.substring(3);
+        if (value.length > 11) value = value.substring(0, 11) + '-' + value.substring(11);
+        if (value.length > 13) value = value.substring(0, 13);
         setFormData(prev => ({ ...prev, dni: value }));
         if (dniError) setDniError(null);
     };
 
     const handlePhoneChange = (e) => {
         let value = e.target.value.replace(/\D/g, '');
-
-        if (value.length > 3) {
-            value = value.substring(0, 3) + '-' + value.substring(3);
-        }
-        if (value.length > 7) {
-            value = value.substring(0, 7) + '-' + value.substring(7);
-        }
-
-        if (value.length > 12) {
-            value = value.substring(0, 12);
-        }
-
+        if (value.length > 3) value = value.substring(0, 3) + '-' + value.substring(3);
+        if (value.length > 7) value = value.substring(0, 7) + '-' + value.substring(7);
+        if (value.length > 12) value = value.substring(0, 12);
         setFormData(prev => ({ ...prev, phone: value }));
         if (phoneError) setPhoneError(null);
     };
@@ -196,7 +196,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         const checked = e.checked;
         setIsInsured(checked);
         if (!checked) {
-            setFormData(prev => ({ ...prev, PolicyID: '', arsID: null })); // arsID a null
+            setFormData(prev => ({ ...prev, PolicyID: '', arsID: null }));
         }
     };
 
@@ -229,7 +229,6 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         }
 
         if (isInsured) {
-            // Validar que arsID (la selección del dropdown) no sea null y PolicyID no esté vacío
             if (formData.arsID === null || formData.PolicyID === '') {
                 setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Si el paciente está asegurado, Aseguradora y Póliza ID son obligatorios.' });
                 return;
@@ -252,7 +251,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
             email: formData.email,
             // Solo incluir polizaId y aseguradoraId si isInsured es true
             ...(isInsured && { polizaId: formData.PolicyID }),
-            ...(isInsured && { aseguradoraId: formData.arsID }), // arsID ya es el ID
+            ...(isInsured && { aseguradoraId: formData.arsID }),
         };
 
         const method = initialData ? 'PUT' : 'POST';
@@ -424,11 +423,11 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                             id="arsID"
                             name="arsID"
                             value={formData.arsID}
-                            options={insurers} // Las opciones con { label: nombre, value: id }
+                            options={insurers}
                             onChange={handleInsurerChange}
                             placeholder={insurersLoading ? "Cargando aseguradoras..." : "Seleccione una aseguradora"}
-                            optionLabel="label" // Propiedad del objeto que se mostrará en el dropdown
-                            optionValue="value" // Propiedad del objeto que se usará como valor
+                            optionLabel="label"
+                            optionValue="value"
                             required={isInsured}
                             disabled={insurersLoading}
                             className={insurersError ? 'p-invalid' : ''}
@@ -437,18 +436,18 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                         {insurersLoading && <small>Cargando aseguradoras...</small>}
                     </div>
                     <div className="field col-12 md:col-6">
-                        <label htmlFor="PolicyID">Poliza ID</label>
+                        <label htmlFor="PolicyID">Póliza ID</label>
                         <InputText id="PolicyID" name="PolicyID" value={formData.PolicyID} onChange={handleChange} required={isInsured} />
                     </div>
                 </>
             )}
 
             <div className="col-12 flex justify-content-end gap-2 mt-4">
-                <Button type="button" label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={onCancel} disabled={loading} />
+                {/* <Button type="button" label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={onCancel} disabled={loading} /> */}
                 <Button
                     type="submit"
                     label={loading ? (initialData ? "Actualizando..." : "Registrando...") : (initialData ? "Actualizar Paciente" : "Registrar Paciente")}
-                    icon={loading ? "pi pi-spin pi-spinner" : "pi pi-check"}
+                    // icon={loading ? "pi pi-spin pi-spinner" : "pi pi-check"}
                     disabled={loading}
                 />
             </div>

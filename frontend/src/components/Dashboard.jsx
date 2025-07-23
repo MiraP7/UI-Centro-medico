@@ -4,16 +4,18 @@ import { Dialog } from 'primereact/dialog';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { PanelMenu } from 'primereact/panelmenu';
-import PatientRegistrationForm from './PatientRegistrationForm';
 import AppointmentRegistrationForm from './AppointmentRegistrationForm';
 import { Sidebar } from 'primereact/sidebar';
 import 'primeicons/primeicons.css';
-import 'primereact/resources/themes/lara-light-indigo/theme.css'; // Asegúrate de tener tu tema
+import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
-import '/src/App.css'; // Asegúrate de tener tu archivo CSS global
+import '/src/App.css';
 import PatientView from '/src/Views/PatientView';
 import FacturacionView from '/src/Views/FacturacionView';
+import AseguradoraView from '/src/Views/AseguradoraView';
+// AÑADIDO: Importa MedicoView
+import MedicoView from '/src/Views/MedicoView'; // Asegúrate de que esta ruta sea correcta
 
 const initialAppointments = [
   { id: 1, time: '09:00 AM', patient: 'Juan Pérez', reason: 'Consulta General' },
@@ -42,6 +44,10 @@ export default function Dashboard({ onLogout }) {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [showPatientViewModal, setShowPatientViewModal] = useState(false);
   const [showFacturacionViewModal, setShowFacturacionViewModal] = useState(false);
+  const [showAseguradoraViewModal, setShowAseguradoraViewModal] = useState(false);
+  // AÑADIDO: Nuevo estado para controlar la visibilidad del modal de Médicos
+  const [showMedicoViewModal, setShowMedicoViewModal] = useState(false);
+
 
   const handlePatientRegistered = (newPatient) => {
     console.log('Paciente Registrado:', newPatient);
@@ -52,6 +58,15 @@ export default function Dashboard({ onLogout }) {
     console.log('Cita Registrada:', newAppointment);
     setAppointments(prev => [...prev, { ...newAppointment, id: Date.now(), patient: newAppointment.patientName || 'Nuevo Paciente' }]);
     setShowAppointmentModal(false);
+  };
+
+  // Función auxiliar para cerrar todos los modales de vista
+  const closeAllViewModals = () => {
+    setShowPatientViewModal(false);
+    setShowFacturacionViewModal(false);
+    setShowAseguradoraViewModal(false);
+    setShowMedicoViewModal(false); // AÑADIDO: Cierra el modal de médicos
+    setSidebarVisible(false);
   };
 
   // Definición de los ítems del PanelMenu
@@ -71,16 +86,18 @@ export default function Dashboard({ onLogout }) {
       label: 'Pacientes',
       icon: 'pi pi-fw pi-users icons-bar',
       command: () => {
+        closeAllViewModals();
         setShowPatientViewModal(true);
-        setSidebarVisible(false);
+
       },
     },
     {
       label: 'Facturación',
       icon: 'pi pi-fw pi-money-bill icons-bar',
       command: () => {
+        closeAllViewModals();
         setShowFacturacionViewModal(true);
-        setSidebarVisible(false);
+
       },
     },
     {
@@ -115,7 +132,7 @@ export default function Dashboard({ onLogout }) {
         <PanelMenu model={items} className="w-full sidebar-panelmenu " />
       </Sidebar>
 
-      {/* HEADER REDISEÑADO */}
+      {/* HEADER */}
       <header style={{ backgroundColor: COLOR_AZUL_MARINO }}
         className="flex align-items-center justify-content-between p-3 shadow-2 mb-4">
         <div className="flex align-items-center gap-3">
@@ -132,7 +149,7 @@ export default function Dashboard({ onLogout }) {
             <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-2" onClick={() => setShowAppointmentModal(true)} />
 
           </div>          <div className="card p-2 shadow-1 border-round-md">
-            <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas del Día</h2>
+            <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas</h2>
             <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
               paginator
               rows={9}
@@ -157,13 +174,6 @@ export default function Dashboard({ onLogout }) {
           </div>
         </div> */}
       </div>
-
-      {/* Dialog para Registrar Paciente (comentado en tu código original, si lo necesitas, descoméntalo) */}
-      {/*
-      <Dialog header="Registrar Paciente" visible={showPatientModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowPatientModal(false)} modal>
-        <PatientRegistrationForm onPatientRegistered={handlePatientRegistered} onCancel={() => setShowPatientModal(false)} />
-      </Dialog>
-      */}
 
       {/* Dialog para Registrar Cita */}
       <Dialog header="Registrar Cita" visible={showAppointmentModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowAppointmentModal(false)} modal>
@@ -193,6 +203,28 @@ export default function Dashboard({ onLogout }) {
         modal
       >
         <FacturacionView onClose={() => setShowFacturacionViewModal(false)} />
+      </Dialog>
+
+      {/* Dialog para la Vista de Aseguradoras (AseguradoraView) */}
+      <Dialog
+        header="Listado de Aseguradoras"
+        visible={showAseguradoraViewModal}
+        style={{ width: '70vw', minWidth: '600px', height: '70vh' }}
+        onHide={() => setShowAseguradoraViewModal(false)}
+        modal
+      >
+        <AseguradoraView onClose={() => setShowAseguradoraViewModal(false)} />
+      </Dialog>
+
+      {/* AÑADIDO: Dialog para la Vista de Médicos (MedicoView) */}
+      <Dialog
+        header="Gestión de Médicos" // Título para el modal de médicos
+        visible={showMedicoViewModal} // Controla la visibilidad con el nuevo estado
+        style={{ width: '80vw', minWidth: '700px', height: '80vh' }} // Ajusta el tamaño según necesites
+        onHide={() => setShowMedicoViewModal(false)} // Cierra el modal
+        modal
+      >
+        <MedicoView onClose={() => setShowMedicoViewModal(false)} />
       </Dialog>
 
     </div>

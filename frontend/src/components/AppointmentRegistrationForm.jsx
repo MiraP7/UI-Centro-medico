@@ -3,10 +3,9 @@ import { Dropdown } from 'primereact/dropdown';
 import { Calendar } from 'primereact/calendar';
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
-import { Dialog } from 'primereact/dialog'; // Importa el componente Dialog de PrimeReact
+import { Dialog } from 'primereact/dialog';
 
-// Asegúrate de que esta ruta sea correcta y que PatientRegistrationForm
-// sea una exportación por defecto (export default function PatientRegistrationForm...)
+
 import PatientRegistrationForm from './PatientRegistrationForm';
 
 export default function AppointmentRegistrationForm({ onAppointmentRegistered, onCancel }) {
@@ -14,10 +13,10 @@ export default function AppointmentRegistrationForm({ onAppointmentRegistered, o
     const [appointmentDate, setAppointmentDate] = useState(null);
     const [appointmentTime, setAppointmentTime] = useState('');
     const [reason, setReason] = useState('');
-    // Estado para controlar la visibilidad del modal de registro de paciente
+
     const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
 
-    // Simulación: en una app real, estos datos vendrían de una API o estado global
+    // Simulación: en una app real, estos datos vendrían del API  
     const patients = [
         { label: 'Juan Pérez (ID: 101)', value: '101', name: 'Juan Pérez' },
         { label: 'Ana Gómez (ID: 102)', value: '102', name: 'Ana Gómez' },
@@ -27,24 +26,21 @@ export default function AppointmentRegistrationForm({ onAppointmentRegistered, o
         { label: '09:00 AM', value: '09:00 AM' }, { label: '09:30 AM', value: '09:30 AM' },
         { label: '10:00 AM', value: '10:00 AM' }, { label: '10:30 AM', value: '10:30 AM' },
         { label: '11:00 AM', value: '11:00 AM' }, { label: '11:30 AM', value: '11:30 AM' },
-        // ... más horarios
     ];
 
     const handlePatientRegistered = (newPatient) => {
         console.log('Paciente Registrado desde el modal:', newPatient);
-        // Aquí podrías querer actualizar la lista de pacientes 'patients' para que el nuevo paciente aparezca en el Dropdown
-        // setPatients(prevPatients => [...prevPatients, { label: newPatient.name + ' (ID: ' + newPatient.id + ')', value: newPatient.id, name: newPatient.name }]);
-        setShowPatientRegistrationModal(false); // Cierra el modal después de registrar
+        setShowPatientRegistrationModal(false);
     };
 
     const handleCancelPatientRegistration = () => {
-        setShowPatientRegistrationModal(false); // Función para cerrar el modal si el usuario cancela
+        setShowPatientRegistrationModal(false);
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (!selectedPatient || !appointmentDate || !appointmentTime || !reason) {
-            alert('Todos los campos son obligatorios.'); // Usar Toast para mejor UX en una aplicación real
+            alert('Todos los campos son obligatorios.');
             return;
         }
         const patientDetails = patients.find(p => p.value === selectedPatient);
@@ -64,7 +60,7 @@ export default function AppointmentRegistrationForm({ onAppointmentRegistered, o
                 type="button"
                 label="Registrar Paciente"
                 className="p-button-text"
-                onClick={() => setShowPatientRegistrationModal(true)} // <-- Cambiado a true
+                onClick={() => setShowPatientRegistrationModal(true)}
             />
 
             <div className="field col-12">
@@ -85,22 +81,22 @@ export default function AppointmentRegistrationForm({ onAppointmentRegistered, o
             </div>
 
             <div className="col-12 flex justify-content-end gap-2 mt-4">
-                <Button type="button" label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={onCancel} />
-                <Button type="submit" label="Registrar Cita" icon="pi pi-check" />
+                {/* <Button type="button" label="Cancelar" icon="pi pi-times" className="p-button-text" onClick={onCancel} /> */}
+                <Button type="submit" label="Registrar Cita" /> {/* icon="pi pi-check" /> */}
             </div>
 
             {/* Componente Dialog para mostrar PatientRegistrationForm */}
             <Dialog
-                header="Registrar Paciente" // Título del modal
-                visible={showPatientRegistrationModal} // Controla la visibilidad con el estado
-                style={{ width: '50vw' }} // Ancho del modal, ajusta según necesidad
-                modal // Hace que el fondo sea oscuro y no se pueda interactuar con él
-                onHide={handleCancelPatientRegistration} // Función para cerrar el modal al hacer clic fuera o presionar Esc
+                header="Registrar Paciente"
+                visible={showPatientRegistrationModal}
+                style={{ width: '50vw' }}
+                modal
+                onHide={handleCancelPatientRegistration}
             >
                 {/* Renderiza el formulario de registro de paciente dentro del Dialog */}
                 <PatientRegistrationForm
-                    onPatientRegistered={handlePatientRegistered} // Callback cuando un paciente es registrado
-                    onCancel={handleCancelPatientRegistration} // Callback para cerrar el modal desde el formulario hijo
+                    onPatientRegistered={handlePatientRegistered}
+                    onCancel={handleCancelPatientRegistration}
                 />
             </Dialog>
         </form>

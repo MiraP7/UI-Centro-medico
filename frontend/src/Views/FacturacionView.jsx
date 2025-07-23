@@ -5,9 +5,8 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
-import FacturaService from '/src/services/FacturaService'; // Importa el servicio de facturas
-import PatientRegistrationForm from '/src/components/PatientRegistrationForm'; // NUEVO: Importa el formulario de registro de pacientes
-
+import FacturaService from '/src/services/FacturaService';
+import PatientRegistrationForm from '/src/components/PatientRegistrationForm';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -20,16 +19,14 @@ export default function FacturacionView({ onClose }) {
     const [loadingFacturas, setLoadingFacturas] = useState(true);
     const [errorFacturas, setErrorFacturas] = useState(null);
 
-    const [selectedFactura, setSelectedFactura] = useState(null);
+    const [selectedFactura, setSelectedFactura] = useState(null); // Estado para la factura seleccionada
     const [detalleFactura, setDetalleFactura] = useState([]);
     const [showDetalleDialog, setShowDetalleDialog] = useState(false);
     const [loadingDetalle, setLoadingDetalle] = useState(false);
     const [errorDetalle, setErrorDetalle] = useState(null);
-
-    // NUEVO ESTADO: Para controlar la visibilidad del diálogo de registro de paciente
     const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
 
-    // Fetch all facturas on component mount
+    // Efecto para cargar las facturas al inicio
     useEffect(() => {
         const fetchFacturas = async () => {
             setLoadingFacturas(true);
@@ -47,39 +44,47 @@ export default function FacturacionView({ onClose }) {
         fetchFacturas();
     }, []);
 
-    // Function to load factura details
-    const loadDetalleFactura = async (factura) => {
-        setSelectedFactura(factura);
-        setLoadingDetalle(true);
-        setErrorDetalle(null);
-        setShowDetalleDialog(true);
-        try {
-            const detalles = await facturaService.getDetalleFacturaByFacturaId(factura.facturaId);
-            setDetalleFactura(detalles);
-        } catch (err) {
-            setErrorDetalle(`Error al cargar detalles: ${err.message}`);
-            console.error("Error fetching factura details:", err);
-            setDetalleFactura([]); // Clear details on error
-        } finally {
-            setLoadingDetalle(false);
+    // Nuevo efecto para cargar los detalles cuando selectedFactura cambia
+    useEffect(() => {
+        if (selectedFactura) {
+            // Solo cargar detalles si hay una factura seleccionada y no se está cargando ya
+            const fetchDetalle = async () => {
+                setLoadingDetalle(true);
+                setErrorDetalle(null);
+                setShowDetalleDialog(true); // Abrir el diálogo inmediatamente
+                try {
+                    const detalles = await facturaService.getDetalleFacturaByFacturaId(selectedFactura.facturaId);
+                    setDetalleFactura(detalles);
+                } catch (err) {
+                    setErrorDetalle(`Error al cargar detalles: ${err.message}`);
+                    console.error("Error fetching factura details:", err);
+                    setDetalleFactura([]);
+                } finally {
+                    setLoadingDetalle(false);
+                }
+            };
+            fetchDetalle();
+        } else {
+            // Si selectedFactura es null, cerrar el diálogo y limpiar
+            setShowDetalleDialog(false);
+            setDetalleFactura([]);
+            setErrorDetalle(null);
         }
-    };
+    }, [selectedFactura]); // Este efecto se ejecuta cada vez que selectedFactura cambia
 
     const hideDetalleDialog = () => {
         setShowDetalleDialog(false);
-        setSelectedFactura(null);
+        setSelectedFactura(null); // Limpiar la factura seleccionada al cerrar el diálogo
         setDetalleFactura([]);
         setErrorDetalle(null);
     };
 
-    // NUEVA FUNCIÓN: Manejar paciente registrado (solo cierra el modal en esta vista)
     const handlePatientRegistered = () => {
         console.log("Paciente registrado desde la vista de facturación.");
-        setShowPatientRegistrationModal(false); // Cierra el modal de registro de paciente
-        // En una aplicación real, podrías querer refrescar la lista de pacientes si es relevante aquí
+        setShowPatientRegistrationModal(false);
+
     };
 
-    // Template for 'Pagado' column (no changes here, as it's for the main invoice list)
     const pagadoBodyTemplate = (rowData) => {
         return (
             <i className={rowData.pagado ? 'pi pi-check-circle' : 'pi pi-times-circle'}
@@ -88,7 +93,6 @@ export default function FacturacionView({ onClose }) {
         );
     };
 
-    // Template for 'Acciones' column (no changes here)
     const actionBodyTemplate = (rowData) => {
         return (
             <Button
@@ -96,7 +100,11 @@ export default function FacturacionView({ onClose }) {
                 className="p-button-rounded p-button-text p-button-sm"
                 tooltip="Ver Detalles"
                 tooltipOptions={{ position: 'bottom' }}
-                onClick={() => loadDetalleFactura(rowData)}
+                onClick={(e) => {
+                    // Prevenir que el evento de clic en el botón active también la selección de la fila
+                    e.stopPropagation();
+                    setSelectedFactura(rowData); // Establecer la factura seleccionada y el useEffect la manejará
+                }}
             />
         );
     };
@@ -107,48 +115,46 @@ export default function FacturacionView({ onClose }) {
         return date.toLocaleDateString('es-DO', { year: 'numeric', month: '2-digit', day: '2-digit' });
     };
 
-    // Body template for 'Monto Cubierto por ARS'
     const montoCubiertoBodyTemplate = (rowData) => {
-        if (rowData.cubierto > 0) {
-            return (
-                <span style={{ color: 'green', fontWeight: 'bold' }}>
-                    ${rowData.cubierto.toFixed(2)}
-                </span>
-            );
-        } else {
-            return (
-                <span style={{ color: 'red' }}>
-                    ${rowData.cubierto.toFixed(2)}
-                </span>
-            );
+        if (rowData.cubierto !== undefined && rowData.cubierto !== null) {
+            if (rowData.cubierto > 0) {
+                return (
+                    <span style={{ color: 'green', fontWeight: 'bold' }}>
+                        ${rowData.cubierto.toFixed(2)}
+                    </span>
+                );
+            } else {
+                return (
+                    <span style={{ color: 'red' }}>
+                        ${rowData.cubierto.toFixed(2)}
+                    </span>
+                );
+            }
         }
+        return '';
     };
 
-    // Función para manejar el clic del botón de Reporte de Cobertura
     const handleReporteCoberturaClick = () => {
-        // Aquí puedes agregar la lógica para generar o mostrar el reporte de cobertura
         console.log("Generando reporte de cobertura...");
-        // Por ejemplo, podrías abrir otro diálogo, redirigir a otra página, o iniciar una descarga.
-        // setshowReporteCoberturaModal(true); // Si tuvieras un modal para el reporte
     };
 
     return (
         <div className="p-4">
             <div className="flex justify-content-between align-items-center mb-4">
-                {/* <h2>Módulo de Facturación</h2> */}
-                <div className="flex gap-2"> {/* Contenedor para los botones */}
-                    {/* Botón: Registrar Paciente */}
+
+                <div className="flex gap-2">
+
                     <Button
                         label="Registrar Paciente"
                         icon="pi pi-user-plus"
                         className="p-button-success p-button-raised"
                         onClick={() => setShowPatientRegistrationModal(true)}
                     />
-                    {/* Botón: Reporte de Cobertura (MODIFICADO) */}
+
                     <Button
                         label="Reporte de Cobertura"
-                        icon="pi pi-file" // Icono de reporte (puedes probar 'pi pi-chart-bar' o 'pi pi-file-excel')
-                        className="p-button-info p-button-raised" // Clase para color azul claro
+                        icon="pi pi-file"
+                        className="p-button-info p-button-raised"
                         onClick={handleReporteCoberturaClick}
                     />
                 </div>
@@ -175,16 +181,16 @@ export default function FacturacionView({ onClose }) {
                         rowsPerPageOptions={[5, 10, 25]}
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} facturas"
-                        selectionMode="single"
-                        onSelectionChange={(e) => loadDetalleFactura(e.value)}
+                        selectionMode="single" // Habilitar selección de fila única
+                        selection={selectedFactura} // Vincular la selección al estado
+                        onSelectionChange={(e) => setSelectedFactura(e.value)} // Actualizar el estado de selección
                         emptyMessage="No hay facturas."
                     >
                         <Column field="facturaId" header="ID Factura"></Column>
                         <Column field="pacienteNombre" header="Paciente"></Column>
                         <Column field="fechaEmision" header="Fecha Emisión" body={(rowData) => formatDate(rowData.fechaEmision)}></Column>
                         <Column field="monto" header="Monto Total" body={(rowData) => `$${rowData.monto.toFixed(2)}`}></Column>
-                        {/* <Column field="pagado" header="Pagado" body={pagadoBodyTemplate}></Column> */}
-                        {/* <Column body={actionBodyTemplate} header="Acciones" exportable={false} style={{ width: '6rem' }}></Column> */}
+                        {/* <Column header="Acciones" body={actionBodyTemplate} exportable={false} style={{ minWidth: '8rem' }}></Column> */}
                     </DataTable>
                 </div>
             )}
@@ -207,9 +213,9 @@ export default function FacturacionView({ onClose }) {
                 {!loadingDetalle && !errorDetalle && detalleFactura.length > 0 && (
                     <DataTable value={detalleFactura} emptyMessage="No hay detalles para esta factura.">
                         <Column field="descripcion" header="Descripción Tratamiento"></Column>
-                        <Column field="fecha" header="Fecha Tratamiento"></Column>
+                        <Column field="fecha" header="Fecha Tratamiento" body={(rowData) => formatDate(rowData.fecha)}></Column>
                         <Column field="costo" header="Costo" body={(rowData) => `$${rowData.costo.toFixed(2)}`}></Column>
-                        <Column field="cubierto" header="Monto Cubierto por ARS" body={montoCubiertoBodyTemplate}></Column>
+                        {/* <Column field="cubierto" header="Cubierto por ARS" body={montoCubiertoBodyTemplate}></Column> */}
                     </DataTable>
                 )}
                 {!loadingDetalle && !errorDetalle && detalleFactura.length === 0 && !selectedFactura && (
@@ -233,12 +239,6 @@ export default function FacturacionView({ onClose }) {
                     onCancel={() => setShowPatientRegistrationModal(false)}
                 />
             </Dialog>
-
-            {onClose && (
-                <div className="flex justify-content-end mt-4">
-                    <Button label="Cerrar Vista" icon="pi pi-times" className="p-button-secondary" onClick={onClose} />
-                </div>
-            )}
         </div>
     );
 }

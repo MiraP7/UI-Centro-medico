@@ -85,7 +85,6 @@ class AseguradoraService {
                 throw new Error(`Failed to create aseguradora: ${response.status} - ${errorData.message || response.statusText}`);
             }
 
-            // Depending on your API, POST might return the created object or just a success status
             return await response.json();
         } catch (error) {
             console.error("Error creating aseguradora:", error);
@@ -123,8 +122,6 @@ class AseguradoraService {
                 throw new Error(`Failed to update aseguradora: ${response.status} - ${errorData.message || response.statusText}`);
             }
 
-            // PUT usually returns the updated resource or just an empty success response (204 No Content)
-            // Check if there's content to parse
             const contentType = response.headers.get("content-type");
             if (contentType && contentType.indexOf("application/json") !== -1) {
                 return await response.json();
@@ -168,76 +165,3 @@ class AseguradoraService {
         }
     }
 }
-
-// --- Usage Example ---
-// In your component or another service file:
-// const aseguradoraService = new AseguradoraService();
-
-// // Example: Get all aseguradoras
-// async function fetchAllAndLog() {
-//     try {
-//         const allAseguradoras = await aseguradoraService.getAllAseguradoras();
-//         console.log('All Aseguradoras:', allAseguradoras);
-//     } catch (error) {
-//         console.error('Failed to get all aseguradoras in example:', error.message);
-//     }
-// }
-// fetchAllAndLog();
-
-// // Example: Get an aseguradora by ID
-// async function fetchByIdAndLog(id) {
-//     try {
-//         const aseguradora = await aseguradoraService.getAseguradoraById(id);
-//         console.log(`Aseguradora ${id}:`, aseguradora);
-//     } catch (error) {
-//         console.error(`Failed to get aseguradora ${id} in example:`, error.message);
-//     }
-// }
-// fetchByIdAndLog('some-aseguradora-id'); // Replace with an actual ID
-
-// // Example: Create a new aseguradora
-// async function createAndLog() {
-//     const newAseguradoraData = {
-//         nombre: "Nueva Seguros S.A.",
-//         direccion: "Av. Siempre Viva 742",
-//         telefono: "809-123-4567",
-//         email: "info@nuevaseguros.com",
-//         contacto: "Juan Perez"
-//     };
-//     try {
-//         const created = await aseguradoraService.createAseguradora(newAseguradoraData);
-//         console.log('Created Aseguradora:', created);
-//     } catch (error) {
-//         console.error('Failed to create aseguradora in example:', error.message);
-//     }
-// }
-// // createAndLog(); // Uncomment to run example
-
-// // Example: Update an aseguradora
-// async function updateAndLog(id) {
-//     const updatedData = {
-//         nombre: "Seguros Modernos S.R.L.",
-//         direccion: "Calle Falsa 123",
-//         telefono: "809-765-4321",
-//         email: "contacto@segurosmodernos.com",
-//         contacto: "Maria Gomez"
-//     };
-//     try {
-//         const result = await aseguradoraService.updateAseguradora(id, updatedData);
-//         console.log(`Updated Aseguradora ${id}:`, result);
-//     } catch (error) {
-//         console.error(`Failed to update aseguradora ${id} in example:`, error.message);
-//     }
-// }
-// // updateAndLog('ID_Aseguradora_a_actualizar'); // Uncomment and replace ID
-
-// // Example: Delete an aseguradora
-// async function deleteAndLog(id) {
-//     try {
-//         const result = await aseguradoraService.deleteAseguradora(id);
-//         console.log(`Delete Aseguradora ${id}:`, result.message);
-//     } catch (error) {
-//         console.error(`Failed to delete aseguradora ${id} in example:`, error.message);
-//     }
-// }
-// // deleteAndLog('ID_Aseguradora_a_eliminar'); // Uncomment and replace ID
