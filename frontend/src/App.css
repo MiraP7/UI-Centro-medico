@@ -26,6 +26,85 @@
 }
 
 
-.container-citas {
-  
+/* Estilos para la barra lateral en general */
+.icons-bar {
+  color: white;
+  /* Color del texto y los íconos dentro de la barra */
+  background-color: transparent;
+  border: none !important;
+  margin-right: 5px;
+  /* Color de fondo oscuro de la barra */
+}
+
+/* Sobrescribir estilos de PrimeReact para los ítems del menú y sus enlaces */
+/* Esto es importante porque PrimeReact a menudo tiene sus propias reglas que pueden ser más específicas */
+.p-sidebar.icons-bar {
+  background-color: #273747ff !important;
+  /* Fuerza el fondo de la barra lateral */
+}
+
+.icons-bar .p-menu {
+  background-color: #273747ff !important;
+  /* Fuerza el fondo del componente Menu dentro del sidebar */
+  border: none;
+  /* Elimina cualquier borde que el tema por defecto pueda añadir */
+}
+
+.icons-bar .p-menuitem-link {
+  color: white !important;
+  /* Fuerza el color blanco para el texto de los enlaces del menú */
+}
+
+.icons-bar .p-menuitem-icon {
+  color: white !important;
+  /* Fuerza el color blanco para los íconos del menú */
+}
+
+/* Opcional: Estilo para los ítems del menú al pasar el mouse por encima o al seleccionarlos */
+.icons-bar .p-menuitem-link:hover {
+  background-color: #384d63ff !important;
+  /* Un tono un poco más claro al pasar el mouse */
+}
+
+.icons-bar .p-menuitem-link.p-focus {
+  background-color: #4a6385ff !important;
+  /* Estilo al seleccionar con teclado o foco */
+}
+
+.p-panelmenu-header-content {
+  background-color: #273747ff !important;
+  border: none !important;
+}
+
+.p-panelmenu-header-link {
+  color: white !important;
+  background-color: #273747ff !important;
+  padding: 5px 0px;
+  font-size: 16px !important;
+  font-weight: 700;
+  margin: 10px 10px;
+  padding: 5px;
+  border-bottom: 1px solid #384d63ff !important;
+
+  /* Fuerza el color blanco para los enlaces del encabezado del PanelMenu */
+}
+
+
+.p-panelmenu-header-link:hover {
+  background-color: #384d63ff !important;
+  border-radius: 10px;
+
+  /* Un tono un poco más claro al pasar el mouse */
+}
+
+.p-panelmenu-panel {
+  border: none !important;
+}
+
+.container-dialog {
+  padding: 20px;
+}
+
+.p-dialog-title {
+  padding: 10px;
 }

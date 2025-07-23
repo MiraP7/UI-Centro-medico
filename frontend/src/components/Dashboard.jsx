@@ -58,7 +58,8 @@ export default function Dashboard({ onLogout }) {
   const items = [
     {
       label: 'Home',
-      icon: 'pi pi-fw pi-home',
+      icon: 'pi pi-fw pi-home icons-bar',
+
       command: () => { // AÑADIDO: Cierra el sidebar al hacer clic en Home
         setSidebarVisible(false);
         // Aquí podrías añadir lógica adicional si "Home" implicara ocultar otros modales abiertos
@@ -68,7 +69,7 @@ export default function Dashboard({ onLogout }) {
     },
     {
       label: 'Pacientes',
-      icon: 'pi pi-fw pi-users',
+      icon: 'pi pi-fw pi-users icons-bar',
       command: () => {
         setShowPatientViewModal(true);
         setSidebarVisible(false);
@@ -76,7 +77,7 @@ export default function Dashboard({ onLogout }) {
     },
     {
       label: 'Facturación',
-      icon: 'pi pi-fw pi-money-bill',
+      icon: 'pi pi-fw pi-money-bill icons-bar',
       command: () => {
         setShowFacturacionViewModal(true);
         setSidebarVisible(false);
@@ -84,19 +85,19 @@ export default function Dashboard({ onLogout }) {
     },
     {
       label: 'Autorización',
-      icon: 'pi pi-fw pi-check-square',
+      icon: 'pi pi-fw pi-check-square icons-bar',
     },
     {
       label: 'Medicos',
-      icon: 'pi pi-fw pi-user-md',
+      icon: 'pi pi-fw pi-user-md icons-bar',
     },
     {
       label: 'Usuarios',
-      icon: 'pi pi-fw pi-id-card',
+      icon: 'pi pi-fw pi-id-card icons-bar',
     },
     {
-      label: 'Aseguradora',
-      icon: 'pi pi-fw pi-shield',
+      label: 'Aseguradora ',
+      icon: 'pi pi-fw pi-shield icons-bar',
     }
   ];
 
@@ -107,11 +108,11 @@ export default function Dashboard({ onLogout }) {
         showCloseIcon={true}
         baseZIndex={9999}
         className="w-20rem"
-        style={{ backgroundColor: COLOR_AZUL_MARINO }}
+        style={{ backgroundColor: '#273747ff' }}
       >
         <h3 className="mb-3 pl-3 text-2xl font-semibold" style={{ color: COLOR_BLANCO, textAlign: 'center' }}>Menú Principal</h3>
         {/* The className "sidebar-panelmenu" is crucial here for your CSS to work */}
-        <PanelMenu model={items} className="w-full sidebar-panelmenu" />
+        <PanelMenu model={items} className="w-full sidebar-panelmenu " />
       </Sidebar>
 
       {/* HEADER REDISEÑADO */}

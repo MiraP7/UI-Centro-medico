@@ -58,7 +58,7 @@ export default function AppointmentRegistrationForm({ onAppointmentRegistered, o
     };
 
     return (
-        <form onSubmit={handleSubmit} className="p-fluid grid formgrid">
+        <form onSubmit={handleSubmit} className="p-fluid grid formgrid container-dialog">
             {/* Botón para abrir el formulario de registro de paciente */}
             <Button
                 type="button"
