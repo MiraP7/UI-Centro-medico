@@ -35,7 +35,7 @@ export default function PatientView({ onClose }) {
         setError(null);
         console.log("Intentando cargar pacientes de la API...");
         try {
-            const response = await fetch('https://localhost:44388/api/Paciente/all', {
+            const response = await fetch('https://localhost:5185/api/Paciente/all', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

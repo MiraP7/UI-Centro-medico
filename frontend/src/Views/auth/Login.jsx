@@ -24,7 +24,7 @@ export default function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const response = await fetch("https://localhost:44388/api/Auth/Login", {
+      const response = await fetch("http://localhost:5185/api/Auth/Login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

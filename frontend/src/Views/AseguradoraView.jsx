@@ -32,7 +32,7 @@ export default function AseguradoraView({ onClose }) {
         setApiMessage(null);
         console.log("Intentando cargar aseguradoras de la API directamente...");
         try {
-            const response = await fetch('https://localhost:44388/api/Aseguradora/all', {
+            const response = await fetch('https://localhost:5185api/Aseguradora/all', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

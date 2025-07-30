@@ -35,7 +35,7 @@ export default function MedicoView({ onClose }) {
         setApiMessage(null);
         console.log("Intentando cargar médicos de la API...");
         try {
-            const response = await fetch('https://localhost:44388/api/Medico/all', {
+            const response = await fetch('https://localhost:5185/api/Medico/all', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

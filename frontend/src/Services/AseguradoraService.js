@@ -1,5 +1,5 @@
 class AseguradoraService {
-    constructor(baseUrl = 'https://localhost:44388/api/Aseguradora') {
+    constructor(baseUrl = 'https://localhost:5185/api/Aseguradora') {
         this.baseUrl = baseUrl;
     }
 

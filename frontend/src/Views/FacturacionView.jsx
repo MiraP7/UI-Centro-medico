@@ -5,8 +5,8 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
-import FacturaService from '/src/services/FacturaService';
-import PatientRegistrationForm from '/src/components/PatientRegistrationForm';
+import FacturaService from '../Services/FacturaService.js';
+import PatientRegistrationForm from '../components/PatientRegistrationForm.jsx';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -14,7 +14,7 @@ import 'primeflex/primeflex.css';
 
 const facturaService = new FacturaService();
 
-export default function FacturacionView({ onClose }) {
+export default function FacturacionView() {
     const [facturas, setFacturas] = useState([]);
     const [loadingFacturas, setLoadingFacturas] = useState(true);
     const [errorFacturas, setErrorFacturas] = useState(null);
