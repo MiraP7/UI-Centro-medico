@@ -2,7 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/auth/AuthContext';
 import { ROLES } from '../routes/roles';
-import '../styles/Sidebar.css'; // Mantén los estilos existentes
+import './styles/Sidebar.css';
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
@@ -50,6 +50,17 @@ export default function Sidebar() {
     item.roles.includes(user?.role)
   );
 
+  const getRoleName = (role) => {
+    switch (role) {
+      case ROLES.ADMIN:
+        return 'Administrador';
+      case ROLES.ASSISTANT:
+        return 'Asistente';
+      default:
+        return 'Usuario';
+    }
+  };
+
   const handleLogout = () => {
     logout();
   };
@@ -71,19 +82,26 @@ export default function Sidebar() {
           ))}
         </ul>
       </nav>
+      
       <div className="user-info">
         {user && (
           <>
-            <span className="user-role">
-              {user.role === ROLES.ADMIN ? 'Administrador' : 'Asistente'}
-            </span>
-            <span className="user-name">{user.name}</span>
+            <div className="user-details">
+              <span className="user-role">
+                <i className="fas fa-user-shield"></i>
+                {getRoleName(user.role)}
+              </span>
+              <span className="user-name">
+                <i className="fas fa-user"></i>
+                {user.name}
+              </span>
+            </div>
+            <button className="logout-button" onClick={handleLogout}>
+              <i className="fas fa-sign-out-alt"></i>
+              <span>Cerrar Sesión</span>
+            </button>
           </>
         )}
-        <button className="logout-button" onClick={handleLogout}>
-          <i className="fas fa-sign-out-alt"></i>
-          Cerrar Sesión
-        </button>
       </div>
     </div>
   );
