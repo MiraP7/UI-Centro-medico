@@ -8,7 +8,7 @@ export default defineConfig({
     proxy: {
       // Redirige las peticiones que comienzan con /api al backend de .NET
       '/api': {
-        target: 'http://localhost:5000', // <-- USA EL PUERTO DE TU BACKEND .NET
+        target: 'http://localhost:5185/', // <-- USA EL PUERTO DE TU BACKEND .NET
         changeOrigin: true,
         secure: false,      
       }

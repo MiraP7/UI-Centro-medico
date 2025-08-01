@@ -46,7 +46,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
             setInsurersLoading(true);
             setInsurersError(null);
             try {
-                const response = await fetch('https://localhost:44388/api/Aseguradora/all', {
+                const response = await fetch('https://localhost:5185/api/Aseguradora/all', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -256,8 +256,8 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
 
         const method = initialData ? 'PUT' : 'POST';
         const url = initialData
-            ? `https://localhost:44388/api/Paciente/${initialData.pacienteId}`
-            : 'https://localhost:44388/api/Paciente';
+            ? `http://localhost:5185//api/Paciente/${initialData.pacienteId}`
+            : 'http://localhost:5185//api/Paciente';
 
         try {
             const response = await fetch(url, {

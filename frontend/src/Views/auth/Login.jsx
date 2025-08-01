@@ -18,7 +18,7 @@ export default function Login({ onLoginSuccess }) {
   const [isUsernameFocused, setIsUsernameFocused] = useState(false);
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (credentials) => {
     e.preventDefault();
     setError("");
     setLoading(true);
@@ -35,17 +35,13 @@ export default function Login({ onLoginSuccess }) {
       const data = await response.json();
 
       if (response.ok) {
-        if (data.isSuccess) {
-          localStorage.setItem("authToken", data.token);
-          localStorage.setItem("usuario", usuario);
-          localStorage.setItem("clave", clave);
-
-          onLoginSuccess && onLoginSuccess();
-        } else {
-          setError(
-            data.message || "Credenciales incorrectas. Intente de nuevo."
-          );
-        }
+        const userData = {
+          ...response.data,
+          role: response.data.isAdmin ? ROLES.ADMIN : ROLES.ASSISTANT
+        };
+        
+        login(userData);
+        navigate('/home');
       } else {
         setError(
           data.message || `Error en el servidor: ${response.statusText}`

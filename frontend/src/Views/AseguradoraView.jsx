@@ -101,7 +101,7 @@ export default function AseguradoraView({ onClose }) {
                 try {
                     setLoading(true);
                     console.log("Intentando eliminar Aseguradora con ID:", aseguradoraId);
-                    const response = await fetch(`https://localhost:44388/api/Aseguradora/${aseguradoraId}`, {
+                    const response = await fetch(`http://localhost:5185//api/Aseguradora/${aseguradoraId}`, {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
