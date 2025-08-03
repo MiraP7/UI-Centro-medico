@@ -4,6 +4,7 @@ import { Message } from 'primereact/message';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Toast } from 'primereact/toast';
+import { InputText } from 'primereact/inputtext';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog';
 
 import AseguradoraRegistrationForm from '/src/components/AseguradoraRegistrationForm';
@@ -18,6 +19,7 @@ export default function AseguradoraView({ onClose }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [apiMessage, setApiMessage] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     const [showAseguradoraRegistrationModal, setShowAseguradoraRegistrationModal] = useState(false);
     const [editingAseguradora, setEditingAseguradora] = useState(null);
@@ -76,6 +78,17 @@ export default function AseguradoraView({ onClose }) {
     useEffect(() => {
         fetchAseguradoras();
     }, []);
+
+    // Función para filtrar aseguradoras según el término de búsqueda
+    const filteredAseguradoras = aseguradoras.filter(aseguradora => {
+        const searchLower = searchTerm.toLowerCase();
+
+        return (
+            aseguradora.aseguradoraId?.toString().toLowerCase().includes(searchLower) ||
+            aseguradora.id?.toString().toLowerCase().includes(searchLower) ||
+            aseguradora.nombre?.toLowerCase().includes(searchLower)
+        );
+    });
 
     const handleAseguradoraSaved = (savedAseguradora) => {
         console.log('Aseguradora guardada (desde AseguradoraView):', savedAseguradora);
@@ -180,12 +193,26 @@ export default function AseguradoraView({ onClose }) {
             <Toast ref={toast} />
             <ConfirmDialog />
             <div className="flex justify-content-between align-items-center mb-4">
-                <Button
-                    label="Registrar Aseguradora"
-                    // icon="pi pi-plus"
-                    className="p-button-primary"
-                    onClick={() => setShowAseguradoraRegistrationModal(true)}
-                />
+                <div className="flex align-items-center gap-3">
+                    <Button
+                        label="Registrar Aseguradora"
+                        // icon="pi pi-plus"
+                        className="p-button-primary"
+                        onClick={() => setShowAseguradoraRegistrationModal(true)}
+                    />
+                </div>
+
+                <div className="flex align-items-center gap-2">
+                    <span className="p-input-icon-left">
+                        <i className="pi pi-search" />
+                        <InputText
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Buscar por..."
+                            className="w-20rem"
+                        />
+                    </span>
+                </div>
             </div>
 
             {apiMessage && (
@@ -209,7 +236,11 @@ export default function AseguradoraView({ onClose }) {
                 <Message severity="info" summary="Información" text="No hay aseguradoras registradas." className="mb-3 w-full" />
             )}
 
-            {!loading && !error && aseguradoras.length > 0 && (
+            {!loading && !error && aseguradoras.length > 0 && filteredAseguradoras.length === 0 && searchTerm && (
+                <Message severity="warn" summary="Sin resultados" text={`No se encontraron aseguradoras que coincidan con "${searchTerm}".`} className="mb-3 w-full" />
+            )}
+
+            {!loading && !error && filteredAseguradoras.length > 0 && (
                 <div className="card">
                     <table className="p-datatable p-component p-datatable-sm" style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead className="p-datatable-thead">
@@ -224,7 +255,7 @@ export default function AseguradoraView({ onClose }) {
                             </tr>
                         </thead>
                         <tbody className="p-datatable-tbody">
-                            {aseguradoras.map(aseg => (
+                            {filteredAseguradoras.map(aseg => (
                                 <tr key={aseg.aseguradoraId || aseg.id}>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.aseguradoraId || aseg.id}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{aseg.nombre}</td>

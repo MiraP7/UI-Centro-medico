@@ -4,6 +4,7 @@ import { Message } from 'primereact/message';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { Toast } from 'primereact/toast';
+import { InputText } from 'primereact/inputtext';
 import { confirmDialog, ConfirmDialog } from 'primereact/confirmdialog'; // Importar ConfirmDialog
 
 // Importamos el formulario para médicos
@@ -19,6 +20,7 @@ export default function MedicoView({ onClose }) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [apiMessage, setApiMessage] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Estados para los modales de registro y edición
     const [showMedicoRegistrationModal, setShowMedicoRegistrationModal] = useState(false);
@@ -80,6 +82,17 @@ export default function MedicoView({ onClose }) {
     useEffect(() => {
         fetchMedicos();
     }, []);
+
+    // Función para filtrar médicos según el término de búsqueda
+    const filteredMedicos = medicos.filter(medico => {
+        const searchLower = searchTerm.toLowerCase();
+
+        return (
+            medico.cedula?.toString().toLowerCase().includes(searchLower) ||
+            medico.nombre?.toLowerCase().includes(searchLower) ||
+            medico.especialidad?.toLowerCase().includes(searchLower)
+        );
+    });
 
     // Función para manejar el guardado (registro o edición) de un médico
     const handleMedicoSaved = (savedMedico) => {
@@ -182,13 +195,26 @@ export default function MedicoView({ onClose }) {
             <ConfirmDialog /> {/* ¡Importante! Asegúrate de que ConfirmDialog esté aquí */}
 
             <div className="flex justify-content-between align-items-center mb-4">
-                {/* <h2>Listado de Médicos</h2> */}
-                <Button
-                    label="Registrar Médico"
-                    // icon="pi pi-plus"
-                    className="p-button-primary"
-                    onClick={() => setShowMedicoRegistrationModal(true)}
-                />
+                <div className="flex align-items-center gap-3">
+                    <Button
+                        label="Registrar Médico"
+                        // icon="pi pi-plus"
+                        className="p-button-primary"
+                        onClick={() => setShowMedicoRegistrationModal(true)}
+                    />
+                </div>
+
+                <div className="flex align-items-center gap-2">
+                    <span className="p-input-icon-left">
+                        <i className="pi pi-search" />
+                        <InputText
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Buscar por..."
+                            className="w-20rem"
+                        />
+                    </span>
+                </div>
             </div>
 
             {apiMessage && (
@@ -212,12 +238,16 @@ export default function MedicoView({ onClose }) {
                 <Message severity="info" summary="Información" text="No hay médicos registrados." className="mb-3 w-full" />
             )}
 
-            {!loading && !error && medicos.length > 0 && (
+            {!loading && !error && medicos.length > 0 && filteredMedicos.length === 0 && searchTerm && (
+                <Message severity="warn" summary="Sin resultados" text={`No se encontraron médicos que coincidan con "${searchTerm}".`} className="mb-3 w-full" />
+            )}
+
+            {!loading && !error && filteredMedicos.length > 0 && (
                 <div className="card">
                     <table className="p-datatable p-component p-datatable-sm" style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead className="p-datatable-thead">
                             <tr>
-                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>ID</th>
+                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Cédula</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Nombre</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Apellido</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Especialidad</th>
@@ -227,9 +257,9 @@ export default function MedicoView({ onClose }) {
                             </tr>
                         </thead>
                         <tbody className="p-datatable-tbody">
-                            {medicos.map(med => (
+                            {filteredMedicos.map(med => (
                                 <tr key={med.medicoId || med.id}>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.medicoId || med.id}</td>
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.cedula}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.nombre}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.apellido}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{med.especialidad}</td>

@@ -454,7 +454,7 @@ export default function Dashboard({ onLogout }) {
                 ) : (
                   <DataTable value={filteredAppointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
                     paginator
-                    rows={9}
+                    rows={3}
                     className=''
                     rowsPerPageOptions={[5, 10, 25, 50]}
                     paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"

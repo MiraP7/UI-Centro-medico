@@ -5,6 +5,7 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
+import { InputText } from 'primereact/inputtext';
 // Eliminamos la importación de ConfirmDialog y confirmDialog ya que no se usarán
 
 // Asegúrate de que los estilos de PrimeReact (básicos y PrimeFlex) estén disponibles
@@ -20,6 +21,7 @@ export default function PatientView({ onClose }) {
     const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
     const [isAppointmentModalOpen, setAppointmentModalOpen] = useState(false);
     const [selectedPatient, setSelectedPatient] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
 
     // Estado para la edición
     const [editingPatient, setEditingPatient] = useState(null);
@@ -78,6 +80,20 @@ export default function PatientView({ onClose }) {
         fetchPatients();
     }, []);
 
+    // Función para filtrar pacientes según el término de búsqueda
+    const filteredPatients = patients.filter(patient => {
+        const searchLower = searchTerm.toLowerCase();
+        const fullName = `${patient.nombre} ${patient.apellido}`.toLowerCase();
+
+        return (
+            patient.cedula?.toString().toLowerCase().includes(searchLower) ||
+            fullName.includes(searchLower) ||
+            patient.sexo?.toLowerCase().includes(searchLower) ||
+            patient.telefono?.toString().toLowerCase().includes(searchLower) ||
+            patient.aseguradora?.toLowerCase().includes(searchLower)
+        );
+    });
+
     // Función para manejar paciente registrado
     const handlePatientRegistered = (newPatient) => {
         console.log('Paciente Registrado (desde PatientView):', newPatient);
@@ -129,13 +145,26 @@ export default function PatientView({ onClose }) {
         <div className="p-4">
             {/* Eliminamos <ConfirmDialog /> */}
             <div className="flex justify-content-between align-items-center mb-4">
+                <div className="flex align-items-center gap-3">
+                    <Button
+                        label="Registrar Paciente"
+                        icon="pi pi-user-plus"
+                        className="p-button-primary"
+                        onClick={() => setShowPatientRegistrationModal(true)}
+                    />
+                </div>
 
-                <Button
-                    label="Registrar Paciente"
-                    icon="pi pi-user-plus"
-                    className="p-button-primary"
-                    onClick={() => setShowPatientRegistrationModal(true)}
-                />
+                <div className="flex align-items-center gap-2">
+                    <span className="p-input-icon-left">
+                        {/* <i className="pi pi-search" /> */}
+                        <InputText
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            placeholder="Buscar..."
+                            className="w-20rem"
+                        />
+                    </span>
+                </div>
             </div>
 
             {apiMessage && (
@@ -159,12 +188,16 @@ export default function PatientView({ onClose }) {
                 <Message severity="info" summary="Información" text="No hay pacientes registrados." className="mb-3 w-full" />
             )}
 
-            {!loading && !error && patients.length > 0 && (
+            {!loading && !error && patients.length > 0 && filteredPatients.length === 0 && searchTerm && (
+                <Message severity="warn" summary="Sin resultados" text={`No se encontraron pacientes que coincidan con "${searchTerm}".`} className="mb-3 w-full" />
+            )}
+
+            {!loading && !error && filteredPatients.length > 0 && (
                 <div className="card">
                     <table className="p-datatable p-component p-datatable-sm" style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead className="p-datatable-thead">
                             <tr>
-                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>ID</th>
+                                <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Cédula</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Nombre</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Fecha Nac.</th>
                                 <th style={{ padding: '0.75rem', textAlign: 'left', borderBottom: '1px solid #dee2e6' }}>Sexo</th>
@@ -176,9 +209,9 @@ export default function PatientView({ onClose }) {
                             </tr>
                         </thead>
                         <tbody className="p-datatable-tbody">
-                            {patients.map(patient => (
+                            {filteredPatients.map(patient => (
                                 <tr key={patient.pacienteId}>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.pacienteId}</td>
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.cedula}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{`${patient.nombre} ${patient.apellido}`}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.fechaNacimiento}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.sexo}</td>

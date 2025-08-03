@@ -482,7 +482,7 @@ export default function AppointmentRegistrationForm({
                     loading={loadingPatients}
                     onShow={loadPatients}
                     filter
-                    filterPlaceholder="Buscar por nombre o cédula..."
+                    filterPlaceholder="Buscar por..."
                     emptyMessage="No se encontraron pacientes"
                     required
                 />
@@ -499,7 +499,7 @@ export default function AppointmentRegistrationForm({
                     loading={loadingMedicos}
                     onShow={loadMedicos}
                     filter
-                    filterPlaceholder="Buscar por nombre o cédula..."
+                    filterPlaceholder="Buscar por..."
                     emptyMessage="No se encontraron médicos"
                     required
                 />
