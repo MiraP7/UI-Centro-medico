@@ -99,13 +99,13 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
             if (response.ok) {
                 const result = await response.json();
                 console.log("Respuesta de búsqueda de aseguradora:", result);
-                
+
                 if (result && Array.isArray(result.data) && result.data.length > 0) {
                     // Buscar coincidencia exacta primero
-                    const exactMatch = result.data.find(insurer => 
+                    const exactMatch = result.data.find(insurer =>
                         insurer.nombre.toLowerCase() === insurerName.toLowerCase()
                     );
-                    
+
                     if (exactMatch) {
                         console.log(`Aseguradora encontrada (coincidencia exacta):`, exactMatch);
                         return exactMatch.aseguradoraId;
@@ -151,9 +151,9 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         const initializeFormData = async () => {
             if (initialData) {
                 console.log("Datos iniciales (initialData):", initialData);
-                
+
                 let initialArsId = null;
-                
+
                 // Si hay nombre de aseguradora, buscar su ID
                 if (initialData.aseguradora) {
                     console.log(`Buscando ID para aseguradora: "${initialData.aseguradora}"`);
@@ -177,7 +177,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                     PolicyID: initialData.polizaId || '',
                     arsID: initialArsId,
                 });
-                
+
                 // Activar isInsured si hay datos de póliza o aseguradora
                 setIsInsured(!!initialData.polizaId || !!initialData.aseguradora || !!initialArsId);
             } else {
