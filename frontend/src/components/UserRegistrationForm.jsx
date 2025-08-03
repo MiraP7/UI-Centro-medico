@@ -20,7 +20,8 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         usuario1: '',
         contraseña: '',
         confirmarContraseña: '',
-        estadoId: 100 // Por defecto: Activo
+        estadoId: 100, // Por defecto: Activo
+        rolId: 101 // Por defecto: Administrador
     });
 
     const [loading, setLoading] = useState(false);
@@ -34,9 +35,32 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         { label: 'Inactivo', value: 101 }
     ];
 
+    // Opciones de roles
+    const rolOptions = [
+        { label: 'Administrador', value: 101, rolNombre: 'Administrador' },
+        { label: 'Contador', value: 103, rolNombre: 'Contador' },
+        { label: 'Médico', value: 104, rolNombre: 'Médico' },
+        { label: 'Recepcionista', value: 105, rolNombre: 'Recepcionista' }
+    ];
+
     // useEffect para inicializar el formulario si hay datos iniciales (para edición)
     useEffect(() => {
         if (initialData) {
+            console.log("🔧 Datos iniciales para editar usuario:", initialData);
+            console.log("🔧 Campos disponibles:", Object.keys(initialData));
+
+            // Mapear rolNombre a rolId para inicializar el formulario
+            const getRolIdFromRolNombre = (rolNombre) => {
+                const roleMap = {
+                    'Administrador': 101,
+                    'Contador': 103,
+                    'Médico': 104,
+                    'Medico': 104, // Por si acaso
+                    'Recepcionista': 105
+                };
+                return roleMap[rolNombre] || 101; // Default: Administrador
+            };
+
             setFormData({
                 nombre: initialData.nombre || '',
                 apellido: initialData.apellido || '',
@@ -45,8 +69,19 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 contraseña: '', // No pre-llenar contraseña por seguridad
                 confirmarContraseña: '',
                 estadoId: initialData.estadoId || 100,
+                rolId: getRolIdFromRolNombre(initialData.rolNombre)
+            });
+
+            console.log("🔧 FormData configurado para edición:", {
+                nombre: initialData.nombre || '',
+                apellido: initialData.apellido || '',
+                email: initialData.email || '',
+                usuario1: initialData.usuario1 || '',
+                estadoId: initialData.estadoId || 100,
+                rolId: getRolIdFromRolNombre(initialData.rolNombre)
             });
         } else {
+            console.log("🔧 Nuevo usuario - reseteando formulario");
             // Resetear el formulario para un nuevo registro
             setFormData({
                 nombre: '',
@@ -56,6 +91,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 contraseña: '',
                 confirmarContraseña: '',
                 estadoId: 100,
+                rolId: 101
             });
         }
     }, [initialData]);
@@ -69,6 +105,10 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         setFormData(prev => ({ ...prev, estadoId: e.value }));
     };
 
+    const handleRolChange = (e) => {
+        setFormData(prev => ({ ...prev, rolId: e.value }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -77,10 +117,19 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         setLoading(true);
 
         // Validación básica
-        if (!formData.nombre || !formData.apellido || !formData.email || !formData.usuario1) {
-            setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Nombre, Apellido, Email y Usuario son obligatorios.' });
+        if (!formData.usuario1) {
+            setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'El campo Usuario es obligatorio.' });
             setLoading(false);
             return;
+        }
+
+        // Para edición, solo validar campos que realmente necesitamos
+        if (!initialData) { // Solo para nuevos usuarios
+            if (!formData.nombre || !formData.apellido || !formData.email) {
+                setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Nombre, Apellido y Email son obligatorios para nuevos usuarios.' });
+                setLoading(false);
+                return;
+            }
         }
 
         // Validación de contraseña (solo para nuevos usuarios o si se proporciona)
@@ -101,12 +150,14 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
             return;
         }
 
-        // Validación de email
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData.email)) {
-            setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, ingrese un email válido.' });
-            setLoading(false);
-            return;
+        // Validación de email - solo para nuevos usuarios o si se proporciona email
+        if (formData.email && formData.email.trim() !== '') {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(formData.email)) {
+                setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, ingrese un email válido.' });
+                setLoading(false);
+                return;
+            }
         }
 
         const method = initialData ? 'PUT' : 'POST';
@@ -114,18 +165,42 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
             ? `https://localhost:44388/api/Usuario/${initialData.usuarioId}` // Usar usuarioId para PUT
             : 'https://localhost:44388/api/Usuario'; // POST a la URL base
 
-        // Preparar datos para envío
-        const userDataToSend = {
-            nombre: formData.nombre,
-            apellido: formData.apellido,
-            email: formData.email,
-            usuario1: formData.usuario1,
-            estadoId: formData.estadoId,
-        };
+        // Preparar datos para envío - DIFERENTES FORMATOS PARA PUT vs POST
+        let userDataToSend;
 
-        // Solo incluir contraseña si se proporciona
-        if (formData.contraseña) {
-            userDataToSend.contraseña = formData.contraseña;
+        if (initialData) {
+            // **MODO EDICIÓN - PUT**: Solo enviar los campos que el API PUT espera
+            console.log("🔄 Preparando datos para PUT (edición)");
+
+            userDataToSend = {
+                usuario1: formData.usuario1,
+                rolId: formData.rolId
+            };
+
+            // Solo incluir contraseña si se proporciona en PUT
+            if (formData.contraseña) {
+                userDataToSend.contrasena = formData.contraseña;
+            }
+
+            console.log("📤 Datos para PUT:", userDataToSend);
+        } else {
+            // **MODO CREACIÓN - POST**: Enviar todos los campos necesarios
+            console.log("🆕 Preparando datos para POST (creación)");
+
+            userDataToSend = {
+                nombre: formData.nombre,
+                apellido: formData.apellido,
+                email: formData.email,
+                usuario1: formData.usuario1,
+                estadoId: formData.estadoId,
+            };
+
+            // Solo incluir contraseña si se proporciona en POST
+            if (formData.contraseña) {
+                userDataToSend.contraseña = formData.contraseña;
+            }
+
+            console.log("📤 Datos para POST:", userDataToSend);
         }
 
         try {
@@ -173,37 +248,43 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 </div>
             )}
 
+            {initialData && (
+                <div className="col-12">
+                    <Message severity="info" summary="Modo Edición" text={`Editando usuario: ${initialData.usuario1} (${initialData.rolNombre}). Los campos vacíos se mantendrán sin cambios.`} />
+                </div>
+            )}
+
             <div className="field col-12 md:col-6">
-                <label htmlFor="nombre">Nombre</label>
+                <label htmlFor="nombre">Nombre {initialData && <small>(opcional en edición)</small>}</label>
                 <InputText
                     id="nombre"
                     name="nombre"
                     value={formData.nombre}
                     onChange={handleChange}
-                    required
+                    required={!initialData}
                     placeholder="Ej: Juan"
                 />
             </div>
             <div className="field col-12 md:col-6">
-                <label htmlFor="apellido">Apellido</label>
+                <label htmlFor="apellido">Apellido {initialData && <small>(opcional en edición)</small>}</label>
                 <InputText
                     id="apellido"
                     name="apellido"
                     value={formData.apellido}
                     onChange={handleChange}
-                    required
+                    required={!initialData}
                     placeholder="Ej: Pérez"
                 />
             </div>
             <div className="field col-12 md:col-6">
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email">Email {initialData && <small>(opcional en edición)</small>}</label>
                 <InputText
                     id="email"
                     name="email"
                     type="email"
                     value={formData.email}
                     onChange={handleChange}
-                    required
+                    required={!initialData}
                     placeholder="usuario@clinica.com"
                 />
             </div>
@@ -253,6 +334,18 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                     onChange={handleEstadoChange}
                     placeholder="Seleccionar Estado"
                 />
+            </div>
+            <div className="field col-12 md:col-6">
+                <label htmlFor="rolId">Rol</label>
+                <Dropdown
+                    id="rolId"
+                    value={formData.rolId}
+                    options={rolOptions}
+                    onChange={handleRolChange}
+                    placeholder="Seleccionar Rol"
+                    disabled={!initialData} // Solo editable en modo edición
+                />
+                {!initialData && <small>El rol se asignará automáticamente para nuevos usuarios</small>}
             </div>
 
             <div className="col-12 flex justify-content-end gap-2 mt-4">

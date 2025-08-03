@@ -63,6 +63,14 @@ export default function UserView({ onClose }) {
     };
 
     const handleEditUser = (user) => {
+        console.log("✏️ Editando usuario:", user);
+        console.log("✏️ Campos del usuario:", Object.keys(user));
+        console.log("✏️ Datos específicos:", {
+            usuarioId: user.usuarioId,
+            usuario1: user.usuario1,
+            rolNombre: user.rolNombre,
+            contrasena: user.contrasena ? "***" : "undefined"
+        });
         setEditingUser(user);
         setShowUserModal(true);
     };
@@ -104,25 +112,25 @@ export default function UserView({ onClose }) {
         }
     };
 
-    // Template para mostrar el estado
-    const statusTemplate = (rowData) => {
-        // Si no hay estadoId en la respuesta, usar un estado por defecto
-        const estadoId = rowData.estadoId || 100; // Por defecto "Activo"
-
-        const getStatusDetails = (estadoId) => {
-            switch (estadoId) {
-                case 100:
-                    return { label: 'Activo', severity: 'success' };
-                case 101:
-                    return { label: 'Inactivo', severity: 'danger' };
-                default:
-                    return { label: 'Activo', severity: 'success' };
-            }
-        };
-
-        const status = getStatusDetails(estadoId);
-        return <Tag value={status.label} severity={status.severity} />;
-    };
+    // Template para mostrar el estado - COMENTADO
+    // const statusTemplate = (rowData) => {
+    //     // Si no hay estadoId en la respuesta, usar un estado por defecto
+    //     const estadoId = rowData.estadoId || 100; // Por defecto "Activo"
+    //
+    //     const getStatusDetails = (estadoId) => {
+    //         switch (estadoId) {
+    //             case 100:
+    //                 return { label: 'Activo', severity: 'success' };
+    //             case 101:
+    //                 return { label: 'Inactivo', severity: 'danger' };
+    //             default:
+    //                 return { label: 'Activo', severity: 'success' };
+    //         }
+    //     };
+    //
+    //     const status = getStatusDetails(estadoId);
+    //     return <Tag value={status.label} severity={status.severity} />;
+    // };
 
     // Template para los botones de acción
     const actionTemplate = (rowData) => {
@@ -167,12 +175,12 @@ export default function UserView({ onClose }) {
                     severity="success"
                     onClick={handleCreateUser}
                 />
-                <Button
+                {/* <Button
                     label="Actualizar"
                     icon="pi pi-refresh"
                     severity="help"
                     onClick={fetchUsers}
-                />
+                /> */}
             </div>
         );
     };
@@ -181,7 +189,7 @@ export default function UserView({ onClose }) {
         return (
             <div className="flex align-items-center gap-2">
                 <span className="p-input-icon-left">
-                    <i className="pi pi-search" />
+                    {/* <i className="pi pi-search" /> */}
                     <InputText
                         type="search"
                         placeholder="Buscar usuarios..."
@@ -227,14 +235,14 @@ export default function UserView({ onClose }) {
                 stripedRows
                 showGridlines
             >
-                <Column
+                {/* <Column
                     field="usuarioId"
                     header="ID"
                     sortable
                     style={{ width: '80px' }}
-                />
+                /> */}
                 <Column
-                    header="Nombre/Rol"
+                    header="Rol"
                     body={fullNameTemplate}
                     sortable
                     sortField="rolNombre"
@@ -244,18 +252,18 @@ export default function UserView({ onClose }) {
                     header="Usuario"
                     sortable
                 />
-                <Column
+                {/* <Column
                     field="rolNombre"
                     header="Rol"
                     sortable
-                />
-                <Column
+                /> */}
+                {/* <Column
                     field="estadoId"
                     header="Estado"
                     body={statusTemplate}
                     sortable
                     style={{ width: '120px' }}
-                />
+                /> */}
                 <Column
                     header="Acciones"
                     body={actionTemplate}
