@@ -144,12 +144,12 @@ export default function FacturacionView({ onClose }) {
 
                 <div className="flex gap-2">
 
-                    <Button
+                    {/* <Button
                         label="Registrar Paciente"
                         icon="pi pi-user-plus"
                         className="p-button-success p-button-raised"
                         onClick={() => setShowPatientRegistrationModal(true)}
-                    />
+                    /> */}
 
                     <Button
                         label="Reporte de Cobertura"
@@ -227,7 +227,7 @@ export default function FacturacionView({ onClose }) {
             </Dialog>
 
             {/* DIALOG: Para el formulario de registro de paciente */}
-            <Dialog
+            {/* <Dialog
                 header="Registrar Paciente"
                 visible={showPatientRegistrationModal}
                 style={{ width: '50vw', minWidth: '350px' }}
@@ -238,7 +238,7 @@ export default function FacturacionView({ onClose }) {
                     onPatientRegistered={handlePatientRegistered}
                     onCancel={() => setShowPatientRegistrationModal(false)}
                 />
-            </Dialog>
+            </Dialog> */}
         </div>
     );
 }

@@ -372,53 +372,77 @@ export default function Dashboard({ onLogout }) {
       </header>
 
       <div className="grid m-4">
-        <div className="container-citas col-12 ">
-          <div className='bnt-registrar'>
-            <Button
-              label="Registrar Cita"
-              icon="pi pi-calendar-plus"
-              className="p-button-info p-button-raised p-2"
-              onClick={handleCreateAppointment}
-            />
-          </div>
-          <div className="card p-2 shadow-1 border-round-md">
-            <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas</h2>
+        <div className="container-citas col-12">
+          <div className="grid">
+            {/* Columna izquierda - Tabla de Citas */}
+            <div className="col-9">
+              <div className="card p-2 shadow-1 border-round-md">
+                <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas</h2>
 
-            {loadingAppointments ? (
-              <div className="flex justify-content-center flex-column align-items-center p-5">
-                {/* <ProgressSpinner /> */}
-                <p className="mt-3">Cargando citas...</p>
+                {loadingAppointments ? (
+                  <div className="flex justify-content-center flex-column align-items-center p-5">
+                    {/* <ProgressSpinner /> */}
+                    <p className="mt-3">Cargando citas...</p>
+                  </div>
+                ) : errorAppointments ? (
+                  <Message severity="error" summary="Error" text={errorAppointments} className="mb-3 w-full" />
+                ) : appointments.length === 0 ? (
+                  <Message severity="info" summary="Información" text="No hay citas programadas." className="mb-3 w-full" />
+                ) : (
+                  <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
+                    paginator
+                    rows={9}
+                    className=''
+                    rowsPerPageOptions={[5, 10, 25, 50]}
+                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas "
+                    stripedRows
+                    showGridlines
+                  >
+                    <Column field="date" header="Fecha"></Column>
+                    <Column field="time" header="Hora"></Column>
+                    <Column field="patient" header="Paciente"></Column>
+                    <Column field="medicoNombre" header="Médico"></Column>
+                    <Column field="motivoConsulta" header="Motivo"></Column>
+                    <Column field="estadoDescripcion" header="Estado"></Column>
+                    <Column
+                      header="Accion"
+                      body={actionTemplate}
+                      style={{ width: '200px', minWidth: '200px' }}
+                      frozen
+                      alignFrozen="right"
+                    />
+                  </DataTable>
+                )}
               </div>
-            ) : errorAppointments ? (
-              <Message severity="error" summary="Error" text={errorAppointments} className="mb-3 w-full" />
-            ) : appointments.length === 0 ? (
-              <Message severity="info" summary="Información" text="No hay citas programadas." className="mb-3 w-full" />
-            ) : (
-              <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
-                paginator
-                rows={9}
-                className=''
-                rowsPerPageOptions={[5, 10, 25, 50]}
-                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas "
-                stripedRows
-                showGridlines
-              >
-                <Column field="date" header="Fecha"></Column>
-                <Column field="time" header="Hora"></Column>
-                <Column field="patient" header="Paciente"></Column>
-                <Column field="medicoNombre" header="Médico"></Column>
-                <Column field="motivoConsulta" header="Motivo"></Column>
-                <Column field="estadoDescripcion" header="Estado"></Column>
-                <Column
-                  header="Accion"
-                  body={actionTemplate}
-                  style={{ width: '200px', minWidth: '200px' }}
-                  frozen
-                  alignFrozen="right"
-                />
-              </DataTable>
-            )}
+            </div>
+
+            {/* Columna derecha - Acciones Rápidas */}
+            <div className="col-3">
+              <div className="card p-2 shadow-1 border-round-md">
+                <h4 className="text-base font-semibold mb-2" style={{ color: COLOR_AZUL_MARINO, textAlign: 'center' }}>
+                  <i className="pi pi-bolt mr-1"></i>
+                  Acciones Rápidas
+                </h4>
+                <div className='bnt-registrar flex flex-column gap-2'>
+                  <Button
+                    label="Registrar Cita"
+                    icon="pi pi-calendar-plus"
+                    className="p-button-info p-button-raised p-1 w-full text-sm"
+                    onClick={handleCreateAppointment}
+                  />
+                  <Button
+                    label="Facturación"
+                    icon="pi pi-money-bill"
+                    className="p-button-success p-button-raised p-1 w-full text-sm"
+                    onClick={() => {
+                      closeAllViewModals();
+                      setShowFacturacionViewModal(true);
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

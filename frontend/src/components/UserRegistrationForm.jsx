@@ -20,7 +20,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         usuario1: '',
         contraseña: '',
         confirmarContraseña: '',
-        estadoId: 100, // Por defecto: Activo
+        // estadoId: 100, // Por defecto: Activo - COMENTADO
         rolId: 101 // Por defecto: Administrador
     });
 
@@ -29,11 +29,11 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
     const [passwordError, setPasswordError] = useState(null);
     const toast = useRef(null);
 
-    // Opciones de estado
-    const estadoOptions = [
-        { label: 'Activo', value: 100 },
-        { label: 'Inactivo', value: 101 }
-    ];
+    // Opciones de estado - COMENTADO
+    // const estadoOptions = [
+    //     { label: 'Activo', value: 100 },
+    //     { label: 'Inactivo', value: 101 }
+    // ];
 
     // Opciones de roles
     const rolOptions = [
@@ -68,7 +68,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 usuario1: initialData.usuario1 || '',
                 contraseña: '', // No pre-llenar contraseña por seguridad
                 confirmarContraseña: '',
-                estadoId: initialData.estadoId || 100,
+                // estadoId: initialData.estadoId || 100, // COMENTADO
                 rolId: getRolIdFromRolNombre(initialData.rolNombre)
             });
 
@@ -77,7 +77,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 apellido: initialData.apellido || '',
                 email: initialData.email || '',
                 usuario1: initialData.usuario1 || '',
-                estadoId: initialData.estadoId || 100,
+                // estadoId: initialData.estadoId || 100, // COMENTADO
                 rolId: getRolIdFromRolNombre(initialData.rolNombre)
             });
         } else {
@@ -90,7 +90,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 usuario1: '',
                 contraseña: '',
                 confirmarContraseña: '',
-                estadoId: 100,
+                // estadoId: 100, // COMENTADO
                 rolId: 101
             });
         }
@@ -101,9 +101,9 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleEstadoChange = (e) => {
-        setFormData(prev => ({ ...prev, estadoId: e.value }));
-    };
+    // const handleEstadoChange = (e) => {
+    //     setFormData(prev => ({ ...prev, estadoId: e.value }));
+    // }; // COMENTADO
 
     const handleRolChange = (e) => {
         setFormData(prev => ({ ...prev, rolId: e.value }));
@@ -124,22 +124,20 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         }
 
         // Para edición, solo validar campos que realmente necesitamos
-        if (!initialData) { // Solo para nuevos usuarios
-            if (!formData.nombre || !formData.apellido || !formData.email) {
-                setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Nombre, Apellido y Email son obligatorios para nuevos usuarios.' });
-                setLoading(false);
-                return;
-            }
-        }
+        // if (!initialData) { // Solo para nuevos usuarios
+        //     if (!formData.nombre || !formData.apellido || !formData.email) {
+        //         setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Nombre, Apellido y Email son obligatorios para nuevos usuarios.' });
+        //         setLoading(false);
+        //         return;
+        //     }
+        // }
 
-        // Validación de contraseña (solo para nuevos usuarios o si se proporciona)
-        if (!initialData) { // Nuevo usuario
-            if (!formData.contraseña) {
-                setPasswordError('La contraseña es requerida para nuevos usuarios.');
-                setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, proporcione una contraseña.' });
-                setLoading(false);
-                return;
-            }
+        // Validación de contraseña
+        if (!formData.contraseña) {
+            setPasswordError('La contraseña es requerida.');
+            setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, proporcione una contraseña.' });
+            setLoading(false);
+            return;
         }
 
         // Validación de coincidencia de contraseñas (si se proporciona contraseña)
@@ -151,14 +149,14 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         }
 
         // Validación de email - solo para nuevos usuarios o si se proporciona email
-        if (formData.email && formData.email.trim() !== '') {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(formData.email)) {
-                setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, ingrese un email válido.' });
-                setLoading(false);
-                return;
-            }
-        }
+        // if (formData.email && formData.email.trim() !== '') {
+        //     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        //     if (!emailRegex.test(formData.email)) {
+        //         setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, ingrese un email válido.' });
+        //         setLoading(false);
+        //         return;
+        //     }
+        // }
 
         const method = initialData ? 'PUT' : 'POST';
         const url = initialData
@@ -169,18 +167,14 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         let userDataToSend;
 
         if (initialData) {
-            // **MODO EDICIÓN - PUT**: Solo enviar los campos que el API PUT espera
+            // **MODO EDICIÓN - PUT**: Solo enviar usuario1, contrasena y rolId
             console.log("🔄 Preparando datos para PUT (edición)");
 
             userDataToSend = {
                 usuario1: formData.usuario1,
+                contrasena: formData.contraseña, // Siempre requerida en edición
                 rolId: formData.rolId
             };
-
-            // Solo incluir contraseña si se proporciona en PUT
-            if (formData.contraseña) {
-                userDataToSend.contrasena = formData.contraseña;
-            }
 
             console.log("📤 Datos para PUT:", userDataToSend);
         } else {
@@ -188,17 +182,19 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
             console.log("🆕 Preparando datos para POST (creación)");
 
             userDataToSend = {
-                nombre: formData.nombre,
-                apellido: formData.apellido,
-                email: formData.email,
+                // nombre: formData.nombre,
+                // apellido: formData.apellido,
+                // email: formData.email,
                 usuario1: formData.usuario1,
-                estadoId: formData.estadoId,
+                contrasena: formData.contraseña,
+                rolId: formData.rolId
+                // estadoId: formData.estadoId, // COMENTADO
             };
 
             // Solo incluir contraseña si se proporciona en POST
-            if (formData.contraseña) {
-                userDataToSend.contraseña = formData.contraseña;
-            }
+            // if (formData.contraseña) {
+            //     userDataToSend.contraseña = formData.contraseña;
+            // }
 
             console.log("📤 Datos para POST:", userDataToSend);
         }
@@ -254,7 +250,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 </div>
             )}
 
-            <div className="field col-12 md:col-6">
+            {/* <div className="field col-12 md:col-6">
                 <label htmlFor="nombre">Nombre {initialData && <small>(opcional en edición)</small>}</label>
                 <InputText
                     id="nombre"
@@ -264,8 +260,8 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                     required={!initialData}
                     placeholder="Ej: Juan"
                 />
-            </div>
-            <div className="field col-12 md:col-6">
+            </div> */}
+            {/* <div className="field col-12 md:col-6">
                 <label htmlFor="apellido">Apellido {initialData && <small>(opcional en edición)</small>}</label>
                 <InputText
                     id="apellido"
@@ -275,8 +271,8 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                     required={!initialData}
                     placeholder="Ej: Pérez"
                 />
-            </div>
-            <div className="field col-12 md:col-6">
+            </div> */}
+            {/* <div className="field col-12 md:col-6">
                 <label htmlFor="email">Email {initialData && <small>(opcional en edición)</small>}</label>
                 <InputText
                     id="email"
@@ -287,7 +283,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                     required={!initialData}
                     placeholder="usuario@clinica.com"
                 />
-            </div>
+            </div> */}
             <div className="field col-12 md:col-6">
                 <label htmlFor="usuario1">Usuario</label>
                 <InputText
@@ -300,13 +296,13 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 />
             </div>
             <div className="field col-12 md:col-6">
-                <label htmlFor="contraseña">Contraseña {initialData && <small>(Dejar en blanco para mantener actual)</small>}</label>
+                <label htmlFor="contraseña">Contraseña</label>
                 <Password
                     id="contraseña"
                     name="contraseña"
                     value={formData.contraseña}
                     onChange={handleChange}
-                    placeholder={initialData ? "Nueva contraseña (opcional)" : "Contraseña"}
+                    placeholder={initialData ? "Nueva contraseña" : "Contraseña"}
                     toggleMask
                     feedback={!initialData}
                     className={passwordError ? 'p-invalid' : ''}
@@ -325,7 +321,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                     className={passwordError ? 'p-invalid' : ''}
                 />
             </div>
-            <div className="field col-12 md:col-6">
+            {/* <div className="field col-12 md:col-6">
                 <label htmlFor="estadoId">Estado</label>
                 <Dropdown
                     id="estadoId"
@@ -334,7 +330,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                     onChange={handleEstadoChange}
                     placeholder="Seleccionar Estado"
                 />
-            </div>
+            </div> */}
             <div className="field col-12 md:col-6">
                 <label htmlFor="rolId">Rol</label>
                 <Dropdown
