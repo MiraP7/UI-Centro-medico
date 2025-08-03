@@ -21,7 +21,7 @@ import AseguradoraView from '/src/Views/AseguradoraView';
 import MedicoView from '/src/Views/MedicoView';
 
 // AÑADIDO: Importa el nuevo servicio de Citas
-import CitaService from '/src/services/CitaService';
+import CitaService from '/src/Services/CitaService';
 
 // Las citas iniciales hardcodeadas ya no son necesarias
 // const initialAppointments = [...];
@@ -74,13 +74,26 @@ export default function Dashboard({ onLogout }) {
     setShowPatientModal(false);
   };
 
-  const handleAppointmentRegistered = (newAppointment) => {
-    console.log('Cita Registrada:', newAppointment);
-    setShowAppointmentModal(false);
-    setEditingAppointment(null);
-    // Recargar citas después de que una nueva sea registrada
-    fetchAppointments();
-    showToast('success', 'Éxito', 'Cita registrada exitosamente');
+  const handleAppointmentRegistered = async (appointmentData) => {
+    try {
+      if (editingAppointment) {
+        // Si estamos editando, actualizar la cita existente
+        await citaService.updateCita(appointmentData.citaId, appointmentData);
+        showToast('success', 'Éxito', 'Cita actualizada exitosamente');
+      } else {
+        // Si es nueva, crear la cita
+        await citaService.createCita(appointmentData);
+        showToast('success', 'Éxito', 'Cita registrada exitosamente');
+      }
+
+      setShowAppointmentModal(false);
+      setEditingAppointment(null);
+      // Recargar citas después de la operación
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error al procesar la cita:', error);
+      showToast('error', 'Error', 'Hubo un problema al procesar la cita');
+    }
   };
 
   // Funciones para el CRUD de citas
