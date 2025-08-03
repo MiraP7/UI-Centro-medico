@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { PanelMenu } from 'primereact/panelmenu';
+import { Toast } from 'primereact/toast';
+import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
+import { Message } from 'primereact/message';
+import { SplitButton } from 'primereact/splitbutton';
 import AppointmentRegistrationForm from './AppointmentRegistrationForm';
 import { Sidebar } from 'primereact/sidebar';
 import 'primeicons/primeicons.css';
@@ -35,6 +39,7 @@ export default function Dashboard({ onLogout }) {
   const [appointments, setAppointments] = useState([]); // Ahora se inicializa vacío
   const [loadingAppointments, setLoadingAppointments] = useState(true); // Nuevo estado de carga
   const [errorAppointments, setErrorAppointments] = useState(null); // Nuevo estado de error
+  const [editingAppointment, setEditingAppointment] = useState(null); // Para editar citas
 
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [showPatientViewModal, setShowPatientViewModal] = useState(false);
@@ -42,24 +47,27 @@ export default function Dashboard({ onLogout }) {
   const [showAseguradoraViewModal, setShowAseguradoraViewModal] = useState(false);
   const [showMedicoViewModal, setShowMedicoViewModal] = useState(false);
 
+  const toast = useRef(null);
+
 
   // AÑADIDO: useEffect para cargar las citas de la API
   useEffect(() => {
-    const fetchAppointments = async () => {
-      setLoadingAppointments(true);
-      setErrorAppointments(null);
-      try {
-        const data = await citaService.getAllCitas();
-        setAppointments(data);
-      } catch (err) {
-        setErrorAppointments(`Error al cargar citas: ${err.message}`);
-        console.error("Error fetching appointments:", err);
-      } finally {
-        setLoadingAppointments(false);
-      }
-    };
     fetchAppointments();
   }, []); // El array vacío asegura que se ejecute solo una vez al montar
+
+  const fetchAppointments = async () => {
+    setLoadingAppointments(true);
+    setErrorAppointments(null);
+    try {
+      const data = await citaService.getAllCitas();
+      setAppointments(data);
+    } catch (err) {
+      setErrorAppointments(`Error al cargar citas: ${err.message}`);
+      console.error("Error fetching appointments:", err);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
 
   const handlePatientRegistered = (newPatient) => {
     console.log('Paciente Registrado:', newPatient);
@@ -68,14 +76,82 @@ export default function Dashboard({ onLogout }) {
 
   const handleAppointmentRegistered = (newAppointment) => {
     console.log('Cita Registrada:', newAppointment);
-    // Después de registrar una nueva cita, recargar la lista desde la API
-    // Si tu AppointmentRegistrationForm ya llama a la API para crear la cita,
-    // solo necesitas volver a llamar fetchAppointments() aquí.
-    // Para este ejemplo, simulo la adición local si no hay API real.
-    // setAppointments(prev => [...prev, { ...newAppointment, id: Date.now(), patient: newAppointment.patientName || 'Nuevo Paciente' }]);
     setShowAppointmentModal(false);
+    setEditingAppointment(null);
     // Recargar citas después de que una nueva sea registrada
     fetchAppointments();
+    showToast('success', 'Éxito', 'Cita registrada exitosamente');
+  };
+
+  // Funciones para el CRUD de citas
+  const handleCreateAppointment = () => {
+    setEditingAppointment(null);
+    setShowAppointmentModal(true);
+  };
+
+  const handleEditAppointment = (appointment) => {
+    setEditingAppointment(appointment);
+    setShowAppointmentModal(true);
+  };
+
+  const handleViewAppointment = (appointment) => {
+    const detalles = `
+🆔 ID: ${appointment.citaId}
+👤 Paciente: ${appointment.patient}
+👨‍⚕️ Médico: ${appointment.medicoNombre}
+📅 Fecha: ${appointment.date}
+🕐 Hora: ${appointment.time}
+📝 Motivo: ${appointment.motivoConsulta}
+📊 Estado: ${appointment.estadoDescripcion}
+    `.trim();
+
+    showToast('info', 'Detalles de la Cita', detalles);
+  };
+
+  const handleDeleteAppointment = (appointment) => {
+    confirmDialog({
+      message: `¿Está seguro que desea eliminar la cita de ${appointment.patient}?`,
+      header: 'Confirmar eliminación',
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => deleteAppointment(appointment),
+      reject: () => console.log('Eliminación cancelada'),
+      acceptClassName: 'p-button-danger',
+      rejectClassName: 'p-button-text'
+    });
+  };
+
+  const deleteAppointment = async (appointment) => {
+    try {
+      // Por ahora mostrar mensaje ya que el endpoint no existe
+      showToast('info', 'Información', 'Funcionalidad de eliminación no disponible aún');
+      console.log('Eliminando cita:', appointment.citaId);
+    } catch (error) {
+      showToast('error', 'Error', `Error al eliminar cita: ${error.message}`);
+    }
+  };
+
+  const handleChangeStatus = async (appointment, nuevoEstadoId) => {
+    try {
+      setLoadingAppointments(true);
+      const appointmentActualizada = {
+        ...appointment,
+        estadoId: nuevoEstadoId
+      };
+
+      await citaService.updateCita(appointment.citaId, appointmentActualizada);
+      showToast('success', 'Estado Actualizado', 'El estado de la cita ha sido cambiado');
+      await fetchAppointments();
+    } catch (error) {
+      showToast('error', 'Error', `Error al cambiar estado: ${error.message}`);
+    } finally {
+      setLoadingAppointments(false);
+    }
+  };
+
+  const showToast = (severity, summary, detail) => {
+    if (toast.current) {
+      toast.current.show({ severity, summary, detail });
+    }
   };
 
   // Función auxiliar para cerrar todos los modales de vista
@@ -165,9 +241,83 @@ export default function Dashboard({ onLogout }) {
     return date.toLocaleDateString('es-DO') + ' ' + date.toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' });
   };
 
+  // Template para los botones de acción
+  const actionTemplate = (rowData) => {
+    const estadoMenuItems = [
+      {
+        label: 'Marcar como Completado',
+        icon: 'pi pi-check',
+        command: () => handleChangeStatus(rowData, 103)
+      },
+      {
+        label: 'Marcar como Cancelado',
+        icon: 'pi pi-times',
+        command: () => handleChangeStatus(rowData, 104)
+      },
+      {
+        label: 'Marcar como Aprobado',
+        icon: 'pi pi-thumbs-up',
+        command: () => handleChangeStatus(rowData, 105)
+      },
+      {
+        label: 'Marcar como Pendiente',
+        icon: 'pi pi-clock',
+        command: () => handleChangeStatus(rowData, 102)
+      }
+    ];
+
+    return (
+      <div className="flex gap-1 align-items-center">
+        {/* Botón Ver */}
+        {/* <Button
+          icon="pi pi-eye"
+          size="small"
+          severity="info"
+          tooltip="Ver detalles"
+          tooltipOptions={{ position: 'top' }}
+          onClick={() => handleViewAppointment(rowData)}
+        /> */}
+
+        {/* Botón Editar */}
+        <Button
+          icon="pi pi-pencil"
+          size="small"
+          severity="warning"
+          tooltip="Editar cita"
+          tooltipOptions={{ position: 'top' }}
+          onClick={() => handleEditAppointment(rowData)}
+        />
+
+        {/* Botón Cambiar Estado */}
+        {/* <SplitButton
+          icon="pi pi-cog"
+          size="small"
+          severity="secondary"
+          tooltip="Cambiar estado"
+          tooltipOptions={{ position: 'top' }}
+          model={estadoMenuItems}
+          onClick={() => console.log('Estado actual:', rowData.estadoDescripcion)}
+        /> */}
+
+        {/* Botón Eliminar
+        <Button
+          icon="pi pi-trash"
+          size="small"
+          severity="danger"
+          tooltip="Eliminar cita"
+          tooltipOptions={{ position: 'top' }}
+          onClick={() => handleDeleteAppointment(rowData)}
+        /> */}
+      </div>
+    );
+  };
+
 
   return (
     <div className="">
+      <Toast ref={toast} />
+      <ConfirmDialog />
+
       {/* Sidebar para el PanelMenu */}
       <Sidebar visible={sidebarVisible} onHide={() => setSidebarVisible(false)}
         showCloseIcon={true}
@@ -193,8 +343,12 @@ export default function Dashboard({ onLogout }) {
       <div className="grid m-4">
         <div className="container-citas col-12 ">
           <div className='bnt-registrar'>
-            <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-2" onClick={() => setShowAppointmentModal(true)} />
-
+            <Button
+              label="Registrar Cita"
+              icon="pi pi-calendar-plus"
+              className="p-button-info p-button-raised p-2"
+              onClick={handleCreateAppointment}
+            />
           </div>
           <div className="card p-2 shadow-1 border-round-md">
             <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas</h2>
@@ -216,24 +370,46 @@ export default function Dashboard({ onLogout }) {
                 rowsPerPageOptions={[5, 10, 25, 50]}
                 paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                 currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas "
+                stripedRows
+                showGridlines
               >
-                <Column field="date" header="Fecha"></Column> {/* Nueva columna para la fecha */}
+                <Column field="date" header="Fecha"></Column>
                 <Column field="time" header="Hora"></Column>
                 <Column field="patient" header="Paciente"></Column>
-                <Column field="medicoNombre" header="Médico"></Column> {/* Nueva columna para el médico */}
+                <Column field="medicoNombre" header="Médico"></Column>
                 <Column field="motivoConsulta" header="Motivo"></Column>
-                <Column field="estadoDescripcion" header="Estado"></Column> {/* Nueva columna para el estado */}
+                <Column field="estadoDescripcion" header="Estado"></Column>
+                <Column
+                  header="Accion"
+                  body={actionTemplate}
+                  style={{ width: '200px', minWidth: '200px' }}
+                  frozen
+                  alignFrozen="right"
+                />
               </DataTable>
             )}
           </div>
         </div>
       </div>
 
-      {/* Dialog para Registrar Cita */}
-      <Dialog header="Registrar Cita" visible={showAppointmentModal} style={{ width: '50vw', minWidth: '350px' }} onHide={() => setShowAppointmentModal(false)} modal>
+      {/* Dialog para Registrar/Editar Cita */}
+      <Dialog
+        header={editingAppointment ? "Editar Cita" : "Registrar Cita"}
+        visible={showAppointmentModal}
+        style={{ width: '50vw', minWidth: '350px' }}
+        onHide={() => {
+          setShowAppointmentModal(false);
+          setEditingAppointment(null);
+        }}
+        modal
+      >
         <AppointmentRegistrationForm
+          appointmentToEdit={editingAppointment}
           onAppointmentRegistered={handleAppointmentRegistered}
-          onCancel={() => setShowAppointmentModal(false)}
+          onCancel={() => {
+            setShowAppointmentModal(false);
+            setEditingAppointment(null);
+          }}
         />
       </Dialog>
 

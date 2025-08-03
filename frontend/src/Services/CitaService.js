@@ -96,6 +96,36 @@ class CitaService {
     }
 
     /**
+     * Obtiene todos los pacientes para los dropdowns
+     * @returns {Promise<Array>} Lista de pacientes
+     */
+    async getAllPacientes() {
+        try {
+            const pacientes = await this._fetchData(`${this.pacienteBaseUrl}/all`);
+            console.log("Pacientes obtenidos:", pacientes);
+            return pacientes || [];
+        } catch (error) {
+            console.error("Error al obtener pacientes:", error);
+            return [];
+        }
+    }
+
+    /**
+     * Obtiene todos los médicos para los dropdowns
+     * @returns {Promise<Array>} Lista de médicos
+     */
+    async getAllMedicos() {
+        try {
+            const medicos = await this._fetchData(`${this.medicoBaseUrl}/all`);
+            console.log("Médicos obtenidos:", medicos);
+            return medicos || [];
+        } catch (error) {
+            console.error("Error al obtener médicos:", error);
+            return [];
+        }
+    }
+
+    /**
      * Obtiene todas las citas con nombres completos de pacientes y médicos.
      * Realiza consultas adicionales para resolver los nombres.
      * @returns {Promise<Array>} Un array de objetos Cita con nombres enriquecidos.
@@ -149,19 +179,97 @@ class CitaService {
      */
     mapearEstado(estadoId) {
         const estados = {
-            101: 'Programada',
-            102: 'En Progreso',
-            103: 'Completada',
-            104: 'Cancelada',
-            105: 'No Asistió'
+            100: 'Activo',
+            101: 'Inactivo',
+            102: 'Pendiente',
+            103: 'Completado',
+            104: 'Cancelado',
+            105: 'Aprobado',
+            106: 'Rechazado'
         };
         return estados[estadoId] || 'Estado Desconocido';
     }
 
+    /**
+     * Crea una nueva cita
+     * @param {Object} citaData - Datos de la cita a crear
+     * @returns {Promise<Object>} Respuesta de la API con la cita creada
+     */
     async createCita(citaData) {
         try {
+            // Validar datos antes de enviar
+            const validatedData = this.validateCitaData(citaData);
+
+            console.log('Creando cita con datos:', validatedData);
+
             const response = await fetch(`${this.baseUrl}`, {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(validatedData)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Error al crear la cita.');
+            }
+
+            const result = await response.json();
+            console.log('Cita creada exitosamente:', result);
+            return result;
+        } catch (error) {
+            console.error("Error en createCita:", error);
+            throw error;
+        }
+    }
+
+    /**
+     * Obtiene una cita por su ID
+     * @param {number} citaId - ID de la cita
+     * @returns {Promise<Object>} Datos de la cita
+     */
+    async getCitaById(citaId) {
+        try {
+            if (!citaId) {
+                throw new Error('ID de cita es requerido');
+            }
+
+            const response = await fetch(`${this.baseUrl}/${citaId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Error al obtener la cita con ID: ${citaId}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error(`Error en getCitaById(${citaId}):`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Actualiza una cita existente
+     * @param {number} citaId - ID de la cita a actualizar
+     * @param {Object} citaData - Datos actualizados de la cita
+     * @returns {Promise<Object>} Respuesta de la API
+     */
+    async updateCita(citaId, citaData) {
+        try {
+            if (!citaId) {
+                throw new Error('ID de cita es requerido para actualizar');
+            }
+
+            const response = await fetch(`${this.baseUrl}/${citaId}`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
@@ -171,13 +279,86 @@ class CitaService {
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al crear la cita.');
+                throw new Error(errorData.message || `Error al actualizar la cita con ID: ${citaId}`);
             }
+
             return await response.json();
         } catch (error) {
-            console.error("Error en createCita:", error);
+            console.error(`Error en updateCita(${citaId}):`, error);
             throw error;
         }
+    }
+
+    /**
+     * Elimina una cita (COMENTADO - endpoint no disponible aún)
+     * @param {number} citaId - ID de la cita a eliminar
+     * @returns {Promise<Object>} Respuesta de la API
+     */
+    /*
+    async deleteCita(citaId) {
+        try {
+            if (!citaId) {
+                throw new Error('ID de cita es requerido para eliminar');
+            }
+
+            const response = await fetch(`${this.baseUrl}/${citaId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Error al eliminar la cita con ID: ${citaId}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error(`Error en deleteCita(${citaId}):`, error);
+            throw error;
+        }
+    }
+    */
+
+    /**
+     * Valida los datos de una cita antes de enviarlos
+     * @param {Object} citaData - Datos de la cita a validar
+     * @returns {Object} Datos validados y formateados
+     */
+    validateCitaData(citaData) {
+        const errors = [];
+
+        // Validaciones requeridas
+        if (!citaData.pacienteId && !citaData.pacienteID) {
+            errors.push('ID del paciente es requerido');
+        }
+
+        if (!citaData.medicoId && !citaData.medicoID) {
+            errors.push('ID del médico es requerido');
+        }
+
+        if (!citaData.fechaHora) {
+            errors.push('Fecha y hora son requeridas');
+        }
+
+        if (!citaData.motivoConsulta) {
+            errors.push('Motivo de consulta es requerido');
+        }
+
+        if (errors.length > 0) {
+            throw new Error(`Datos inválidos: ${errors.join(', ')}`);
+        }
+
+        // Formatear datos para envío
+        return {
+            pacienteId: citaData.pacienteId || citaData.pacienteID,
+            medicoId: citaData.medicoId || citaData.medicoID,
+            fechaHora: citaData.fechaHora,
+            motivoConsulta: citaData.motivoConsulta,
+            estadoId: citaData.estadoId || citaData.estadoID || 102 // Por defecto: Pendiente
+        };
     }
 }
 
