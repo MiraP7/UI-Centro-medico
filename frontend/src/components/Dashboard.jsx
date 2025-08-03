@@ -19,6 +19,7 @@ import PatientView from '/src/Views/PatientView';
 import FacturacionView from '/src/Views/FacturacionView';
 import AseguradoraView from '/src/Views/AseguradoraView';
 import MedicoView from '/src/Views/MedicoView';
+import UserView from '/src/Views/UserView';
 
 // AÑADIDO: Importa el nuevo servicio de Citas
 import CitaService from '/src/Services/CitaService';
@@ -46,6 +47,7 @@ export default function Dashboard({ onLogout }) {
   const [showFacturacionViewModal, setShowFacturacionViewModal] = useState(false);
   const [showAseguradoraViewModal, setShowAseguradoraViewModal] = useState(false);
   const [showMedicoViewModal, setShowMedicoViewModal] = useState(false);
+  const [showUserViewModal, setShowUserViewModal] = useState(false);
 
   const toast = useRef(null);
 
@@ -188,6 +190,7 @@ export default function Dashboard({ onLogout }) {
     setShowFacturacionViewModal(false);
     setShowAseguradoraViewModal(false);
     setShowMedicoViewModal(false);
+    setShowUserViewModal(false);
     setSidebarVisible(false);
   };
 
@@ -237,7 +240,7 @@ export default function Dashboard({ onLogout }) {
       icon: 'pi pi-fw pi-id-card', // Eliminado 'icons-bar' de aquí
       command: () => {
         closeAllViewModals();
-        // Lógica para Usuarios
+        setShowUserViewModal(true); // Abre el modal de Usuarios
       }
     },
     {
@@ -483,6 +486,17 @@ export default function Dashboard({ onLogout }) {
         modal
       >
         <MedicoView onClose={() => setShowMedicoViewModal(false)} />
+      </Dialog>
+
+      {/* AÑADIDO: Dialog para la Vista de Usuarios (UserView) */}
+      <Dialog
+        header="Gestión de Usuarios"
+        visible={showUserViewModal}
+        style={{ width: '80vw', minWidth: '700px', height: '80vh' }}
+        onHide={() => setShowUserViewModal(false)}
+        modal
+      >
+        <UserView onClose={() => setShowUserViewModal(false)} />
       </Dialog>
 
     </div>
