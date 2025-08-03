@@ -78,7 +78,8 @@ export default function Dashboard({ onLogout }) {
     try {
       if (editingAppointment) {
         // Si estamos editando, actualizar la cita existente
-        await citaService.updateCita(appointmentData.citaId, appointmentData);
+        const { citaId, ...dataToSend } = appointmentData; // Separar citaId del resto de datos
+        await citaService.updateCita(citaId, dataToSend);
         showToast('success', 'Éxito', 'Cita actualizada exitosamente');
       } else {
         // Si es nueva, crear la cita

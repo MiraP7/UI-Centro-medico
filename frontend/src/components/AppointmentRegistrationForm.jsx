@@ -224,25 +224,96 @@ export default function AppointmentRegistrationForm({
 
         const patientDetails = patients.find(p => p.value === selectedPatient);
         const medicoDetails = medicos.find(m => m.value === selectedMedico);
-        const appointmentData = {
-            patientId: selectedPatient,
-            patientName: patientDetails ? patientDetails.name : 'Desconocido',
-            medicoId: selectedMedico,
-            medicoName: medicoDetails ? medicoDetails.name : 'Desconocido',
-            date: appointmentDate.toLocaleDateString('es-ES'),
-            time: appointmentTime,
-            reason,
-            // Si estamos editando, incluir el ID de la cita
-            ...(isEditMode && appointmentToEdit && { citaId: appointmentToEdit.citaId })
-        };
 
-        onAppointmentRegistered(appointmentData);
+        if (isEditMode) {
+            // **MODO EDICIÓN**: Formato para PUT - necesita cédulas
+            console.log('🔄 === MODO EDICIÓN - PREPARANDO DATOS PARA PUT ===');
+
+            // Extraer cédulas de los labels de los dropdowns
+            const pacienteCedula = extractCedulaFromLabel(patientDetails?.label || '');
+            const medicoCedula = extractCedulaFromLabel(medicoDetails?.label || '');
+
+            console.log('👤 Cédula del paciente extraída:', pacienteCedula);
+            console.log('👨‍⚕️ Cédula del médico extraída:', medicoCedula);
+
+            const editAppointmentData = {
+                pacienteCedula: pacienteCedula,
+                medicoCedula: medicoCedula,
+                fechaHora: appointmentDate.toISOString().split('T')[0] + 'T' + convertTimeToAPI(appointmentTime),
+                motivoConsulta: reason,
+                estadoId: 102, // Usar estadoId (consistente entre POST y PUT)
+                // Para Dashboard - ID de la cita para URL
+                citaId: parseInt(appointmentToEdit.citaId || appointmentToEdit.citaID),
+                // Campos adicionales para el frontend
+                patientName: patientDetails ? patientDetails.name : 'Desconocido',
+                medicoName: medicoDetails ? medicoDetails.name : 'Desconocido',
+                date: appointmentDate.toLocaleDateString('es-ES'),
+                time: appointmentTime,
+                isEditMode: true // Bandera para que Dashboard sepa el modo
+            };
+
+            console.log('📤 Datos para EDITAR cita:', editAppointmentData);
+            onAppointmentRegistered(editAppointmentData);
+        } else {
+            // **MODO CREACIÓN**: Formato para POST - necesita cédulas también
+            console.log('🆕 === MODO CREACIÓN - PREPARANDO DATOS PARA POST ===');
+
+            // Extraer cédulas de los labels de los dropdowns (igual que en edición)
+            const pacienteCedula = extractCedulaFromLabel(patientDetails?.label || '');
+            const medicoCedula = extractCedulaFromLabel(medicoDetails?.label || '');
+
+            console.log('👤 Cédula del paciente extraída:', pacienteCedula);
+            console.log('👨‍⚕️ Cédula del médico extraída:', medicoCedula);
+
+            // Generar un citaId temporal para el POST (el servidor puede asignar el real)
+            const temporalCitaId = Date.now(); // Usar timestamp como ID temporal
+
+            const createAppointmentData = {
+                citaId: temporalCitaId, // Incluir citaId para la lógica del frontend
+                pacienteCedula: pacienteCedula,  // POST usa cédulas
+                medicoCedula: medicoCedula,      // POST usa cédulas
+                fechaHora: appointmentDate.toISOString().split('T')[0] + 'T' + convertTimeToAPI(appointmentTime),
+                motivoConsulta: reason,
+                estadoId: 102, // Usar estadoId (consistente con PUT)
+                // Campos adicionales para el frontend
+                patientName: patientDetails ? patientDetails.name : 'Desconocido',
+                medicoName: medicoDetails ? medicoDetails.name : 'Desconocido',
+                date: appointmentDate.toLocaleDateString('es-ES'),
+                time: appointmentTime,
+                isEditMode: false // Bandera para que Dashboard sepa el modo
+            };
+
+            console.log('📤 Datos para CREAR cita (con cédulas):', createAppointmentData);
+            onAppointmentRegistered(createAppointmentData);
+        }
+    };
+
+    // Función auxiliar para extraer cédula del label del dropdown
+    const extractCedulaFromLabel = (label) => {
+        // El label tiene formato: "Nombre Apellido (Cédula: 00598765432)"
+        const match = label.match(/Cédula:\s*(\w+)/);
+        return match ? match[1] : '';
+    };
+
+    // Función auxiliar para convertir la hora del formato del frontend al formato de la API
+    const convertTimeToAPI = (timeString) => {
+        // Convertir "10:30 AM" a "10:30:00"
+        const [time, period] = timeString.split(' ');
+        let [hours, minutes] = time.split(':');
+
+        if (period === 'PM' && hours !== '12') {
+            hours = (parseInt(hours) + 12).toString();
+        } else if (period === 'AM' && hours === '12') {
+            hours = '00';
+        }
+
+        return `${hours.padStart(2, '0')}:${minutes}:00`;
     };
 
     return (
         <form onSubmit={handleSubmit} className="p-fluid grid formgrid container-dialog">
             {/* TEMPORAL: Botón de debug */}
-            <div className="col-12 mb-2">
+            {/* <div className="col-12 mb-2">
                 <div className="grid">
                     <div className="col-6">
                         <Button
@@ -273,7 +344,7 @@ export default function AppointmentRegistrationForm({
                         )}
                     </div>
                 </div>
-            </div>
+            </div> */}
 
             {/* Mensaje informativo en modo edición */}
             {isEditMode && appointmentToEdit && (
