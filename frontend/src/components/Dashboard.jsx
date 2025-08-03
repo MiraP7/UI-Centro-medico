@@ -76,13 +76,27 @@ export default function Dashboard({ onLogout }) {
 
   const handleAppointmentRegistered = async (appointmentData) => {
     try {
-      if (editingAppointment) {
-        // Si estamos editando, actualizar la cita existente
-        const { citaId, ...dataToSend } = appointmentData; // Separar citaId del resto de datos
-        await citaService.updateCita(citaId, dataToSend);
+      console.log('📥 === DATOS RECIBIDOS EN DASHBOARD ===');
+      console.log('📊 appointmentData completo:', appointmentData);
+      console.log('🔍 appointmentData.isEditMode:', appointmentData.isEditMode);
+
+      if (appointmentData.isEditMode) {
+        // **MODO EDICIÓN**: Usar PUT con formato de cédulas
+        console.log('🔄 === PROCESANDO EDICIÓN CON PUT ===');
+
+        const { citaId, isEditMode, patientName, medicoName, date, time, ...dataForAPI } = appointmentData;
+
+        console.log('🆔 citaId para URL:', citaId);
+        console.log('📤 Datos para PUT (solo campos de API):', dataForAPI);
+
+        await citaService.updateCita(citaId, dataForAPI);
         showToast('success', 'Éxito', 'Cita actualizada exitosamente');
       } else {
-        // Si es nueva, crear la cita
+        // **MODO CREACIÓN**: Usar POST con formato de IDs
+        console.log('🆕 === PROCESANDO CREACIÓN CON POST ===');
+
+        // Para POST, NO separar el citaId - enviarlo en el body completo
+        console.log('📤 Datos para POST (appointmentData completo):', appointmentData);
         await citaService.createCita(appointmentData);
         showToast('success', 'Éxito', 'Cita registrada exitosamente');
       }
@@ -92,7 +106,7 @@ export default function Dashboard({ onLogout }) {
       // Recargar citas después de la operación
       fetchAppointments();
     } catch (error) {
-      console.error('Error al procesar la cita:', error);
+      console.error('❌ Error al procesar la cita:', error);
       showToast('error', 'Error', 'Hubo un problema al procesar la cita');
     }
   };

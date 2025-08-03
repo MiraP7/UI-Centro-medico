@@ -25,17 +25,27 @@ export default function AseguradoraRegistrationForm({ onAseguradoraSaved, onCanc
 
     const [loading, setLoading] = useState(false);
     const [apiMessage, setApiMessage] = useState(null);
+    const [telefonoError, setTelefonoError] = useState(null);
 
     // Referencia para el Toast de PrimeReact
     const toast = useRef(null);
 
     // useEffect para inicializar el formulario si hay datos iniciales (para edición)
     useEffect(() => {
+        const formatTelefonoForForm = (telefono) => {
+            if (!telefono) return '';
+            const cleaned = String(telefono).replace(/\D/g, '');
+            if (cleaned.length === 10) {
+                return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 6)}-${cleaned.substring(6, 10)}`;
+            }
+            return String(telefono);
+        };
+
         if (initialData) {
             setFormData({
                 nombre: initialData.nombre || '',
                 direccion: initialData.direccion || '',
-                telefono: initialData.telefono || '',
+                telefono: formatTelefonoForForm(initialData.telefono) || '',
                 email: initialData.email || '',
                 contacto: initialData.contacto || '',
             });
@@ -56,9 +66,19 @@ export default function AseguradoraRegistrationForm({ onAseguradoraSaved, onCanc
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleTelefonoChange = (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 3) value = value.substring(0, 3) + '-' + value.substring(3);
+        if (value.length > 7) value = value.substring(0, 7) + '-' + value.substring(7);
+        if (value.length > 12) value = value.substring(0, 12);
+        setFormData(prev => ({ ...prev, telefono: value }));
+        if (telefonoError) setTelefonoError(null);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        setTelefonoError(null);
         setApiMessage(null);
         setLoading(true);
 
@@ -69,10 +89,29 @@ export default function AseguradoraRegistrationForm({ onAseguradoraSaved, onCanc
             return;
         }
 
+        // Validación de formato de teléfono
+        const telefonoRegex = /^\d{3}-\d{3}-\d{4}$/;
+        const cleanedTelefono = formData.telefono.replace(/-/g, '');
+        if (!telefonoRegex.test(formData.telefono) || cleanedTelefono.length !== 10) {
+            setTelefonoError('El teléfono debe tener el formato 809-654-2156 y 10 dígitos numéricos.');
+            setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, corrija el formato del teléfono.' });
+            setLoading(false);
+            return;
+        }
+
         const method = initialData ? 'PUT' : 'POST';
         const url = initialData
             ? `https://localhost:44388/api/Aseguradora/${initialData.aseguradoraId}` // Usar aseguradoraId para PUT
             : 'https://localhost:44388/api/Aseguradora'; // POST a la URL base
+
+        // Preparar datos para envío (teléfono sin guiones)
+        const aseguradoraDataToSend = {
+            nombre: formData.nombre,
+            direccion: formData.direccion,
+            telefono: cleanedTelefono,
+            email: formData.email,
+            contacto: formData.contacto,
+        };
 
         try {
             const response = await fetch(url, {
@@ -81,7 +120,7 @@ export default function AseguradoraRegistrationForm({ onAseguradoraSaved, onCanc
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(aseguradoraDataToSend),
             });
 
             if (response.ok) {
@@ -148,10 +187,13 @@ export default function AseguradoraRegistrationForm({ onAseguradoraSaved, onCanc
                     id="telefono"
                     name="telefono"
                     value={formData.telefono}
-                    onChange={handleChange}
+                    onChange={handleTelefonoChange}
                     required
                     placeholder="Ej: 809-123-4567"
+                    maxLength={12}
+                    className={telefonoError ? 'p-invalid' : ''}
                 />
+                {telefonoError && <small className="p-error">{telefonoError}</small>}
             </div>
             <div className="field col-12 md:col-6">
                 <label htmlFor="email">Email</label>

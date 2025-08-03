@@ -197,12 +197,20 @@ class CitaService {
      */
     async createCita(citaData) {
         try {
-            // Validar datos antes de enviar
+            // Validar y formatear datos para que usen cédulas
             const validatedData = this.validateCitaData(citaData);
 
-            console.log('Creando cita con datos:', validatedData);
+            console.log('🚀 === DETALLES DE LA PETICIÓN POST ===');
+            console.log('📊 Datos originales (citaData):', citaData);
+            console.log('✅ Datos validados (con cédulas):', validatedData);
+            console.log('� URL:', this.baseUrl);
+            console.log('📝 JSON stringificado:', JSON.stringify(validatedData, null, 2));
+            console.log('🔧 Headers:', {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            });
 
-            const response = await fetch(`${this.baseUrl}`, {
+            const response = await fetch(this.baseUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -211,16 +219,28 @@ class CitaService {
                 body: JSON.stringify(validatedData)
             });
 
+            console.log('📡 Respuesta del servidor:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok
+            });
+
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Error al crear la cita.');
+                const errorText = await response.text();
+                console.error('❌ Error response body:', errorText);
+                try {
+                    const errorData = JSON.parse(errorText);
+                    throw new Error(errorData.message || 'Error al crear la cita.');
+                } catch (parseError) {
+                    throw new Error(`Error ${response.status}: ${errorText}`);
+                }
             }
 
             const result = await response.json();
-            console.log('Cita creada exitosamente:', result);
+            console.log('✅ Cita creada exitosamente:', result);
             return result;
         } catch (error) {
-            console.error("Error en createCita:", error);
+            console.error("❌ Error en createCita:", error);
             throw error;
         }
     }
@@ -268,23 +288,50 @@ class CitaService {
                 throw new Error('ID de cita es requerido para actualizar');
             }
 
+            // Validar y formatear datos para que usen cédulas
+            const validatedData = this.validateCitaData(citaData);
+
+            console.log('🚀 === DETALLES DE LA PETICIÓN PUT ===');
+            console.log('🔗 URL:', `${this.baseUrl}/${citaId}`);
+            console.log('📊 Datos originales (citaData):', citaData);
+            console.log('✅ Datos validados (con cédulas):', validatedData);
+            console.log('📝 JSON stringificado:', JSON.stringify(validatedData, null, 2));
+            console.log('🔧 Headers:', {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            });
+
             const response = await fetch(`${this.baseUrl}/${citaId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
-                body: JSON.stringify(citaData)
+                body: JSON.stringify(validatedData)
+            });
+
+            console.log('📡 Respuesta del servidor:', {
+                status: response.status,
+                statusText: response.statusText,
+                ok: response.ok
             });
 
             if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || `Error al actualizar la cita con ID: ${citaId}`);
+                const errorText = await response.text();
+                console.error('❌ Error response body:', errorText);
+                try {
+                    const errorData = JSON.parse(errorText);
+                    throw new Error(errorData.message || `Error al actualizar la cita con ID: ${citaId}`);
+                } catch (parseError) {
+                    throw new Error(`Error ${response.status}: ${errorText}`);
+                }
             }
 
-            return await response.json();
+            const result = await response.json();
+            console.log('✅ Respuesta exitosa:', result);
+            return result;
         } catch (error) {
-            console.error(`Error en updateCita(${citaId}):`, error);
+            console.error(`❌ Error en updateCita(${citaId}):`, error);
             throw error;
         }
     }
@@ -330,13 +377,13 @@ class CitaService {
     validateCitaData(citaData) {
         const errors = [];
 
-        // Validaciones requeridas
-        if (!citaData.pacienteId && !citaData.pacienteID) {
-            errors.push('ID del paciente es requerido');
+        // Validaciones requeridas - ahora para cédulas
+        if (!citaData.pacienteCedula && !citaData.pacienteId && !citaData.pacienteID) {
+            errors.push('Cédula del paciente es requerida');
         }
 
-        if (!citaData.medicoId && !citaData.medicoID) {
-            errors.push('ID del médico es requerido');
+        if (!citaData.medicoCedula && !citaData.medicoId && !citaData.medicoID) {
+            errors.push('Cédula del médico es requerida');
         }
 
         if (!citaData.fechaHora) {
@@ -351,10 +398,13 @@ class CitaService {
             throw new Error(`Datos inválidos: ${errors.join(', ')}`);
         }
 
-        // Formatear datos para envío
+        // Formatear datos para envío - priorizar cédulas y asegurar que sean strings
+        const pacienteCedula = citaData.pacienteCedula || citaData.pacienteId || citaData.pacienteID;
+        const medicoCedula = citaData.medicoCedula || citaData.medicoId || citaData.medicoID;
+
         return {
-            pacienteId: citaData.pacienteId || citaData.pacienteID,
-            medicoId: citaData.medicoId || citaData.medicoID,
+            pacienteCedula: String(pacienteCedula), // Asegurar que sea string
+            medicoCedula: String(medicoCedula),     // Asegurar que sea string
             fechaHora: citaData.fechaHora,
             motivoConsulta: citaData.motivoConsulta,
             estadoId: citaData.estadoId || citaData.estadoID || 102 // Por defecto: Pendiente

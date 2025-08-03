@@ -14,6 +14,7 @@ export default function MedicoRegistrationForm({ onMedicoSaved, onCancel, initia
     const [formData, setFormData] = useState({
         nombre: '',
         apellido: '',
+        cedula: '',
         especialidad: '',
         telefono: '',
         email: '',
@@ -21,16 +22,37 @@ export default function MedicoRegistrationForm({ onMedicoSaved, onCancel, initia
 
     const [loading, setLoading] = useState(false);
     const [apiMessage, setApiMessage] = useState(null);
+    const [cedulaError, setCedulaError] = useState(null);
+    const [telefonoError, setTelefonoError] = useState(null);
     const toast = useRef(null);
 
     // useEffect para inicializar el formulario si hay datos iniciales (para edición)
     useEffect(() => {
+        const formatCedulaForForm = (cedula) => {
+            if (!cedula) return '';
+            const cleaned = String(cedula).replace(/\D/g, '');
+            if (cleaned.length === 11) {
+                return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 10)}-${cleaned.substring(10, 11)}`;
+            }
+            return String(cedula);
+        };
+
+        const formatTelefonoForForm = (telefono) => {
+            if (!telefono) return '';
+            const cleaned = String(telefono).replace(/\D/g, '');
+            if (cleaned.length === 10) {
+                return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 6)}-${cleaned.substring(6, 10)}`;
+            }
+            return String(telefono);
+        };
+
         if (initialData) {
             setFormData({
                 nombre: initialData.nombre || '',
                 apellido: initialData.apellido || '',
+                cedula: formatCedulaForForm(initialData.cedula) || '',
                 especialidad: initialData.especialidad || '',
-                telefono: initialData.telefono || '',
+                telefono: formatTelefonoForForm(initialData.telefono) || '',
                 email: initialData.email || '',
             });
         } else {
@@ -38,6 +60,7 @@ export default function MedicoRegistrationForm({ onMedicoSaved, onCancel, initia
             setFormData({
                 nombre: '',
                 apellido: '',
+                cedula: '',
                 especialidad: '',
                 telefono: '',
                 email: '',
@@ -50,15 +73,58 @@ export default function MedicoRegistrationForm({ onMedicoSaved, onCancel, initia
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
+    const handleCedulaChange = (e) => {
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 3) value = value.substring(0, 3) + '-' + value.substring(3);
+        if (value.length > 11) value = value.substring(0, 11) + '-' + value.substring(11);
+        if (value.length > 13) value = value.substring(0, 13);
+        setFormData(prev => ({ ...prev, cedula: value }));
+        if (cedulaError) setCedulaError(null);
+    };
+
+    const handleTelefonoChange = (e) => {
+        console.log('📞 handleTelefonoChange ejecutado, valor original:', e.target.value);
+        let value = e.target.value.replace(/\D/g, '');
+        console.log('📞 valor después de limpiar:', value);
+        if (value.length > 3) value = value.substring(0, 3) + '-' + value.substring(3);
+        if (value.length > 7) value = value.substring(0, 7) + '-' + value.substring(7);
+        if (value.length > 12) value = value.substring(0, 12);
+        console.log('📞 valor final formateado:', value);
+        setFormData(prev => ({ ...prev, telefono: value }));
+        if (telefonoError) setTelefonoError(null);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        setCedulaError(null);
+        setTelefonoError(null);
         setApiMessage(null);
         setLoading(true);
 
         // Validación básica
-        if (!formData.nombre || !formData.apellido || !formData.especialidad || !formData.telefono || !formData.email) {
+        if (!formData.nombre || !formData.apellido || !formData.cedula || !formData.especialidad || !formData.telefono || !formData.email) {
             setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Todos los campos son obligatorios.' });
+            setLoading(false);
+            return;
+        }
+
+        // Validación de formato de cédula
+        const cedulaRegex = /^\d{3}-\d{7}-\d{1}$/;
+        const cleanedCedula = formData.cedula.replace(/-/g, '');
+        if (!cedulaRegex.test(formData.cedula) || cleanedCedula.length !== 11) {
+            setCedulaError('La cédula debe tener el formato 123-4567890-2 y 11 dígitos numéricos.');
+            setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, corrija el formato de la cédula.' });
+            setLoading(false);
+            return;
+        }
+
+        // Validación de formato de teléfono
+        const telefonoRegex = /^\d{3}-\d{3}-\d{4}$/;
+        const cleanedTelefono = formData.telefono.replace(/-/g, '');
+        if (!telefonoRegex.test(formData.telefono) || cleanedTelefono.length !== 10) {
+            setTelefonoError('El teléfono debe tener el formato 809-654-2156 y 10 dígitos numéricos.');
+            setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, corrija el formato del teléfono.' });
             setLoading(false);
             return;
         }
@@ -68,6 +134,16 @@ export default function MedicoRegistrationForm({ onMedicoSaved, onCancel, initia
             ? `https://localhost:44388/api/Medico/${initialData.medicoId}` // Usar medicoId para PUT
             : 'https://localhost:44388/api/Medico'; // POST a la URL base
 
+        // Preparar datos para envío (sin guiones)
+        const medicoDataToSend = {
+            nombre: formData.nombre,
+            apellido: formData.apellido,
+            cedula: cleanedCedula,
+            especialidad: formData.especialidad,
+            telefono: cleanedTelefono,
+            email: formData.email,
+        };
+
         try {
             const response = await fetch(url, {
                 method: method,
@@ -75,7 +151,7 @@ export default function MedicoRegistrationForm({ onMedicoSaved, onCancel, initia
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(medicoDataToSend),
             });
 
             if (response.ok) {
@@ -135,7 +211,21 @@ export default function MedicoRegistrationForm({ onMedicoSaved, onCancel, initia
                     placeholder="Ej: Pérez"
                 />
             </div>
-            <div className="field col-12">
+            <div className="field col-12 md:col-6">
+                <label htmlFor="cedula">Cédula</label>
+                <InputText
+                    id="cedula"
+                    name="cedula"
+                    value={formData.cedula}
+                    onChange={handleCedulaChange}
+                    required
+                    placeholder="Ej: 004-0000040-0"
+                    maxLength={13}
+                    className={cedulaError ? 'p-invalid' : ''}
+                />
+                {cedulaError && <small className="p-error">{cedulaError}</small>}
+            </div>
+            <div className="field col-12 md:col-6">
                 <label htmlFor="especialidad">Especialidad</label>
                 <InputText
                     id="especialidad"
@@ -152,10 +242,13 @@ export default function MedicoRegistrationForm({ onMedicoSaved, onCancel, initia
                     id="telefono"
                     name="telefono"
                     value={formData.telefono}
-                    onChange={handleChange}
+                    onChange={handleTelefonoChange}
                     required
                     placeholder="Ej: 809-111-2222"
+                    maxLength={12}
+                    className={telefonoError ? 'p-invalid' : ''}
                 />
+                {telefonoError && <small className="p-error">{telefonoError}</small>}
             </div>
             <div className="field col-12 md:col-6">
                 <label htmlFor="email">Email</label>
