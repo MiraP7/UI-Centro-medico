@@ -8,6 +8,7 @@ import { Toast } from 'primereact/toast';
 import { ConfirmDialog, confirmDialog } from 'primereact/confirmdialog';
 import { Message } from 'primereact/message';
 import { SplitButton } from 'primereact/splitbutton';
+import { InputText } from 'primereact/inputtext';
 import AppointmentRegistrationForm from './AppointmentRegistrationForm';
 import { Sidebar } from 'primereact/sidebar';
 import 'primeicons/primeicons.css';
@@ -38,6 +39,8 @@ export default function Dashboard({ onLogout }) {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [appointments, setAppointments] = useState([]); // Ahora se inicializa vacío
+  const [filteredAppointments, setFilteredAppointments] = useState([]); // Estado para citas filtradas
+  const [globalFilter, setGlobalFilter] = useState(''); // Estado para el filtro global
   const [loadingAppointments, setLoadingAppointments] = useState(true); // Nuevo estado de carga
   const [errorAppointments, setErrorAppointments] = useState(null); // Nuevo estado de error
   const [editingAppointment, setEditingAppointment] = useState(null); // Para editar citas
@@ -57,12 +60,42 @@ export default function Dashboard({ onLogout }) {
     fetchAppointments();
   }, []); // El array vacío asegura que se ejecute solo una vez al montar
 
+  // AÑADIDO: useEffect para filtrar las citas según el término de búsqueda
+  useEffect(() => {
+    if (!globalFilter.trim()) {
+      // Si no hay filtro, mostrar todas las citas
+      setFilteredAppointments(appointments);
+    } else {
+      // Filtrar las citas según el término de búsqueda
+      const filtered = appointments.filter(appointment => {
+        const searchTerm = globalFilter.toLowerCase();
+
+        // Buscar en múltiples campos
+        const matchesDate = appointment.date?.toLowerCase().includes(searchTerm);
+        const matchesTime = appointment.time?.toLowerCase().includes(searchTerm);
+        const matchesPatient = appointment.patient?.toLowerCase().includes(searchTerm);
+        const matchesMedico = appointment.medicoNombre?.toLowerCase().includes(searchTerm);
+        const matchesMotivo = appointment.motivoConsulta?.toLowerCase().includes(searchTerm);
+        const matchesEstado = appointment.estadoDescripcion?.toLowerCase().includes(searchTerm);
+
+        // También buscar en fechaHora si está disponible
+        const matchesFechaHora = appointment.fechaHora?.toLowerCase().includes(searchTerm);
+
+        return matchesDate || matchesTime || matchesPatient || matchesMedico ||
+          matchesMotivo || matchesEstado || matchesFechaHora;
+      });
+
+      setFilteredAppointments(filtered);
+    }
+  }, [appointments, globalFilter]);
+
   const fetchAppointments = async () => {
     setLoadingAppointments(true);
     setErrorAppointments(null);
     try {
       const data = await citaService.getAllCitas();
       setAppointments(data);
+      setFilteredAppointments(data); // Inicializar filteredAppointments con todos los datos
     } catch (err) {
       setErrorAppointments(`Error al cargar citas: ${err.message}`);
       console.error("Error fetching appointments:", err);
@@ -379,6 +412,34 @@ export default function Dashboard({ onLogout }) {
               <div className="card p-2 shadow-1 border-round-md">
                 <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas</h2>
 
+                {/* Barra de búsqueda */}
+                <div className="flex justify-content-between align-items-center mb-3">
+                  <div className="flex align-items-center gap-2">
+                    <i className="pi pi-search" style={{ color: COLOR_AZUL_MARINO }}></i>
+                    <InputText
+                      value={globalFilter}
+                      onChange={(e) => setGlobalFilter(e.target.value)}
+                      placeholder="Buscar..."
+                      className="w-full"
+                      style={{ minWidth: '300px' }}
+                    />
+                    {globalFilter && (
+                      <Button
+                        icon="pi pi-times"
+                        className="p-button-text p-button-sm"
+                        onClick={() => setGlobalFilter('')}
+                        tooltip="Limpiar búsqueda"
+                        tooltipOptions={{ position: 'top' }}
+                      />
+                    )}
+                  </div>
+                  {globalFilter && (
+                    <small className="text-500">
+                      {filteredAppointments.length} de {appointments.length} citas
+                    </small>
+                  )}
+                </div>
+
                 {loadingAppointments ? (
                   <div className="flex justify-content-center flex-column align-items-center p-5">
                     {/* <ProgressSpinner /> */}
@@ -386,10 +447,12 @@ export default function Dashboard({ onLogout }) {
                   </div>
                 ) : errorAppointments ? (
                   <Message severity="error" summary="Error" text={errorAppointments} className="mb-3 w-full" />
-                ) : appointments.length === 0 ? (
+                ) : filteredAppointments.length === 0 && appointments.length === 0 ? (
                   <Message severity="info" summary="Información" text="No hay citas programadas." className="mb-3 w-full" />
+                ) : filteredAppointments.length === 0 && globalFilter ? (
+                  <Message severity="warn" summary="Sin resultados" text="No se encontraron citas que coincidan con la búsqueda." className="mb-3 w-full" />
                 ) : (
-                  <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
+                  <DataTable value={filteredAppointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
                     paginator
                     rows={9}
                     className=''

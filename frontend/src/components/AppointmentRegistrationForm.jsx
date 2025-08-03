@@ -19,11 +19,13 @@ export default function AppointmentRegistrationForm({
     const [selectedMedico, setSelectedMedico] = useState(null);
     const [appointmentDate, setAppointmentDate] = useState(null);
     const [appointmentTime, setAppointmentTime] = useState('');
-    const [reason, setReason] = useState('');
+    const [selectedTreatment, setSelectedTreatment] = useState(null); // Cambiado de reason a selectedTreatment
     const [patients, setPatients] = useState([]);
     const [medicos, setMedicos] = useState([]);
+    const [treatments, setTreatments] = useState([]); // Nuevo estado para tratamientos
     const [loadingPatients, setLoadingPatients] = useState(false);
     const [loadingMedicos, setLoadingMedicos] = useState(false);
+    const [loadingTreatments, setLoadingTreatments] = useState(false); // Nuevo estado de carga
 
     const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
 
@@ -62,11 +64,17 @@ export default function AppointmentRegistrationForm({
                 setAppointmentTime(timeValue);
             }
 
-            // Manejar el motivo de la consulta
-            if (appointmentToEdit.motivoConsulta || appointmentToEdit.reason) {
+            // Manejar el tratamiento - buscar por tratamientoId o descripción
+            if (appointmentToEdit.tratamientoId) {
+                const treatmentId = appointmentToEdit.tratamientoId.toString();
+                console.log('🏥 Configurando tratamiento ID:', treatmentId);
+                setSelectedTreatment(treatmentId);
+            } else if (appointmentToEdit.motivoConsulta || appointmentToEdit.reason) {
+                // Si no hay tratamientoId, buscar por descripción cuando los tratamientos estén cargados
                 const reasonValue = appointmentToEdit.motivoConsulta || appointmentToEdit.reason;
-                console.log('📝 Configurando motivo:', reasonValue);
-                setReason(reasonValue);
+                console.log('📝 Tratamiento por descripción:', reasonValue);
+                // Esto se manejará en un useEffect separado cuando los tratamientos estén cargados
+                setSelectedTreatment(reasonValue);
             }
 
             // Pre-llenar médico si existe
@@ -84,9 +92,77 @@ export default function AppointmentRegistrationForm({
             setSelectedMedico(null);
             setAppointmentDate(null);
             setAppointmentTime('');
-            setReason('');
+            setSelectedTreatment(null);
         }
     }, [isEditMode, appointmentToEdit]);
+
+    // Función para cargar tratamientos desde la API
+    const loadTreatments = async () => {
+        try {
+            console.log('🔄 Iniciando carga de tratamientos...');
+            setLoadingTreatments(true);
+
+            const response = await fetch('https://localhost:44388/api/Tratamiento/all', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log('📊 Datos de tratamientos recibidos:', result);
+
+                // Verificar si hay datos
+                if (!result || !Array.isArray(result.data)) {
+                    console.warn('⚠️ Los datos de tratamientos no son un array válido:', result);
+                    setTreatments([]);
+                    return;
+                }
+
+                // Transformar los datos para el formato del Dropdown
+                const formattedTreatments = result.data.map(treatment => {
+                    console.log('🔄 Procesando tratamiento:', treatment);
+
+                    const treatmentId = treatment.tratamientoId || treatment.id;
+
+                    if (!treatmentId) {
+                        console.warn('⚠️ Tratamiento sin ID válido:', treatment);
+                        return null;
+                    }
+
+                    return {
+                        label: `${treatment.descripcion} - $${treatment.costo}`,
+                        value: treatmentId.toString(),
+                        descripcion: treatment.descripcion,
+                        costo: treatment.costo
+                    };
+                }).filter(treatment => treatment !== null);
+
+                console.log('✅ Tratamientos formateados:', formattedTreatments);
+                setTreatments(formattedTreatments);
+
+                if (formattedTreatments.length === 0) {
+                    console.warn('⚠️ No se pudieron formatear tratamientos válidos');
+                }
+            } else {
+                const errorData = await response.json();
+                console.error('❌ Error de API al cargar tratamientos:', response.status, errorData);
+                setTreatments([]);
+            }
+        } catch (error) {
+            console.error('❌ Error al cargar tratamientos:', error);
+            console.error('❌ Detalles del error:', {
+                message: error.message,
+                stack: error.stack,
+                name: error.name
+            });
+            setTreatments([]);
+        } finally {
+            setLoadingTreatments(false);
+        }
+    };
 
     // Función para cargar pacientes desde la API
     const loadPatients = async () => {
@@ -198,11 +274,33 @@ export default function AppointmentRegistrationForm({
         }
     };
 
-    // Cargar pacientes y médicos al montar el componente
+    // Cargar pacientes, médicos y tratamientos al montar el componente
     useEffect(() => {
         loadPatients();
         loadMedicos();
+        loadTreatments();
     }, []);
+
+    // UseEffect para manejar la selección de tratamiento por descripción cuando los tratamientos estén cargados
+    useEffect(() => {
+        if (isEditMode && appointmentToEdit && treatments.length > 0 && selectedTreatment) {
+            // Si selectedTreatment es una descripción (string largo), buscar el ID correspondiente
+            if (isNaN(selectedTreatment) && selectedTreatment.length > 5) {
+                console.log('🔍 Buscando tratamiento por descripción:', selectedTreatment);
+                const foundTreatment = treatments.find(treatment =>
+                    treatment.descripcion.toLowerCase().includes(selectedTreatment.toLowerCase()) ||
+                    selectedTreatment.toLowerCase().includes(treatment.descripcion.toLowerCase())
+                );
+
+                if (foundTreatment) {
+                    console.log('✅ Tratamiento encontrado por descripción:', foundTreatment);
+                    setSelectedTreatment(foundTreatment.value);
+                } else {
+                    console.warn('⚠️ No se encontró tratamiento para la descripción:', selectedTreatment);
+                }
+            }
+        }
+    }, [treatments, isEditMode, appointmentToEdit]);
 
     const handlePatientRegistered = (newPatient) => {
         console.log('Paciente Registrado desde el modal:', newPatient);
@@ -217,13 +315,14 @@ export default function AppointmentRegistrationForm({
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!selectedPatient || !selectedMedico || !appointmentDate || !appointmentTime || !reason) {
+        if (!selectedPatient || !selectedMedico || !appointmentDate || !appointmentTime || !selectedTreatment) {
             alert('Todos los campos son obligatorios.');
             return;
         }
 
         const patientDetails = patients.find(p => p.value === selectedPatient);
         const medicoDetails = medicos.find(m => m.value === selectedMedico);
+        const treatmentDetails = treatments.find(t => t.value === selectedTreatment);
 
         if (isEditMode) {
             // **MODO EDICIÓN**: Formato para PUT - necesita cédulas
@@ -240,13 +339,15 @@ export default function AppointmentRegistrationForm({
                 pacienteCedula: pacienteCedula,
                 medicoCedula: medicoCedula,
                 fechaHora: appointmentDate.toISOString().split('T')[0] + 'T' + convertTimeToAPI(appointmentTime),
-                motivoConsulta: reason,
+                motivoConsulta: treatmentDetails ? treatmentDetails.descripcion : 'Tratamiento no especificado', // Enviar descripción como string
                 estadoId: 102, // Usar estadoId (consistente entre POST y PUT)
                 // Para Dashboard - ID de la cita para URL
                 citaId: parseInt(appointmentToEdit.citaId || appointmentToEdit.citaID),
                 // Campos adicionales para el frontend
                 patientName: patientDetails ? patientDetails.name : 'Desconocido',
                 medicoName: medicoDetails ? medicoDetails.name : 'Desconocido',
+                treatmentName: treatmentDetails ? treatmentDetails.descripcion : 'Desconocido',
+                tratamientoId: parseInt(selectedTreatment), // Mantener ID para uso interno del frontend
                 date: appointmentDate.toLocaleDateString('es-ES'),
                 time: appointmentTime,
                 isEditMode: true // Bandera para que Dashboard sepa el modo
@@ -273,11 +374,13 @@ export default function AppointmentRegistrationForm({
                 pacienteCedula: pacienteCedula,  // POST usa cédulas
                 medicoCedula: medicoCedula,      // POST usa cédulas
                 fechaHora: appointmentDate.toISOString().split('T')[0] + 'T' + convertTimeToAPI(appointmentTime),
-                motivoConsulta: reason,
+                motivoConsulta: treatmentDetails ? treatmentDetails.descripcion : 'Tratamiento no especificado', // Enviar descripción como string
                 estadoId: 102, // Usar estadoId (consistente con PUT)
                 // Campos adicionales para el frontend
                 patientName: patientDetails ? patientDetails.name : 'Desconocido',
                 medicoName: medicoDetails ? medicoDetails.name : 'Desconocido',
+                treatmentName: treatmentDetails ? treatmentDetails.descripcion : 'Desconocido',
+                tratamientoId: parseInt(selectedTreatment), // Mantener ID para uso interno del frontend
                 date: appointmentDate.toLocaleDateString('es-ES'),
                 time: appointmentTime,
                 isEditMode: false // Bandera para que Dashboard sepa el modo
@@ -411,8 +514,20 @@ export default function AppointmentRegistrationForm({
                 <Dropdown id="appointmentTime" value={appointmentTime} options={timeSlots} onChange={(e) => setAppointmentTime(e.value)} placeholder="Seleccionar Hora" required />
             </div>
             <div className="field col-12">
-                <label htmlFor="reason">Motivo de la Cita</label>
-                <InputTextarea id="reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={3} required />
+                <label htmlFor="treatment">Tratamiento</label>
+                <Dropdown
+                    id="treatment"
+                    value={selectedTreatment}
+                    options={treatments}
+                    onChange={(e) => setSelectedTreatment(e.value)}
+                    placeholder={loadingTreatments ? "Cargando tratamientos..." : "Seleccionar Tratamiento"}
+                    loading={loadingTreatments}
+                    onShow={loadTreatments}
+                    filter
+                    filterPlaceholder="Buscar tratamiento..."
+                    emptyMessage="No se encontraron tratamientos"
+                    required
+                />
             </div>
 
             <div className="col-12 flex justify-content-end gap-2 mt-4">
