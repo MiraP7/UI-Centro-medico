@@ -83,6 +83,51 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         fetchInsurers();
     }, []);
 
+    // Función para buscar aseguradora por nombre y obtener su ID
+    const searchInsurerByName = async (insurerName) => {
+        try {
+            console.log(`Buscando aseguradora por nombre: "${insurerName}"`);
+            const encodedName = encodeURIComponent(insurerName);
+            const response = await fetch(`https://localhost:44388/api/Aseguradora/all?Search=${encodedName}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log("Respuesta de búsqueda de aseguradora:", result);
+                
+                if (result && Array.isArray(result.data) && result.data.length > 0) {
+                    // Buscar coincidencia exacta primero
+                    const exactMatch = result.data.find(insurer => 
+                        insurer.nombre.toLowerCase() === insurerName.toLowerCase()
+                    );
+                    
+                    if (exactMatch) {
+                        console.log(`Aseguradora encontrada (coincidencia exacta):`, exactMatch);
+                        return exactMatch.aseguradoraId;
+                    } else {
+                        // Si no hay coincidencia exacta, tomar el primer resultado
+                        console.log(`Aseguradora encontrada (primer resultado):`, result.data[0]);
+                        return result.data[0].aseguradoraId;
+                    }
+                } else {
+                    console.warn(`No se encontró ninguna aseguradora con el nombre: "${insurerName}"`);
+                    return null;
+                }
+            } else {
+                console.error('Error en la búsqueda de aseguradora:', response.status);
+                return null;
+            }
+        } catch (error) {
+            console.error('Error de red al buscar aseguradora:', error);
+            return null;
+        }
+    };
+
     // useEffect para inicializar el formulario si hay datos iniciales (para edición)
     useEffect(() => {
         const formatDniForForm = (dni) => {
@@ -103,59 +148,57 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
             return String(phone);
         };
 
-        if (initialData) {
-            console.log("Datos iniciales (initialData):", initialData);
-            console.log("Tipo de initialData.aseguradoraId:", typeof initialData.aseguradoraId, "Valor:", initialData.aseguradoraId);
-
-            // Asegurarse de que el arsID sea un número si no es null
-            let initialArsId = initialData.aseguradoraId !== null && initialData.aseguradoraId !== undefined
-                ? Number(initialData.aseguradoraId)
-                : null;
-
-            // Debugging: Verificar si el initialArsId existe en la lista de aseguradoras cargadas
-            if (initialArsId !== null && insurers.length > 0) {
-                const foundInsurer = insurers.find(insurer => insurer.value === initialArsId);
-                if (!foundInsurer) {
-                    console.warn(`Aseguradora con ID ${initialArsId} de initialData no encontrada en la lista de aseguradoras cargadas.`);
-                    // Opcional: Si el ID no se encuentra, puedes decidir resetearlo a null
-                    // initialArsId = null; 
-                } else {
-                    console.log(`Aseguradora encontrada en la lista:`, foundInsurer);
+        const initializeFormData = async () => {
+            if (initialData) {
+                console.log("Datos iniciales (initialData):", initialData);
+                
+                let initialArsId = null;
+                
+                // Si hay nombre de aseguradora, buscar su ID
+                if (initialData.aseguradora) {
+                    console.log(`Buscando ID para aseguradora: "${initialData.aseguradora}"`);
+                    initialArsId = await searchInsurerByName(initialData.aseguradora);
+                    console.log(`ID de aseguradora encontrado: ${initialArsId}`);
+                } else if (initialData.aseguradoraId) {
+                    // Si ya tenemos el ID, usarlo directamente
+                    initialArsId = Number(initialData.aseguradoraId);
+                    console.log(`Usando ID de aseguradora existente: ${initialArsId}`);
                 }
-            } else if (initialArsId !== null && insurersLoading) {
-                console.log("Aseguradoras aún cargando, se intentará establecer arsID cuando estén disponibles.");
-            }
 
-            setFormData({
-                name: initialData.nombre || '',
-                lastName: initialData.apellido || '',
-                dni: formatDniForForm(initialData.cedula) || '',
-                dob: initialData.fechaNacimiento ? new Date(initialData.fechaNacimiento) : null,
-                phone: formatPhoneForForm(initialData.telefono) || '',
-                email: initialData.email || '',
-                sex: initialData.sexo || null,
-                address: initialData.direccion || '',
-                PolicyID: initialData.polizaId || '',
-                arsID: initialArsId, // Usar el ID procesado
-            });
-            // Activar isInsured si hay datos de póliza o aseguradora
-            setIsInsured(!!initialData.polizaId || (initialData.aseguradoraId !== null && initialData.aseguradoraId !== undefined));
-        } else {
-            setFormData({
-                name: '',
-                lastName: '',
-                dni: '',
-                dob: null,
-                phone: '',
-                email: '',
-                sex: null,
-                address: '',
-                PolicyID: '',
-                arsID: null,
-            });
-            setIsInsured(false);
-        }
-    }, [initialData, insurers, insurersLoading]); // Añade 'insurersLoading' como dependencia para mejor reactividad
+                setFormData({
+                    name: initialData.nombre || '',
+                    lastName: initialData.apellido || '',
+                    dni: formatDniForForm(initialData.cedula) || '',
+                    dob: initialData.fechaNacimiento ? new Date(initialData.fechaNacimiento) : null,
+                    phone: formatPhoneForForm(initialData.telefono) || '',
+                    email: initialData.email || '',
+                    sex: initialData.sexo || null,
+                    address: initialData.direccion || '',
+                    PolicyID: initialData.polizaId || '',
+                    arsID: initialArsId,
+                });
+                
+                // Activar isInsured si hay datos de póliza o aseguradora
+                setIsInsured(!!initialData.polizaId || !!initialData.aseguradora || !!initialArsId);
+            } else {
+                setFormData({
+                    name: '',
+                    lastName: '',
+                    dni: '',
+                    dob: null,
+                    phone: '',
+                    email: '',
+                    sex: null,
+                    address: '',
+                    PolicyID: '',
+                    arsID: null,
+                });
+                setIsInsured(false);
+            }
+        };
+
+        initializeFormData();
+    }, [initialData]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;

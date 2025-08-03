@@ -179,7 +179,7 @@ export default function PatientView({ onClose }) {
                             {patients.map(patient => (
                                 <tr key={patient.pacienteId}>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.pacienteId}</td>
-                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.nombre}</td>
+                                    <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{`${patient.nombre} ${patient.apellido}`}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.fechaNacimiento}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.sexo}</td>
                                     <td style={{ padding: '0.75rem', borderBottom: '1px solid #e9ecef' }}>{patient.telefono}</td>
