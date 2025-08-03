@@ -206,11 +206,11 @@ export default function MedicoView({ onClose }) {
 
                 <div className="flex align-items-center gap-2">
                     <span className="p-input-icon-left">
-                        <i className="pi pi-search" />
+                        {/* <i className="pi pi-search" /> */}
                         <InputText
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            placeholder="Buscar por..."
+                            placeholder="Buscar..."
                             className="w-20rem"
                         />
                     </span>
