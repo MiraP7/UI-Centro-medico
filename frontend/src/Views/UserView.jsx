@@ -10,7 +10,7 @@ import { InputText } from 'primereact/inputtext';
 import { Toolbar } from 'primereact/toolbar';
 import { Tag } from 'primereact/tag';
 
-import UserRegistrationForm from '/src/components/UserRegistrationForm';
+import UserRegistrationForm from '../components/UserRegistrationForm';
 import UserService from '../Services/UserService';
 
 // Estilos de PrimeReact
@@ -40,10 +40,12 @@ export default function UserView({ onClose }) {
         setApiMessage(null);
         try {
             const data = await userService.getAllUsers();
+            console.log("📊 Usuarios obtenidos del API:", data);
+            console.log("📊 Primer usuario para debug:", data[0]);
+            console.log("📊 Campos disponibles:", data[0] ? Object.keys(data[0]) : 'No hay usuarios');
             setUsers(data);
-            console.log("Usuarios cargados:", data);
         } catch (error) {
-            console.error("Error al cargar usuarios:", error);
+            console.error("❌ Error al cargar usuarios:", error);
             setApiMessage({
                 severity: 'error',
                 summary: 'Error',
@@ -67,7 +69,7 @@ export default function UserView({ onClose }) {
 
     const handleDeleteUser = (user) => {
         confirmDialog({
-            message: `¿Está seguro que desea eliminar el usuario "${user.nombreUsuario}"?`,
+            message: `¿Está seguro que desea eliminar el usuario "${user.usuario1 || user.nombreUsuario}"?`,
             header: 'Confirmar eliminación',
             icon: 'pi pi-exclamation-triangle',
             accept: () => deleteUser(user),
@@ -104,6 +106,9 @@ export default function UserView({ onClose }) {
 
     // Template para mostrar el estado
     const statusTemplate = (rowData) => {
+        // Si no hay estadoId en la respuesta, usar un estado por defecto
+        const estadoId = rowData.estadoId || 100; // Por defecto "Activo"
+
         const getStatusDetails = (estadoId) => {
             switch (estadoId) {
                 case 100:
@@ -111,11 +116,11 @@ export default function UserView({ onClose }) {
                 case 101:
                     return { label: 'Inactivo', severity: 'danger' };
                 default:
-                    return { label: 'Desconocido', severity: 'warning' };
+                    return { label: 'Activo', severity: 'success' };
             }
         };
 
-        const status = getStatusDetails(rowData.estadoId);
+        const status = getStatusDetails(estadoId);
         return <Tag value={status.label} severity={status.severity} />;
     };
 
@@ -145,7 +150,11 @@ export default function UserView({ onClose }) {
 
     // Template para el nombre completo
     const fullNameTemplate = (rowData) => {
-        return `${rowData.nombre} ${rowData.apellido}`;
+        // Si no hay nombre y apellido separados, mostrar el rolNombre o usuario1
+        if (rowData.nombre && rowData.apellido) {
+            return `${rowData.nombre} ${rowData.apellido}`;
+        }
+        return rowData.rolNombre || rowData.usuario1 || 'N/A';
     };
 
     // Toolbar de la tabla
@@ -225,19 +234,19 @@ export default function UserView({ onClose }) {
                     style={{ width: '80px' }}
                 />
                 <Column
-                    header="Nombre Completo"
+                    header="Nombre/Rol"
                     body={fullNameTemplate}
                     sortable
-                    sortField="nombre"
+                    sortField="rolNombre"
                 />
                 <Column
-                    field="nombreUsuario"
+                    field="usuario1"
                     header="Usuario"
                     sortable
                 />
                 <Column
-                    field="email"
-                    header="Email"
+                    field="rolNombre"
+                    header="Rol"
                     sortable
                 />
                 <Column
@@ -278,14 +287,14 @@ export default function UserView({ onClose }) {
             </Dialog>
 
             {/* Botón para cerrar la vista */}
-            <div className="flex justify-content-end mt-4">
+            {/* <div className="flex justify-content-end mt-4">
                 <Button
                     label="Cerrar"
                     icon="pi pi-times"
                     className="p-button-secondary"
                     onClick={onClose}
                 />
-            </div>
+            </div> */}
         </div>
     );
 }

@@ -17,7 +17,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         nombre: '',
         apellido: '',
         email: '',
-        nombreUsuario: '',
+        usuario1: '',
         contraseña: '',
         confirmarContraseña: '',
         estadoId: 100 // Por defecto: Activo
@@ -41,7 +41,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 nombre: initialData.nombre || '',
                 apellido: initialData.apellido || '',
                 email: initialData.email || '',
-                nombreUsuario: initialData.nombreUsuario || '',
+                usuario1: initialData.usuario1 || '',
                 contraseña: '', // No pre-llenar contraseña por seguridad
                 confirmarContraseña: '',
                 estadoId: initialData.estadoId || 100,
@@ -52,7 +52,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 nombre: '',
                 apellido: '',
                 email: '',
-                nombreUsuario: '',
+                usuario1: '',
                 contraseña: '',
                 confirmarContraseña: '',
                 estadoId: 100,
@@ -77,8 +77,8 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
         setLoading(true);
 
         // Validación básica
-        if (!formData.nombre || !formData.apellido || !formData.email || !formData.nombreUsuario) {
-            setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Nombre, Apellido, Email y Nombre de Usuario son obligatorios.' });
+        if (!formData.nombre || !formData.apellido || !formData.email || !formData.usuario1) {
+            setApiMessage({ severity: 'warn', summary: 'Advertencia', detail: 'Nombre, Apellido, Email y Usuario son obligatorios.' });
             setLoading(false);
             return;
         }
@@ -119,7 +119,7 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
             nombre: formData.nombre,
             apellido: formData.apellido,
             email: formData.email,
-            nombreUsuario: formData.nombreUsuario,
+            usuario1: formData.usuario1,
             estadoId: formData.estadoId,
         };
 
@@ -208,11 +208,11 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
                 />
             </div>
             <div className="field col-12 md:col-6">
-                <label htmlFor="nombreUsuario">Nombre de Usuario</label>
+                <label htmlFor="usuario1">Usuario</label>
                 <InputText
-                    id="nombreUsuario"
-                    name="nombreUsuario"
-                    value={formData.nombreUsuario}
+                    id="usuario1"
+                    name="usuario1"
+                    value={formData.usuario1}
                     onChange={handleChange}
                     required
                     placeholder="Ej: jperez"

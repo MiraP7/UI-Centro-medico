@@ -42,11 +42,26 @@ class UserService {
      */
     async getAllUsers() {
         try {
-            const users = await this._fetchData(`${this.baseUrl}/all`);
-            console.log("Usuarios obtenidos:", users);
-            return users || [];
+            console.log("🔍 Solicitando usuarios del endpoint:", `${this.baseUrl}/all`);
+            const result = await this._fetchData(`${this.baseUrl}/all`);
+            console.log("📥 Respuesta completa del API:", result);
+
+            // Si la respuesta tiene estructura { data: [...] }
+            if (result && result.data && Array.isArray(result.data)) {
+                console.log("✅ Datos extraídos del campo 'data':", result.data);
+                return result.data;
+            }
+
+            // Si la respuesta es directamente un array
+            if (Array.isArray(result)) {
+                console.log("✅ Respuesta es array directo:", result);
+                return result;
+            }
+
+            console.warn("⚠️ Formato de respuesta inesperado, devolviendo array vacío");
+            return [];
         } catch (error) {
-            console.error("Error al obtener usuarios:", error);
+            console.error("❌ Error al obtener usuarios:", error);
             return [];
         }
     }
