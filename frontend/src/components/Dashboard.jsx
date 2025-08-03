@@ -10,44 +10,56 @@ import 'primeicons/primeicons.css';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeflex/primeflex.css';
-import '/src/App.css';
+import '/src/App.css'; // Asegúrate de tener tu archivo CSS global
 import PatientView from '/src/Views/PatientView';
 import FacturacionView from '/src/Views/FacturacionView';
 import AseguradoraView from '/src/Views/AseguradoraView';
-// AÑADIDO: Importa MedicoView
-import MedicoView from '/src/Views/MedicoView'; // Asegúrate de que esta ruta sea correcta
+import MedicoView from '/src/Views/MedicoView';
 
-const initialAppointments = [
-  { id: 1, time: '09:00 AM', patient: 'Juan Pérez', reason: 'Consulta General' },
-  { id: 2, time: '10:30 AM', patient: 'Ana Gómez', reason: 'Revisión Dental' },
-  { id: 3, time: '11:00 AM', patient: 'Pedro López', reason: 'Vacunación' },
-  { id: 4, time: '11:30 AM', patient: 'María Fernández', reason: 'Examen de la vista' },
-  { id: 5, time: '12:00 PM', patient: 'Carlos Ruiz', reason: 'Control de rutina' },
-  { id: 6, time: '01:00 PM', patient: 'Laura Díaz', reason: 'Terapia física' },
-  { id: 7, time: '01:30 PM', patient: 'Roberto Soto', reason: 'Consulta dermatológica' },
-  { id: 8, time: '02:00 PM', patient: 'Sofía Castro', reason: 'Seguimiento' },
-  { id: 9, time: '02:30 PM', patient: 'Miguel Torres', reason: 'Endocrinología' },
-  { id: 10, time: '03:00 PM', patient: 'Elena Vargas', reason: 'Ecografía' },
-  { id: 11, time: '03:30 PM', patient: 'Gabriel Ramos', reason: 'Rehabilitación' },
-  { id: 12, time: '04:00 PM', patient: 'Daniela Morales', reason: 'Chequeo pediátrico' },
-];
+// AÑADIDO: Importa el nuevo servicio de Citas
+import CitaService from '/src/services/CitaService';
+
+// Las citas iniciales hardcodeadas ya no son necesarias
+// const initialAppointments = [...];
 
 // Definición de los colores para facilitar la referencia
 const COLOR_AZUL_MARINO = '#2c3e50';
 const COLOR_AZUL_CLARO = '#3498db';
 const COLOR_BLANCO = '#ffffff';
 
+const citaService = new CitaService(); // Instancia del servicio de citas
+
 export default function Dashboard({ onLogout }) {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
-  const [appointments, setAppointments] = useState(initialAppointments);
+  const [appointments, setAppointments] = useState([]); // Ahora se inicializa vacío
+  const [loadingAppointments, setLoadingAppointments] = useState(true); // Nuevo estado de carga
+  const [errorAppointments, setErrorAppointments] = useState(null); // Nuevo estado de error
+
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [showPatientViewModal, setShowPatientViewModal] = useState(false);
   const [showFacturacionViewModal, setShowFacturacionViewModal] = useState(false);
   const [showAseguradoraViewModal, setShowAseguradoraViewModal] = useState(false);
-  // AÑADIDO: Nuevo estado para controlar la visibilidad del modal de Médicos
   const [showMedicoViewModal, setShowMedicoViewModal] = useState(false);
 
+
+  // AÑADIDO: useEffect para cargar las citas de la API
+  useEffect(() => {
+    const fetchAppointments = async () => {
+      setLoadingAppointments(true);
+      setErrorAppointments(null);
+      try {
+        const data = await citaService.getAllCitas();
+        setAppointments(data);
+      } catch (err) {
+        setErrorAppointments(`Error al cargar citas: ${err.message}`);
+        console.error("Error fetching appointments:", err);
+      } finally {
+        setLoadingAppointments(false);
+      }
+    };
+    fetchAppointments();
+  }, []); // El array vacío asegura que se ejecute solo una vez al montar
 
   const handlePatientRegistered = (newPatient) => {
     console.log('Paciente Registrado:', newPatient);
@@ -56,8 +68,14 @@ export default function Dashboard({ onLogout }) {
 
   const handleAppointmentRegistered = (newAppointment) => {
     console.log('Cita Registrada:', newAppointment);
-    setAppointments(prev => [...prev, { ...newAppointment, id: Date.now(), patient: newAppointment.patientName || 'Nuevo Paciente' }]);
+    // Después de registrar una nueva cita, recargar la lista desde la API
+    // Si tu AppointmentRegistrationForm ya llama a la API para crear la cita,
+    // solo necesitas volver a llamar fetchAppointments() aquí.
+    // Para este ejemplo, simulo la adición local si no hay API real.
+    // setAppointments(prev => [...prev, { ...newAppointment, id: Date.now(), patient: newAppointment.patientName || 'Nuevo Paciente' }]);
     setShowAppointmentModal(false);
+    // Recargar citas después de que una nueva sea registrada
+    fetchAppointments();
   };
 
   // Función auxiliar para cerrar todos los modales de vista
@@ -65,7 +83,7 @@ export default function Dashboard({ onLogout }) {
     setShowPatientViewModal(false);
     setShowFacturacionViewModal(false);
     setShowAseguradoraViewModal(false);
-    setShowMedicoViewModal(false); // AÑADIDO: Cierra el modal de médicos
+    setShowMedicoViewModal(false);
     setSidebarVisible(false);
   };
 
@@ -73,50 +91,80 @@ export default function Dashboard({ onLogout }) {
   const items = [
     {
       label: 'Home',
-      icon: 'pi pi-fw pi-home icons-bar',
-
-      command: () => { // AÑADIDO: Cierra el sidebar al hacer clic en Home
-        setSidebarVisible(false);
-        // Aquí podrías añadir lógica adicional si "Home" implicara ocultar otros modales abiertos
-        // setShowPatientViewModal(false);
-        // setShowFacturacionViewModal(false);
+      icon: 'pi pi-fw pi-home', // Eliminado 'icons-bar' de aquí
+      command: () => {
+        closeAllViewModals(); // Usa la función general para cerrar modales
       },
     },
     {
       label: 'Pacientes',
-      icon: 'pi pi-fw pi-users icons-bar',
+      icon: 'pi pi-fw pi-users', // Eliminado 'icons-bar' de aquí
       command: () => {
         closeAllViewModals();
         setShowPatientViewModal(true);
-
       },
     },
     {
       label: 'Facturación',
-      icon: 'pi pi-fw pi-money-bill icons-bar',
+      icon: 'pi pi-fw pi-money-bill', // Eliminado 'icons-bar' de aquí
       command: () => {
         closeAllViewModals();
         setShowFacturacionViewModal(true);
-
       },
     },
     {
       label: 'Autorización',
-      icon: 'pi pi-fw pi-check-square icons-bar',
+      icon: 'pi pi-fw pi-check-square', // Eliminado 'icons-bar' de aquí
+      command: () => {
+        closeAllViewModals();
+        // Lógica para Autorización
+      }
     },
     {
       label: 'Medicos',
-      icon: 'pi pi-fw pi-user-md icons-bar',
+      icon: 'pi pi-fw pi-user-md', // Eliminado 'icons-bar' de aquí
+      command: () => {
+        closeAllViewModals();
+        setShowMedicoViewModal(true); // Abre el modal de Médicos
+      }
     },
     {
       label: 'Usuarios',
-      icon: 'pi pi-fw pi-id-card icons-bar',
+      icon: 'pi pi-fw pi-id-card', // Eliminado 'icons-bar' de aquí
+      command: () => {
+        closeAllViewModals();
+        // Lógica para Usuarios
+      }
     },
     {
       label: 'Aseguradora ',
-      icon: 'pi pi-fw pi-shield icons-bar',
+      icon: 'pi pi-fw pi-shield', // Eliminado 'icons-bar' de aquí
+      command: () => {
+        closeAllViewModals();
+        setShowAseguradoraViewModal(true);
+      }
     }
   ];
+
+  const formatTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    // Asegúrate de que la fecha sea válida antes de formatear
+    if (isNaN(date.getTime())) {
+      return 'Fecha Inválida';
+    }
+    return date.toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) {
+      return 'Fecha Inválida';
+    }
+    return date.toLocaleDateString('es-DO') + ' ' + date.toLocaleTimeString('es-DO', { hour: '2-digit', minute: '2-digit' });
+  };
+
 
   return (
     <div className="">
@@ -124,12 +172,11 @@ export default function Dashboard({ onLogout }) {
       <Sidebar visible={sidebarVisible} onHide={() => setSidebarVisible(false)}
         showCloseIcon={true}
         baseZIndex={9999}
-        className="w-20rem"
-        style={{ backgroundColor: '#273747ff' }}
+        className="w-20rem icons-bar" // APLICA LA CLASE icons-bar AQUÍ
+      // style={{ backgroundColor: '#273747ff' }} // Puedes eliminar esto si icons-bar ya lo define
       >
         <h3 className="mb-3 pl-3 text-2xl font-semibold" style={{ color: COLOR_BLANCO, textAlign: 'center' }}>Menú Principal</h3>
-        {/* The className "sidebar-panelmenu" is crucial here for your CSS to work */}
-        <PanelMenu model={items} className="w-full sidebar-panelmenu " />
+        <PanelMenu model={items} className="w-full sidebar-panelmenu" />
       </Sidebar>
 
       {/* HEADER */}
@@ -148,31 +195,38 @@ export default function Dashboard({ onLogout }) {
           <div className='bnt-registrar'>
             <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised p-2" onClick={() => setShowAppointmentModal(true)} />
 
-          </div>          <div className="card p-2 shadow-1 border-round-md">
+          </div>
+          <div className="card p-2 shadow-1 border-round-md">
             <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas</h2>
-            <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
-              paginator
-              rows={9}
-              className=''
-              rowsPerPageOptions={[5, 10, 25, 50]}
-              paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-              currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas "
-            >
-              <Column field="time" header="Hora"></Column>
-              <Column field="patient" header="Paciente"></Column>
-              <Column field="reason" header="Motivo"></Column>
-            </DataTable>
+
+            {loadingAppointments ? (
+              <div className="flex justify-content-center flex-column align-items-center p-5">
+                {/* <ProgressSpinner /> */}
+                <p className="mt-3">Cargando citas...</p>
+              </div>
+            ) : errorAppointments ? (
+              <Message severity="error" summary="Error" text={errorAppointments} className="mb-3 w-full" />
+            ) : appointments.length === 0 ? (
+              <Message severity="info" summary="Información" text="No hay citas programadas." className="mb-3 w-full" />
+            ) : (
+              <DataTable value={appointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
+                paginator
+                rows={9}
+                className=''
+                rowsPerPageOptions={[5, 10, 25, 50]}
+                paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas "
+              >
+                <Column field="date" header="Fecha"></Column> {/* Nueva columna para la fecha */}
+                <Column field="time" header="Hora"></Column>
+                <Column field="patient" header="Paciente"></Column>
+                <Column field="medicoNombre" header="Médico"></Column> {/* Nueva columna para el médico */}
+                <Column field="motivoConsulta" header="Motivo"></Column>
+                <Column field="estadoDescripcion" header="Estado"></Column> {/* Nueva columna para el estado */}
+              </DataTable>
+            )}
           </div>
         </div>
-        {/* <div className="col-12 md:col-3 p-2 m-2">
-          <div className="card shadow-1 border-round-md">
-            <h2 className="text-xl font-semibold mb-4" style={{ textAlign: 'center' }}>Acciones Rápidas</h2>
-            <div className="flex flex-column gap-3">
-              <Button label="Registrar Paciente" icon="pi pi-user-plus" className="p-button-success p-button-raised p-button-sm" onClick={() => setShowPatientModal(true)} /> 
-              <Button label="Registrar Cita" icon="pi pi-calendar-plus" className="p-button-info p-button-raised " onClick={() => setShowAppointmentModal(true)} />
-            </div>
-          </div>
-        </div> */}
       </div>
 
       {/* Dialog para Registrar Cita */}
@@ -218,10 +272,10 @@ export default function Dashboard({ onLogout }) {
 
       {/* AÑADIDO: Dialog para la Vista de Médicos (MedicoView) */}
       <Dialog
-        header="Gestión de Médicos" // Título para el modal de médicos
-        visible={showMedicoViewModal} // Controla la visibilidad con el nuevo estado
-        style={{ width: '80vw', minWidth: '700px', height: '80vh' }} // Ajusta el tamaño según necesites
-        onHide={() => setShowMedicoViewModal(false)} // Cierra el modal
+        header="Gestión de Médicos"
+        visible={showMedicoViewModal}
+        style={{ width: '80vw', minWidth: '700px', height: '80vh' }}
+        onHide={() => setShowMedicoViewModal(false)}
         modal
       >
         <MedicoView onClose={() => setShowMedicoViewModal(false)} />
