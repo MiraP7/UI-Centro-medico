@@ -131,8 +131,8 @@ export default function MedicoRegistrationForm({ onMedicoSaved, onCancel, initia
 
         const method = initialData ? 'PUT' : 'POST';
         const url = initialData
-            ? `https://localhost:44388/api/Medico/${initialData.medicoId}` // Usar medicoId para PUT
-            : 'https://localhost:44388/api/Medico'; // POST a la URL base
+            ? `https://localhost:7256/api/Medico/${initialData.medicoId}` // Usar medicoId para PUT
+            : 'https://localhost:7256/api/Medico'; // POST a la URL base
 
         // Preparar datos para envío (sin guiones)
         const medicoDataToSend = {

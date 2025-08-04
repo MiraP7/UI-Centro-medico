@@ -160,8 +160,8 @@ export default function UserRegistrationForm({ onUserSaved, onCancel, initialDat
 
         const method = initialData ? 'PUT' : 'POST';
         const url = initialData
-            ? `https://localhost:44388/api/Usuario/${initialData.usuarioId}` // Usar usuarioId para PUT
-            : 'https://localhost:44388/api/Usuario'; // POST a la URL base
+            ? `https://localhost:7256/api/Usuario/${initialData.usuarioId}` // Usar usuarioId para PUT
+            : 'https://localhost:7256/api/Usuario'; // POST a la URL base
 
         // Preparar datos para envío - DIFERENTES FORMATOS PARA PUT vs POST
         let userDataToSend;

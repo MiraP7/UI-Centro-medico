@@ -45,7 +45,7 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
             setPatientsLoading(true);
             setPatientsError(null);
             try {
-                const response = await fetch('https://localhost:44388/api/Paciente/all', {
+                const response = await fetch('https://localhost:7256/api/Paciente/all', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -91,7 +91,7 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
             setProceduresLoading(true);
             setProceduresError(null);
             try {
-                const response = await fetch('https://localhost:44388/api/Tratamiento/all', {
+                const response = await fetch('https://localhost:7256/api/Tratamiento/all', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
             setInsurersLoading(true);
             setInsurersError(null);
             try {
-                const response = await fetch('https://localhost:44388/api/Aseguradora/all', {
+                const response = await fetch('https://localhost:7256/api/Aseguradora/all', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
         try {
             console.log(`Buscando aseguradora por nombre: "${insurerName}"`);
             const encodedName = encodeURIComponent(insurerName);
-            const response = await fetch(`https://localhost:44388/api/Aseguradora/all?Search=${encodedName}`, {
+            const response = await fetch(`https://localhost:7256/api/Aseguradora/all?Search=${encodedName}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -293,7 +293,7 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
             console.log(`Verificando cobertura - Aseguradora: ${formData.aseguradoraId}, Procedimiento: ${formData.procedimiento}`);
 
             // Aquí puedes ajustar el endpoint según tu API
-            const response = await fetch(`https://localhost:44388/api/Aseguradora/${formData.aseguradoraId}/cobertura/${formData.procedimiento}`, {
+            const response = await fetch(`https://localhost:7256/api/Aseguradora/${formData.aseguradoraId}/cobertura/${formData.procedimiento}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -377,8 +377,8 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
 
         const method = initialData ? 'PUT' : 'POST';
         const url = initialData
-            ? `https://localhost:44388/api/Factura/${initialData.facturaId}`
-            : 'https://localhost:44388/api/Factura';
+            ? `https://localhost:7256/api/Factura/${initialData.facturaId}`
+            : 'https://localhost:7256/api/Factura';
 
         try {
             const response = await fetch(url, {

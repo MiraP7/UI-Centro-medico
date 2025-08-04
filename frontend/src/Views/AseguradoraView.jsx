@@ -34,7 +34,7 @@ export default function AseguradoraView({ onClose }) {
         setApiMessage(null);
         console.log("Intentando cargar aseguradoras de la API directamente...");
         try {
-            const response = await fetch('https://localhost:44388/api/Aseguradora/all', {
+            const response = await fetch('https://localhost:7256/api/Aseguradora/all', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export default function AseguradoraView({ onClose }) {
                 try {
                     setLoading(true);
                     console.log("Intentando eliminar Aseguradora con ID:", aseguradoraId);
-                    const response = await fetch(`https://localhost:44388/api/Aseguradora/${aseguradoraId}`, {
+                    const response = await fetch(`https://localhost:7256/api/Aseguradora/${aseguradoraId}`, {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',

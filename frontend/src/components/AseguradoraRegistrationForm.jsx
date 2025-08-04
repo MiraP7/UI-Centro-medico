@@ -101,8 +101,8 @@ export default function AseguradoraRegistrationForm({ onAseguradoraSaved, onCanc
 
         const method = initialData ? 'PUT' : 'POST';
         const url = initialData
-            ? `https://localhost:44388/api/Aseguradora/${initialData.aseguradoraId}` // Usar aseguradoraId para PUT
-            : 'https://localhost:44388/api/Aseguradora'; // POST a la URL base
+            ? `https://localhost:7256/api/Aseguradora/${initialData.aseguradoraId}` // Usar aseguradoraId para PUT
+            : 'https://localhost:7256/api/Aseguradora'; // POST a la URL base
 
         // Preparar datos para envío (teléfono sin guiones)
         const aseguradoraDataToSend = {

@@ -1,12 +1,12 @@
 class FacturaService {
-    constructor(baseUrl = 'https://localhost:44388/api/Factura') {
+    constructor(baseUrl = 'https://localhost:7256/api/Factura') {
         this.baseUrl = baseUrl;
         // Agregamos la URL base para la API de Pacientes
-        this.pacienteBaseUrl = 'https://localhost:44388/api/Paciente';
+        this.pacienteBaseUrl = 'https://localhost:7256/api/Paciente';
         // AÑADIDO: URL base para la API de DetalleFactura
-        this.detalleFacturaBaseUrl = 'https://localhost:44388/api/DetalleFactura';
+        this.detalleFacturaBaseUrl = 'https://localhost:7256/api/DetalleFactura';
         // AÑADIDO: URL base para la API de Tratamiento
-        this.tratamientoBaseUrl = 'https://localhost:44388/api/Tratamiento';
+        this.tratamientoBaseUrl = 'https://localhost:7256/api/Tratamiento';
     }
 
     /**

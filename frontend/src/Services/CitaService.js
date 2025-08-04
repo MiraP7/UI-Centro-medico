@@ -1,11 +1,11 @@
 // src/services/CitaService.js
 
 class CitaService {
-    constructor(baseUrl = 'https://localhost:44388/api/Cita') {
+    constructor(baseUrl = 'https://localhost:7256/api/Cita') {
         this.baseUrl = baseUrl;
         // URLs base para pacientes y médicos (reactivadas)
-        this.pacienteBaseUrl = 'https://localhost:44388/api/Paciente';
-        this.medicoBaseUrl = 'https://localhost:44388/api/Medico';
+        this.pacienteBaseUrl = 'https://localhost:7256/api/Paciente';
+        this.medicoBaseUrl = 'https://localhost:7256/api/Medico';
     }
 
     // Método auxiliar para obtener datos de la API

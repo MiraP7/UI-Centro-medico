@@ -1,7 +1,7 @@
 // src/services/UserService.js
 
 class UserService {
-    constructor(baseUrl = 'https://localhost:44388/api/Usuario') {
+    constructor(baseUrl = 'https://localhost:7256/api/Usuario') {
         this.baseUrl = baseUrl;
     }
 

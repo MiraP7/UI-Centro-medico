@@ -102,7 +102,7 @@ export default function AppointmentRegistrationForm({
             console.log('🔄 Iniciando carga de tratamientos...');
             setLoadingTreatments(true);
 
-            const response = await fetch('https://localhost:44388/api/Tratamiento/all', {
+            const response = await fetch('https://localhost:7256/api/Tratamiento/all', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',

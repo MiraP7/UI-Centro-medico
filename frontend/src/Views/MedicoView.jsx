@@ -37,7 +37,7 @@ export default function MedicoView({ onClose }) {
         setApiMessage(null);
         console.log("Intentando cargar médicos de la API...");
         try {
-            const response = await fetch('https://localhost:44388/api/Medico/all', {
+            const response = await fetch('https://localhost:7256/api/Medico/all', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ export default function MedicoView({ onClose }) {
                 try {
                     setLoading(true);
                     console.log("Intentando eliminar Médico con ID:", medicoId);
-                    const response = await fetch(`https://localhost:44388/api/Medico/${medicoId}`, {
+                    const response = await fetch(`https://localhost:7256/api/Medico/${medicoId}`, {
                         method: 'DELETE',
                         headers: {
                             'Content-Type': 'application/json',
