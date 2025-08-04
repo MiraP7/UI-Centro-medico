@@ -133,8 +133,8 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
         const formatDniForForm = (dni) => {
             if (!dni) return '';
             const cleaned = String(dni).replace(/\D/g, '');
-            if (cleaned.length === 11) {
-                return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 10)}-${cleaned.substring(10, 11)}`;
+            if (cleaned.length === 10) {
+                return `${cleaned.substring(0, 3)}-${cleaned.substring(3, 9)}-${cleaned.substring(9, 10)}`;
             }
             return String(dni);
         };
@@ -219,9 +219,20 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
 
     const handleDniChange = (e) => {
         let value = e.target.value.replace(/\D/g, '');
-        if (value.length > 3) value = value.substring(0, 3) + '-' + value.substring(3);
-        if (value.length > 11) value = value.substring(0, 11) + '-' + value.substring(11);
-        if (value.length > 13) value = value.substring(0, 13);
+
+        // Limitamos a máximo 10 dígitos numéricos (003-848995-1)
+        if (value.length > 10) {
+            value = value.substring(0, 10);
+        }
+
+        // Formatear cédula: XXX-XXXXXX-X (3-6-1 dígitos)
+        if (value.length > 3) {
+            value = value.substring(0, 3) + '-' + value.substring(3);
+        }
+        if (value.length > 10) { // Posición 10 considerando el primer guión
+            value = value.substring(0, 10) + '-' + value.substring(10);
+        }
+
         setFormData(prev => ({ ...prev, dni: value }));
         if (dniError) setDniError(null);
     };
@@ -255,10 +266,10 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
             return;
         }
 
-        const dniRegex = /^\d{3}-\d{7}-\d{1}$/;
+        const dniRegex = /^\d{3}-\d{6}-\d{1}$/;
         const cleanedDni = formData.dni.replace(/-/g, '');
-        if (!dniRegex.test(formData.dni) || cleanedDni.length !== 11) {
-            setDniError('El DNI debe tener el formato 123-4567890-2 y 11 dígitos numéricos.');
+        if (!dniRegex.test(formData.dni) || cleanedDni.length !== 10) {
+            setDniError('El DNI debe tener el formato 003-848995-1 y 10 dígitos numéricos.');
             setApiMessage({ severity: 'error', summary: 'Error de Validación', detail: 'Por favor, corrija el formato del DNI.' });
             return;
         }
@@ -280,6 +291,108 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
 
         setLoading(true);
         setApiMessage(null);
+
+        // Validar afiliación a la ARS si el paciente está asegurado
+        if (isInsured) {
+            try {
+                console.log(`Validando afiliación del paciente con cédula: ${formData.dni} a la ARS ID: ${formData.arsID}`);
+                const affiliateResponse = await fetch(`https://localhost:44359/api/v1/hospitales/integracion/validate-affiliate?documentNumber=${encodeURIComponent(formData.dni)}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    }
+                });
+
+                // Manejar tanto respuestas OK como 404 (que pueden contener datos válidos)
+                if (affiliateResponse.ok || affiliateResponse.status === 404) {
+                    const affiliateResult = await affiliateResponse.json();
+                    console.log("Resultado de validación de afiliación:", affiliateResult);
+
+                    // Verificar si el paciente no está afiliado
+                    if (!affiliateResult.exists) {
+                        // Obtener el nombre de la ARS seleccionada
+                        const selectedInsurer = insurers.find(insurer => insurer.value === formData.arsID);
+                        const insurerName = selectedInsurer ? selectedInsurer.label : 'la ARS seleccionada';
+
+                        let errorMessage = `El paciente no está afiliado a la ARS: "${insurerName}".`;
+
+                        // Si hay detalles del error, incluirlos en el mensaje
+                        if (affiliateResult.details && affiliateResult.details.length > 0) {
+                            const errorDetail = affiliateResult.details[0];
+                            errorMessage += ` ${errorDetail.message}`;
+                        }
+
+                        if (affiliateResult.status) {
+                            errorMessage += ` Estado: ${affiliateResult.status}`;
+                        }
+
+                        setApiMessage({
+                            severity: 'error',
+                            summary: 'Error de Afiliación',
+                            detail: errorMessage
+                        });
+                        setLoading(false);
+                        return;
+                    }
+
+                    // Verificar el estado de la póliza si está afiliado
+                    if (affiliateResult.exists) {
+                        console.log(`✅ Paciente encontrado: ${affiliateResult.name}`);
+                        console.log(`📋 Plan: ${affiliateResult.plan}`);
+                        console.log(`📅 Fecha de afiliación: ${affiliateResult.affiliateDate}`);
+
+                        // Verificar si la póliza está activa
+                        if (affiliateResult.policyStatus && affiliateResult.policyStatus.toLowerCase() !== 'activo') {
+                            setApiMessage({
+                                severity: 'warn',
+                                summary: 'Póliza Inactiva',
+                                detail: `El paciente ${affiliateResult.name} está afiliado pero su póliza tiene estado: ${affiliateResult.policyStatus}. Verifique con la ARS antes de continuar.`
+                            });
+                            setLoading(false);
+                            return;
+                        }
+
+                        console.log("✅ Paciente confirmado como afiliado activo a la ARS");
+
+                        // Mostrar información adicional en consola para reference
+                        if (affiliateResult.coverages && affiliateResult.coverages.length > 0) {
+                            console.log("📋 Coberturas disponibles:", affiliateResult.coverages.map(c => `${c.name} (${c.coveragePercentage}%)`));
+                        }
+                    }
+                } else {
+                    // Manejar respuesta de error del servidor (que no sea 404)
+                    let errorMessage = 'No se pudo validar la afiliación del paciente.';
+
+                    try {
+                        const errorData = await affiliateResponse.json();
+                        if (errorData && errorData.message) {
+                            errorMessage = errorData.message;
+                        }
+                    } catch (parseError) {
+                        console.log('No se pudo parsear el error response');
+                    }
+
+                    console.error('Error al validar afiliación:', affiliateResponse.status, errorMessage);
+                    setApiMessage({
+                        severity: 'error',
+                        summary: 'Error de Validación',
+                        detail: `${errorMessage} (Código: ${affiliateResponse.status})`
+                    });
+                    setLoading(false);
+                    return;
+                }
+            } catch (error) {
+                console.error('Error de red al validar afiliación:', error);
+                setApiMessage({
+                    severity: 'error',
+                    summary: 'Error de Conexión',
+                    detail: 'No se pudo conectar para validar la afiliación. Verifique su conexión.'
+                });
+                setLoading(false);
+                return;
+            }
+        }
 
         const formattedDob = formData.dob ? formData.dob.toISOString().split('T')[0] : null;
 
@@ -387,7 +500,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
                     value={formData.dni}
                     onChange={handleDniChange}
                     required
-                    placeholder="Ej: 123-4567890-2"
+                    placeholder="Ej: 003-848995-1"
                     className={dniError ? 'p-invalid' : ''}
                     maxLength={13}
                 />
