@@ -10,6 +10,7 @@ import { Message } from 'primereact/message';
 import { SplitButton } from 'primereact/splitbutton';
 import { InputText } from 'primereact/inputtext';
 import AppointmentRegistrationForm from './AppointmentRegistrationForm';
+import FacturacionRegistrationForm from './FacturacionRegistrationForm';
 import { Sidebar } from 'primereact/sidebar';
 import 'primeicons/primeicons.css';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
@@ -38,6 +39,7 @@ const citaService = new CitaService(); // Instancia del servicio de citas
 export default function Dashboard({ onLogout }) {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
+  const [showBillingModal, setShowBillingModal] = useState(false);
   const [appointments, setAppointments] = useState([]); // Ahora se inicializa vacío
   const [filteredAppointments, setFilteredAppointments] = useState([]); // Estado para citas filtradas
   const [globalFilter, setGlobalFilter] = useState(''); // Estado para el filtro global
@@ -152,6 +154,13 @@ export default function Dashboard({ onLogout }) {
     setShowAppointmentModal(true);
   };
 
+  // Manejador para cuando se registra una factura
+  const handleBillingRegistered = (newBilling) => {
+    console.log('Factura registrada:', newBilling);
+    setShowBillingModal(false);
+    showToast('success', 'Éxito', 'Factura registrada exitosamente');
+  };
+
   const handleEditAppointment = (appointment) => {
     setEditingAppointment(appointment);
     setShowAppointmentModal(true);
@@ -224,6 +233,7 @@ export default function Dashboard({ onLogout }) {
     setShowAseguradoraViewModal(false);
     setShowMedicoViewModal(false);
     setShowUserViewModal(false);
+    setShowBillingModal(false);
     setSidebarVisible(false);
   };
 
@@ -500,7 +510,7 @@ export default function Dashboard({ onLogout }) {
                     className="p-button-success p-button-raised p-1 w-full text-sm"
                     onClick={() => {
                       closeAllViewModals();
-                      setShowFacturacionViewModal(true);
+                      setShowBillingModal(true);
                     }}
                   />
                 </div>
@@ -528,6 +538,20 @@ export default function Dashboard({ onLogout }) {
             setShowAppointmentModal(false);
             setEditingAppointment(null);
           }}
+        />
+      </Dialog>
+
+      {/* Dialog para Registrar Factura */}
+      <Dialog
+        header="Registrar Factura"
+        visible={showBillingModal}
+        style={{ width: '70vw', minWidth: '600px' }}
+        onHide={() => setShowBillingModal(false)}
+        modal
+      >
+        <FacturacionRegistrationForm
+          onFacturaRegistered={handleBillingRegistered}
+          onCancel={() => setShowBillingModal(false)}
         />
       </Dialog>
 
