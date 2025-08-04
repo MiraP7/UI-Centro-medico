@@ -290,7 +290,7 @@ export default function PatientRegistrationForm({ onPatientRegistered, onCancel,
             sexo: formData.sex,
             direccion: formData.address,
             telefono: cleanedPhone,
-            cedula: cleanedDni,
+            cedula: formData.dni, // Enviar la cédula con guiones
             email: formData.email,
             // Solo incluir polizaId y aseguradoraId si isInsured es true
             ...(isInsured && { polizaId: formData.PolicyID }),

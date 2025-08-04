@@ -134,11 +134,11 @@ export default function MedicoRegistrationForm({ onMedicoSaved, onCancel, initia
             ? `https://localhost:7256/api/Medico/${initialData.medicoId}` // Usar medicoId para PUT
             : 'https://localhost:7256/api/Medico'; // POST a la URL base
 
-        // Preparar datos para envío (sin guiones)
+        // Preparar datos para envío (cédula con guiones, teléfono sin guiones)
         const medicoDataToSend = {
             nombre: formData.nombre,
             apellido: formData.apellido,
-            cedula: cleanedCedula,
+            cedula: formData.cedula, // Enviar la cédula con guiones
             especialidad: formData.especialidad,
             telefono: cleanedTelefono,
             email: formData.email,
