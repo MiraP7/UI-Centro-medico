@@ -277,11 +277,11 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
 
     // Función para verificar cobertura del procedimiento
     const checkProcedureCoverage = async () => {
-        if (!formData.aseguradoraId || !formData.procedimiento) {
+        if (!formData.aseguradoraId || !formData.procedimiento || !formData.cedulaPaciente || !formData.costoProcedimiento) {
             setCoverageMessage({
                 severity: 'warn',
                 summary: 'Advertencia',
-                detail: 'Debe seleccionar una aseguradora y un procedimiento para verificar la cobertura.'
+                detail: 'Debe seleccionar un paciente, una aseguradora y un procedimiento para verificar la cobertura.'
             });
             return;
         }
@@ -290,60 +290,104 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
         setCoverageMessage(null);
 
         try {
-            console.log(`Verificando cobertura - Aseguradora: ${formData.aseguradoraId}, Procedimiento: ${formData.procedimiento}`);
+            console.log(`Verificando cobertura - Paciente: ${formData.cedulaPaciente}, Aseguradora: ${formData.aseguradoraId}, Procedimiento: ${formData.procedimiento}`);
 
-            // Aquí puedes ajustar el endpoint según tu API
-            const response = await fetch(`https://localhost:7256/api/Aseguradora/${formData.aseguradoraId}/cobertura/${formData.procedimiento}`, {
-                method: 'GET',
+            // Obtener la descripción del procedimiento seleccionado
+            const selectedProcedure = procedures.find(p => p.value === formData.procedimiento);
+            const procedureDescription = selectedProcedure ? selectedProcedure.descripcion : 'PROCEDIMIENTO_MEDICO';
+
+            // Formatear la cédula para la API (sin guiones)
+            const cleanedCedula = formData.cedulaPaciente.replace(/-/g, '');
+
+            // Preparar datos para la solicitud a la ARS
+            const solicitudData = {
+                tipoDocumento: "CEDULA",
+                numeroDocumento: cleanedCedula,
+                numeroPoliza: 0, // Se puede ajustar si tienes este dato
+                tipoSolicitud: procedureDescription.toUpperCase(),
+                descripcion: `Solicitud de cobertura para ${procedureDescription}`,
+                observaciones: `Verificación de cobertura para paciente ${formData.nombrePaciente}`,
+                montoSolicitud: Number(formData.costoProcedimiento)
+            };
+
+            console.log("Datos de solicitud a enviar:", solicitudData);
+
+            const response = await fetch('https://localhost:7256/api/ars/hacer-solicitud', {
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                }
+                },
+                body: JSON.stringify(solicitudData)
             });
 
             if (response.ok) {
                 const result = await response.json();
-                console.log("Respuesta de cobertura:", result);
+                console.log("Respuesta de solicitud ARS:", result);
 
-                if (result.cubierto) {
+                // Determinar el estado de la cobertura basado en la respuesta
+                if (result.estado && result.estado.toLowerCase() === 'aprobada') {
+                    const montoAprobado = result.montoAprobado || 0;
+                    const porcentajeCobertura = formData.costoProcedimiento > 0
+                        ? Math.round((montoAprobado / formData.costoProcedimiento) * 100)
+                        : 0;
+
                     setCoverageMessage({
                         severity: 'success',
-                        summary: 'Cobertura Confirmada',
-                        detail: `El procedimiento está cubierto. Porcentaje de cobertura: ${result.porcentajeCobertura || '100'}%`
+                        summary: 'Solicitud Aprobada',
+                        detail: `✅ Solicitud ${result.numeroSolicitud} aprobada. Monto aprobado: $${montoAprobado} (${porcentajeCobertura}% de cobertura). Póliza: ${result.numeroPoliza}`
+                    });
+                } else if (result.estado && result.estado.toLowerCase() === 'rechazada') {
+                    setCoverageMessage({
+                        severity: 'error',
+                        summary: 'Solicitud Rechazada',
+                        detail: `❌ Solicitud ${result.numeroSolicitud} rechazada por la ARS. Monto aprobado: $${result.montoAprobado || 0}. Póliza: ${result.numeroPoliza}`
+                    });
+                } else if (result.estado && result.estado.toLowerCase() === 'pendiente') {
+                    setCoverageMessage({
+                        severity: 'info',
+                        summary: 'Solicitud Pendiente',
+                        detail: `⏳ Solicitud ${result.numeroSolicitud} en proceso de revisión. Estado: ${result.estado}. Póliza: ${result.numeroPoliza}`
                     });
                 } else {
                     setCoverageMessage({
-                        severity: 'error',
-                        summary: 'Sin Cobertura',
-                        detail: result.razon || 'El procedimiento no está cubierto por esta aseguradora.'
+                        severity: 'warn',
+                        summary: 'Estado Desconocido',
+                        detail: `Solicitud ${result.numeroSolicitud} procesada con estado: ${result.estado}. Monto aprobado: $${result.montoAprobado || 0}`
                     });
                 }
+
+                // Mostrar información adicional en consola
+                console.log(`📋 Resultado de solicitud:`);
+                console.log(`   - Número de solicitud: ${result.numeroSolicitud}`);
+                console.log(`   - Estado: ${result.estado}`);
+                console.log(`   - Monto solicitado: $${result.montoSolicitud}`);
+                console.log(`   - Monto aprobado: $${result.montoAprobado}`);
+                console.log(`   - Póliza: ${result.numeroPoliza}`);
+                console.log(`   - Hospital: ${result.hospital}`);
+
             } else {
-                // Si el endpoint no existe o hay error, simular una respuesta
-                console.log("Endpoint de cobertura no disponible, simulando respuesta...");
-
-                // Simulación: procedimientos con ID par están cubiertos
-                const procedureId = Number(formData.procedimiento);
-                if (procedureId % 2 === 0) {
-                    setCoverageMessage({
-                        severity: 'success',
-                        summary: 'Cobertura Confirmada',
-                        detail: 'El procedimiento está cubierto por la aseguradora. Porcentaje de cobertura: 80%'
-                    });
-                } else {
-                    setCoverageMessage({
-                        severity: 'error',
-                        summary: 'Sin Cobertura',
-                        detail: 'El procedimiento no está cubierto por esta aseguradora.'
-                    });
+                let errorMessage = 'Error al procesar la solicitud de cobertura.';
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.message || errorData.detail || errorMessage;
+                } catch (parseError) {
+                    console.log('No se pudo parsear el error response');
                 }
+
+                console.error('Error al hacer solicitud ARS:', response.status, errorMessage);
+                setCoverageMessage({
+                    severity: 'error',
+                    summary: 'Error en Solicitud',
+                    detail: `${errorMessage} (Código: ${response.status})`
+                });
             }
         } catch (error) {
             console.error('Error al verificar cobertura:', error);
             setCoverageMessage({
                 severity: 'error',
                 summary: 'Error de Conexión',
-                detail: 'No se pudo verificar la cobertura. Verifique su conexión.'
+                detail: 'No se pudo conectar para procesar la solicitud. Verifique su conexión.'
             });
         } finally {
             setCheckingCoverage(false);
@@ -569,11 +613,11 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
                         <div className="field col-12 md:col-4 flex align-items-end">
                             <Button
                                 type="button"
-                                label={checkingCoverage ? "Verificando..." : "Verificar Cobertura"}
+                                label={checkingCoverage ? "Procesando Solicitud..." : "Verificar Cobertura"}
                                 icon={checkingCoverage ? "pi pi-spin pi-spinner" : "pi pi-search"}
                                 className="p-button-info"
                                 onClick={checkProcedureCoverage}
-                                disabled={checkingCoverage || !formData.aseguradoraId || !formData.procedimiento}
+                                disabled={checkingCoverage || !formData.aseguradoraId || !formData.procedimiento || !formData.cedulaPaciente || !formData.costoProcedimiento}
                             />
                         </div>
 
