@@ -550,7 +550,8 @@
             <h4>Caso de Uso 1: Inicio de Sesión Exitoso</h4>
             <ol>
                 <li><strong>Actor:</strong> Administrador / Operador</li>
-                <li><strong>Precondición:</strong> El usuario tiene credenciales válidas y está en la página de login.</li>
+                <li><strong>Precondición:</strong> El usuario tiene credenciales válidas y está en la página de login.
+                </li>
                 <li><strong>Flujo Principal:</strong>
                     <ol type="a">
                         <li>Usuario ingresa su nombre de usuario y contraseña.</li>
@@ -561,7 +562,8 @@
                         <li>Sistema redirige al usuario a la página principal (`/`).</li>
                     </ol>
                 </li>
-                <li><strong>Postcondición:</strong> El usuario está autenticado y puede ver los módulos permitidos para su rol.</li>
+                <li><strong>Postcondición:</strong> El usuario está autenticado y puede ver los módulos permitidos para
+                    su rol.</li>
             </ol>
             <h4>Caso de Uso 2: Inicio de Sesión Fallido</h4>
             <ol>
@@ -631,7 +633,8 @@
             <h4>Caso de Uso: Generar una Factura Médica</h4>
             <ol>
                 <li><strong>Actor:</strong> Administrador</li>
-                <li><strong>Precondición:</strong> El usuario está autenticado con rol de Administrador y en la vista de "Facturación".</li>
+                <li><strong>Precondición:</strong> El usuario está autenticado con rol de Administrador y en la vista de
+                    "Facturación".</li>
                 <li><strong>Flujo Principal:</strong>
                     <ol type="a">
                         <li>Usuario busca un paciente por cédula.</li>
@@ -639,7 +642,8 @@
                         <li>Usuario hace clic en "Verificar ARS" para validar la cobertura del seguro.</li>
                         <li>Sistema confirma que la cobertura está activa.</li>
                         <li>Usuario selecciona uno o varios procedimientos médicos del catálogo.</li>
-                        <li>Sistema calcula automáticamente el monto total, el descuento del seguro y el copago del paciente.</li>
+                        <li>Sistema calcula automáticamente el monto total, el descuento del seguro y el copago del
+                            paciente.</li>
                         <li>Usuario hace clic en "Generar Factura".</li>
                         <li>Sistema crea la factura y los detalles asociados a través de la API.</li>
                         <li>La factura se agrega a la lista de facturas pendientes de pago.</li>
@@ -655,7 +659,8 @@
             <h4>Caso de Uso General: Gestionar una Entidad (Ej: Médico)</h4>
             <ol>
                 <li><strong>Actor:</strong> Administrador</li>
-                <li><strong>Precondición:</strong> El usuario está en la vista del módulo correspondiente (ej. "Médicos").</li>
+                <li><strong>Precondición:</strong> El usuario está en la vista del módulo correspondiente (ej.
+                    "Médicos").</li>
                 <li><strong>Flujo Principal (Crear):</strong>
                     <ol type="a">
                         <li>Usuario hace clic en "Nuevo Médico".</li>
@@ -670,10 +675,11 @@
                         <li>Hace clic en "Actualizar". Los datos se actualizan en la tabla.</li>
                     </ol>
                 </li>
-                <li><strong>Postcondición:</strong> La lista de entidades (médicos, usuarios, etc.) está actualizada.</li>
+                <li><strong>Postcondición:</strong> La lista de entidades (médicos, usuarios, etc.) está actualizada.
+                </li>
             </ol>
         </div>
-        
+
         <h1 id="auth">🔐 4. Autenticación y Autorización</h1>
 
         <h3>👑 Sistema de Roles</h3>
