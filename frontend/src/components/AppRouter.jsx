@@ -62,7 +62,7 @@ const AppRouter = () => {
                     path="/pacientes" 
                     element={
                         <ProtectedRoute allowedRoles={['admin', 'operador']}>
-                            <Dashboard initialView="patients" />
+                            <Dashboard />
                         </ProtectedRoute>
                     } 
                 />
@@ -72,7 +72,7 @@ const AppRouter = () => {
                     path="/facturacion" 
                     element={
                         <ProtectedRoute allowedRoles={['admin', 'operador']}>
-                            <Dashboard initialView="billing" />
+                            <Dashboard />
                         </ProtectedRoute>
                     } 
                 />
@@ -82,7 +82,7 @@ const AppRouter = () => {
                     path="/autorizacion" 
                     element={
                         <ProtectedRoute allowedRoles={['admin', 'operador']}>
-                            <Dashboard initialView="authorization" />
+                            <Dashboard />
                         </ProtectedRoute>
                     } 
                 />
@@ -92,7 +92,7 @@ const AppRouter = () => {
                     path="/medicos" 
                     element={
                         <ProtectedRoute allowedRoles={['admin']}>
-                            <Dashboard initialView="medicos" />
+                            <Dashboard />
                         </ProtectedRoute>
                     } 
                 />
@@ -102,7 +102,7 @@ const AppRouter = () => {
                     path="/usuarios" 
                     element={
                         <ProtectedRoute allowedRoles={['admin']}>
-                            <Dashboard initialView="users" />
+                            <Dashboard />
                         </ProtectedRoute>
                     } 
                 />
@@ -112,7 +112,7 @@ const AppRouter = () => {
                     path="/aseguradoras" 
                     element={
                         <ProtectedRoute allowedRoles={['admin']}>
-                            <Dashboard initialView="aseguradoras" />
+                            <Dashboard />
                         </ProtectedRoute>
                     } 
                 />

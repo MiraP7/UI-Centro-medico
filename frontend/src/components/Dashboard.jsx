@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { DataTable } from 'primereact/datatable';
@@ -38,7 +38,7 @@ const COLOR_BLANCO = '#ffffff';
 const citaService = new CitaService(); // Instancia del servicio de citas
 const authService = new AuthService(); // Instancia del servicio de autenticación
 
-export default function Dashboard({ onLogout, initialView = 'home' }) {
+export default function Dashboard({ onLogout }) {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showBillingModal, setShowBillingModal] = useState(false);
@@ -50,11 +50,31 @@ export default function Dashboard({ onLogout, initialView = 'home' }) {
   const [editingAppointment, setEditingAppointment] = useState(null); // Para editar citas
 
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [currentView, setCurrentView] = useState(initialView); // Usar initialView como valor inicial
   
   const navigate = useNavigate();
+  const location = useLocation(); // Hook para obtener la ubicación actual
   const currentUser = authService.getCurrentUser();
   const userRole = authService.getUserRole();
+
+  // Función para obtener la vista actual basada en la URL
+  const getCurrentViewFromPath = () => {
+    const path = location.pathname;
+    const viewMap = {
+      '/': 'home',
+      '/pacientes': 'patients',
+      '/facturacion': 'billing',
+      '/autorizacion': 'authorization', 
+      '/medicos': 'medicos',
+      '/usuarios': 'users',
+      '/aseguradoras': 'aseguradoras'
+    };
+    
+    const currentView = viewMap[path] || 'home';
+    console.log('🔍 Debug - Current path:', path, 'Current view:', currentView);
+    return currentView;
+  };
+
+  const currentView = getCurrentViewFromPath();
 
   const toast = useRef(null);
 
