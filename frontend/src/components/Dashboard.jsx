@@ -22,6 +22,7 @@ import FacturacionView from '/src/Views/FacturacionView';
 import AseguradoraView from '/src/Views/AseguradoraView';
 import MedicoView from '/src/Views/MedicoView';
 import UserView from '/src/Views/UserView';
+import SolicitudView from '/src/Views/SolicitudView';
 
 // AÑADIDO: Importa el nuevo servicio de Citas
 import CitaService from '/src/Services/CitaService';
@@ -53,6 +54,7 @@ export default function Dashboard({ onLogout }) {
   const [showAseguradoraViewModal, setShowAseguradoraViewModal] = useState(false);
   const [showMedicoViewModal, setShowMedicoViewModal] = useState(false);
   const [showUserViewModal, setShowUserViewModal] = useState(false);
+  const [showSolicitudViewModal, setShowSolicitudViewModal] = useState(false);
 
   const toast = useRef(null);
 
@@ -233,6 +235,7 @@ export default function Dashboard({ onLogout }) {
     setShowAseguradoraViewModal(false);
     setShowMedicoViewModal(false);
     setShowUserViewModal(false);
+    setShowSolicitudViewModal(false);
     setShowBillingModal(false);
     setSidebarVisible(false);
   };
@@ -267,7 +270,7 @@ export default function Dashboard({ onLogout }) {
       icon: 'pi pi-fw pi-check-square', // Eliminado 'icons-bar' de aquí
       command: () => {
         closeAllViewModals();
-        // Lógica para Autorización
+        setShowSolicitudViewModal(true);
       }
     },
     {
@@ -608,6 +611,17 @@ export default function Dashboard({ onLogout }) {
         modal
       >
         <UserView onClose={() => setShowUserViewModal(false)} />
+      </Dialog>
+
+      {/* AÑADIDO: Dialog para la Vista de Solicitudes (SolicitudView) */}
+      <Dialog
+        header="Gestión de Solicitudes de Autorización"
+        visible={showSolicitudViewModal}
+        style={{ width: '90vw', minWidth: '800px', height: '90vh' }}
+        onHide={() => setShowSolicitudViewModal(false)}
+        modal
+      >
+        <SolicitudView onClose={() => setShowSolicitudViewModal(false)} />
       </Dialog>
 
     </div>
