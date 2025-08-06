@@ -108,3 +108,53 @@
 .p-dialog-title {
   padding: 10px;
 }
+
+/* Estilos para React Router y navegación */
+.active-menu-item {
+  background-color: rgba(52, 152, 219, 0.2) !important;
+  border-left: 4px solid #3498db !important;
+}
+
+.icons-bar {
+  background-color: #273747 !important;
+}
+
+.sidebar-panelmenu .p-panelmenu-content {
+  background-color: transparent !important;
+}
+
+.sidebar-panelmenu .p-menuitem-link {
+  color: #ffffff !important;
+  transition: all 0.3s ease !important;
+}
+
+.sidebar-panelmenu .p-menuitem-link:hover {
+  background-color: rgba(52, 152, 219, 0.1) !important;
+}
+
+.sidebar-panelmenu .active-menu-item .p-menuitem-link {
+  background-color: rgba(52, 152, 219, 0.2) !important;
+  border-left: 4px solid #3498db !important;
+}
+
+/* Animaciones para transiciones de página */
+.page-transition-enter {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.page-transition-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.page-transition-exit {
+  opacity: 1;
+}
+
+.page-transition-exit-active {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 300ms, transform 300ms;
+}

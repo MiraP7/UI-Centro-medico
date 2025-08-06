@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
 import {
   UserIcon,
   LockIcon,
@@ -7,11 +8,12 @@ import {
 } from "../../components/common/Icons";
 import "./Login.css";
 
-export default function Login({ onLoginSuccess }) {
+export default function Login() {
   const [usuario, setUsername] = useState("");
   const [clave, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
 
   const [isUsernameHovered, setIsUsernameHovered] = useState(false);
   const [isPasswordHovered, setIsPasswordHovered] = useState(false);
@@ -24,7 +26,8 @@ export default function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const response = await fetch("https://localhost:7256/api/Auth/Login", {
+      // Paso 1: Autenticar al usuario
+      const authResponse = await fetch("https://localhost:7256/api/Auth/Login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -32,23 +35,55 @@ export default function Login({ onLoginSuccess }) {
         body: JSON.stringify({ usuario: usuario, clave: clave }),
       });
 
-      const data = await response.json();
+      const authData = await authResponse.json();
 
-      if (response.ok) {
-        if (data.isSuccess) {
-          localStorage.setItem("authToken", data.token);
-          localStorage.setItem("usuario", usuario);
-          localStorage.setItem("clave", clave);
+      if (authResponse.ok && authData.isSuccess) {
+        // Paso 2: Obtener información completa del usuario
+        try {
+          const userResponse = await fetch(`https://localhost:7256/api/User/by-username/${usuario}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${authData.token}`
+            }
+          });
 
-          onLoginSuccess && onLoginSuccess();
-        } else {
-          setError(
-            data.message || "Credenciales incorrectas. Intente de nuevo."
-          );
+          if (userResponse.ok) {
+            const userData = await userResponse.json();
+            console.log("Datos del usuario obtenidos:", userData);
+
+            // Crear objeto de usuario completo
+            const completeUserData = {
+              usuario: usuario,
+              rolId: userData.rolId,
+              userId: userData.userId,
+              nombre: userData.nombre,
+              email: userData.email,
+              // Agregar otros campos que puedas necesitar
+            };
+
+            // Usar el contexto de autenticación para hacer login
+            await login(authData.token, completeUserData);
+          } else {
+            // Si no se puede obtener info del usuario, usar datos básicos
+            const basicUserData = {
+              usuario: usuario,
+              rolId: null // Se asumirá como operador si no se puede obtener
+            };
+            await login(authData.token, basicUserData);
+          }
+        } catch (userError) {
+          console.warn("No se pudo obtener información del usuario, usando datos básicos:", userError);
+          // Fallback: usar datos básicos
+          const basicUserData = {
+            usuario: usuario,
+            rolId: null
+          };
+          await login(authData.token, basicUserData);
         }
       } else {
         setError(
-          data.message || `Error en el servidor: ${response.statusText}`
+          authData.message || "Credenciales incorrectas. Intente de nuevo."
         );
       }
     } catch (err) {
