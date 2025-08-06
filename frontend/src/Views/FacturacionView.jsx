@@ -16,7 +16,7 @@ import 'primeflex/primeflex.css';
 
 const facturaService = new FacturaService();
 
-export default function FacturacionView({ onClose }) {
+export default function FacturacionView() {
     const [facturas, setFacturas] = useState([]);
     const [loadingFacturas, setLoadingFacturas] = useState(true);
     const [errorFacturas, setErrorFacturas] = useState(null);
@@ -253,6 +253,12 @@ Reporte de Cobertura Completado:
 
     return (
         <div className="p-4">
+            {/* Título de la página */}
+            <div className="mb-4">
+                <h1 className="text-3xl font-bold text-900 mb-2">Gestión de Facturación</h1>
+                <p className="text-600 text-lg">Administra las facturas y procesos de facturación del centro médico</p>
+            </div>
+
             <div className="flex justify-content-between align-items-center mb-4">
 
                 <div className="flex gap-2">

@@ -270,13 +270,6 @@ export default function HomePage() {
                                     )}
 
                                     <Button
-                                        label="Ver Pacientes"
-                                        icon="pi pi-users"
-                                        className="p-button-secondary p-button-raised p-1 w-full text-sm"
-                                        onClick={() => navigate('/pacientes')}
-                                    />
-
-                                    <Button
                                         label="Autorización"
                                         icon="pi pi-check-square"
                                         className="p-button-warning p-button-raised p-1 w-full text-sm"

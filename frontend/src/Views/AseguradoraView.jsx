@@ -14,7 +14,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 
-export default function AseguradoraView({ onClose }) {
+export default function AseguradoraView() {
     const [aseguradoras, setAseguradoras] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -192,6 +192,13 @@ export default function AseguradoraView({ onClose }) {
         <div className="p-4">
             <Toast ref={toast} />
             <ConfirmDialog />
+
+            {/* Título de la página */}
+            <div className="mb-4">
+                <h1 className="text-3xl font-bold text-900 mb-2">Gestión de Aseguradoras</h1>
+                <p className="text-600 text-lg">Administra las compañías de seguros y planes de salud</p>
+            </div>
+
             <div className="flex justify-content-between align-items-center mb-4">
                 <div className="flex align-items-center gap-3">
                     <Button

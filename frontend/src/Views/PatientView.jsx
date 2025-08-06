@@ -14,7 +14,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 
-export default function PatientView({ onClose }) {
+export default function PatientView() {
     const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -143,6 +143,12 @@ export default function PatientView({ onClose }) {
 
     return (
         <div className="p-4">
+            {/* Título de la página */}
+            <div className="mb-4">
+                <h1 className="text-3xl font-bold text-900 mb-2">Gestión de Pacientes</h1>
+                <p className="text-600 text-lg">Administra la información de los pacientes del centro médico</p>
+            </div>
+
             {/* Eliminamos <ConfirmDialog /> */}
             <div className="flex justify-content-between align-items-center mb-4">
                 <div className="flex align-items-center gap-3">

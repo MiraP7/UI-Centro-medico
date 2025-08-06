@@ -16,7 +16,7 @@ const COLOR_BLANCO = '#ffffff';
 
 export default function Layout() {
     const [sidebarVisible, setSidebarVisible] = useState(false);
-    const { logout, isAdmin, canAccessAdminModules, user } = useAuth();
+    const { logout, isAdmin, canAccessAdminModules, user, debugAuthState } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -37,9 +37,15 @@ export default function Layout() {
 
     // Definición de los ítems del menú según el rol
     const getMenuItems = () => {
-        console.log('Generando menú para usuario:', user);
+        console.log('=== DEBUG MENU GENERATION ===');
+        console.log('Usuario completo:', user);
         console.log('¿Es admin?', isAdmin());
         console.log('RolId del usuario:', user?.rolId);
+        console.log('Tipo de rolId:', typeof user?.rolId);
+        console.log('RolId desde localStorage:', localStorage.getItem('rolId'));
+        console.log('Verificación estricta (rolId === 100):', user?.rolId === 100);
+        console.log('Verificación con parseInt:', parseInt(user?.rolId) === 100);
+        console.log('=== FIN DEBUG ===');
 
         // Elementos básicos para todos los usuarios autenticados
         const commonItems = [
@@ -119,7 +125,6 @@ export default function Layout() {
                     <div className="text-sm" style={{ color: COLOR_BLANCO }}>
                         <p className="m-0"><strong>Usuario:</strong> {user?.usuario || 'Usuario'}</p>
                         <p className="m-0"><strong>Rol:</strong> {user?.rolId === 100 ? 'Administrador' : 'Operador'}</p>
-                        <p className="m-0"><strong>RolId:</strong> {user?.rolId || 'N/A'}</p>
                     </div>
                 </div>
             </Sidebar>
@@ -136,8 +141,26 @@ export default function Layout() {
                         style={{ color: COLOR_BLANCO }}
                         onClick={() => setSidebarVisible(true)}
                     />
-                    <i className="pi pi-heart-fill" style={{ color: COLOR_AZUL_CLARO, fontSize: '2.5rem' }}></i>
-                    <h1 className="text-4xl font-bold m-0" style={{ color: COLOR_BLANCO }}>Health State</h1>
+                    <div
+                        className="flex align-items-center gap-3 cursor-pointer"
+                        onClick={() => navigateTo('/')}
+                        style={{
+                            transition: 'opacity 0.2s ease-in-out',
+                            borderRadius: '8px',
+                            padding: '8px'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.opacity = '0.8';
+                            e.target.style.backgroundColor = 'rgba(255, 255, 255, 0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.opacity = '1';
+                            e.target.style.backgroundColor = 'transparent';
+                        }}
+                    >
+                        <i className="pi pi-heart-fill" style={{ color: COLOR_AZUL_CLARO, fontSize: '2.5rem' }}></i>
+                        <h1 className="text-4xl font-bold m-0" style={{ color: COLOR_BLANCO }}>Health State</h1>
+                    </div>
                 </div>
                 <div className="flex align-items-center gap-3">
                     <span className="text-sm" style={{ color: COLOR_BLANCO }}>

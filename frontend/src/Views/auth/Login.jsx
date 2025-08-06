@@ -40,7 +40,7 @@ export default function Login() {
       if (authResponse.ok && authData.isSuccess) {
         // Paso 2: Obtener información completa del usuario
         try {
-          const userResponse = await fetch(`https://localhost:7256/api/User/by-username/${usuario}`, {
+          const userResponse = await fetch(`https://localhost:7256/api/Usuario/all?Search=${usuario}`, {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
@@ -49,36 +49,90 @@ export default function Login() {
           });
 
           if (userResponse.ok) {
-            const userData = await userResponse.json();
-            console.log("Datos del usuario obtenidos:", userData);
+            const userSearchResult = await userResponse.json();
+            console.log("=== RESPUESTA COMPLETA DE BÚSQUEDA ===");
+            console.log("Respuesta completa:", userSearchResult);
+            console.log("=== FIN RESPUESTA ===");
 
-            // Crear objeto de usuario completo
-            const completeUserData = {
-              usuario: usuario,
-              rolId: userData.rolId,
-              userId: userData.userId,
-              nombre: userData.nombre,
-              email: userData.email,
-              // Agregar otros campos que puedas necesitar
-            };
+            // El API devuelve un objeto con data que es un array
+            if (userSearchResult.data && userSearchResult.data.length > 0) {
+              const userData = userSearchResult.data[0]; // Tomar el primer resultado
+              console.log("=== DATOS DEL USUARIO OBTENIDOS ===");
+              console.log("Usuario encontrado:", userData);
+              console.log("Todas las propiedades del userData:", Object.keys(userData));
+              console.log("RolId obtenido:", userData.rolId);
+              console.log("RolNombre obtenido:", userData.rolNombre);
+              console.log("Tipo de rolId:", typeof userData.rolId);
+              console.log("RolId como string:", String(userData.rolId));
+              console.log("RolId como number:", Number(userData.rolId));
+              console.log("Verificación rolId === 100:", userData.rolId === 100);
+              console.log("Verificación Number(rolId) === 100:", Number(userData.rolId) === 100);
+              console.log("=== FIN DATOS USUARIO ===");
 
-            // Usar el contexto de autenticación para hacer login
-            await login(authData.token, completeUserData);
+              // Determinar el rolId basado en el rolNombre
+              let rolId = null;
+              if (userData.rolNombre === "Administrador") {
+                rolId = 100;
+              } else if (userData.rolNombre === "Operador") {
+                rolId = 200; // o el código que uses para operador
+              } else {
+                // Si hay un rolId directo, usarlo, sino asumir operador
+                rolId = userData.rolId ? Number(userData.rolId) : 200;
+              }
+
+              console.log("=== DETERMINACIÓN DEL ROL ===");
+              console.log("rolNombre:", userData.rolNombre);
+              console.log("rolId determinado:", rolId);
+              console.log("=== FIN DETERMINACIÓN ===");
+
+              // Crear objeto de usuario completo
+              const completeUserData = {
+                usuario: usuario,
+                rolId: rolId, // Usar el rolId determinado
+                userId: userData.usuarioId,
+                nombre: userData.usuario, // Usar el campo correcto según la respuesta del API
+                email: userData.email || '',
+                rolNombre: userData.rolNombre, // Agregar también el nombre del rol
+                // Agregar otros campos que puedas necesitar
+              };
+
+              console.log("=== DATOS COMPLETOS PARA LOGIN ===");
+              console.log("completeUserData:", completeUserData);
+              console.log("rolId en completeUserData:", completeUserData.rolId);
+              console.log("Tipo de rolId en completeUserData:", typeof completeUserData.rolId);
+              console.log("=== FIN DATOS COMPLETOS ===");
+
+              // Usar el contexto de autenticación para hacer login
+              await login(authData.token, completeUserData);
+            } else {
+              console.warn("No se encontraron datos de usuario en la búsqueda");
+              // Si no se encuentra el usuario, usar datos básicos
+              const basicUserData = {
+                usuario: usuario,
+                rolId: null // Se asumirá como operador si no se puede obtener
+              };
+              console.log("No se encontró usuario - Usando datos básicos:", basicUserData);
+              await login(authData.token, basicUserData);
+            }
           } else {
+            console.error("Error al obtener datos de usuario:", userResponse.status, userResponse.statusText);
             // Si no se puede obtener info del usuario, usar datos básicos
             const basicUserData = {
               usuario: usuario,
               rolId: null // Se asumirá como operador si no se puede obtener
             };
+            console.log("Error en API - Usando datos básicos para login:", basicUserData);
             await login(authData.token, basicUserData);
           }
         } catch (userError) {
-          console.warn("No se pudo obtener información del usuario, usando datos básicos:", userError);
+          console.error("Error al obtener información del usuario:", userError);
+          console.warn("No se pudo obtener información del usuario, usando datos básicos");
           // Fallback: usar datos básicos
           const basicUserData = {
             usuario: usuario,
             rolId: null
           };
+          console.log("Catch - Usando datos básicos para login:", basicUserData);
           await login(authData.token, basicUserData);
         }
       } else {

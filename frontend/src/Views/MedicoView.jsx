@@ -15,7 +15,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 
-export default function MedicoView({ onClose }) {
+export default function MedicoView() {
     const [medicos, setMedicos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -193,6 +193,12 @@ export default function MedicoView({ onClose }) {
         <div className="p-4">
             <Toast ref={toast} />
             <ConfirmDialog /> {/* ¡Importante! Asegúrate de que ConfirmDialog esté aquí */}
+
+            {/* Título de la página */}
+            <div className="mb-4">
+                <h1 className="text-3xl font-bold text-900 mb-2">Gestión de Médicos</h1>
+                <p className="text-600 text-lg">Administra la información de los médicos y especialistas del centro</p>
+            </div>
 
             <div className="flex justify-content-between align-items-center mb-4">
                 <div className="flex align-items-center gap-3">

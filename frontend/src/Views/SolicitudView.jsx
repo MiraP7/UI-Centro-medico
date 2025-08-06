@@ -12,7 +12,7 @@ import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
 import 'primeflex/primeflex.css';
 
-export default function SolicitudView({ onClose }) {
+export default function SolicitudView() {
     const [solicitudes, setSolicitudes] = useState([]);
     const [loadingSolicitudes, setLoadingSolicitudes] = useState(true);
     const [errorSolicitudes, setErrorSolicitudes] = useState(null);
@@ -133,8 +133,13 @@ export default function SolicitudView({ onClose }) {
 
     return (
         <div className="p-4">
+            {/* Título de la página */}
+            <div className="mb-4">
+                <h1 className="text-3xl font-bold text-900 mb-2">Gestión de Autorizaciones</h1>
+                <p className="text-600 text-lg">Administra las solicitudes de autorización de tratamientos y procedimientos</p>
+            </div>
+
             <div className="flex justify-content-between align-items-center mb-4">
-                <h2>Gestión de Solicitudes</h2>
                 <div className="flex gap-2">
                     <Button
                         label="Actualizar"

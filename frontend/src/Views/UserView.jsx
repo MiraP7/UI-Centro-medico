@@ -21,7 +21,7 @@ import 'primeflex/primeflex.css';
 
 const userService = new UserService();
 
-export default function UserView({ onClose }) {
+export default function UserView() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [globalFilter, setGlobalFilter] = useState('');
@@ -202,9 +202,15 @@ export default function UserView({ onClose }) {
     };
 
     return (
-        <div className="user-view">
+        <div className="user-view p-4">
             <Toast ref={toast} />
             <ConfirmDialog />
+
+            {/* Título de la página */}
+            <div className="mb-4">
+                <h1 className="text-3xl font-bold text-900 mb-2">Gestión de Usuarios</h1>
+                <p className="text-600 text-lg">Administra los usuarios del sistema y sus permisos de acceso</p>
+            </div>
 
             {apiMessage && (
                 <Message
