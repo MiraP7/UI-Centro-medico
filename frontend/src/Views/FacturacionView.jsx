@@ -32,6 +32,7 @@ export default function FacturacionView({ onClose }) {
     const [loadingDetalle, setLoadingDetalle] = useState(false);
     const [errorDetalle, setErrorDetalle] = useState(null);
     const [showPatientRegistrationModal, setShowPatientRegistrationModal] = useState(false);
+    const [loadingReporte, setLoadingReporte] = useState(false);
 
     // Efecto para cargar las facturas al inicio
     useEffect(() => {
@@ -167,8 +168,82 @@ export default function FacturacionView({ onClose }) {
         return '';
     };
 
-    const handleReporteCoberturaClick = () => {
+    const handleReporteCoberturaClick = async () => {
         console.log("Generando reporte de cobertura...");
+        setLoadingReporte(true);
+
+        try {
+            // Paso 1: Obtener todas las facturas
+            console.log("📥 Obteniendo todas las facturas...");
+            const todasLasFacturas = await facturaService.getAllFacturas();
+
+            if (!todasLasFacturas || todasLasFacturas.length === 0) {
+                console.warn("⚠️ No hay facturas disponibles para procesar");
+                alert("No hay facturas disponibles para generar el reporte de cobertura.");
+                return;
+            }
+
+            // Paso 2: Formatear las facturas para el request
+            const bills = todasLasFacturas.map(factura => ({
+                authorizationNumber: factura.facturaId,
+                amount: factura.monto
+            }));
+
+            console.log("📋 Facturas formateadas para envío:", bills);
+
+            // Paso 3: Preparar el payload para la API
+            const payload = {
+                bills: bills,
+                hospital: "HealthState"
+            };
+
+            console.log("📤 Payload completo:", payload);
+
+            // Paso 4: Realizar la petición a la API de pago
+            const response = await fetch('https://localhost:7256/api/ars/pay-bill', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log("✅ Respuesta exitosa del reporte de cobertura:", result);
+
+                // Mostrar información del resultado
+                const totalFacturas = result.bills ? result.bills.length : 0;
+                const resumenInfo = `
+Reporte de Cobertura Completado:
+• ID de Transferencia: ${result.transferenceId}
+• Monto Total: $${result.totalAmount?.toFixed(2) || '0.00'}
+• Monto Pagado: $${result.paidAmount?.toFixed(2) || '0.00'}
+• Monto Rechazado: $${result.refusedAmount?.toFixed(2) || '0.00'}
+• Facturas Procesadas: ${totalFacturas}
+                `.trim();
+
+                alert(resumenInfo);
+
+                // Log detallado de cada factura procesada
+                if (result.bills && result.bills.length > 0) {
+                    console.log("📊 Detalles por factura:");
+                    result.bills.forEach(bill => {
+                        console.log(`   Autorización: ${bill.authorizationNumber} | Estado: ${bill.status} | Detalles: ${bill.details}`);
+                    });
+                }
+            } else {
+                const errorData = await response.json();
+                console.error("❌ Error en el reporte de cobertura:", response.status, errorData);
+                alert(`Error al generar reporte de cobertura: ${errorData.message || 'Error desconocido'}`);
+            }
+        } catch (error) {
+            console.error("❌ Error de red en reporte de cobertura:", error);
+            alert(`Error de conexión al generar reporte de cobertura: ${error.message}`);
+        } finally {
+            setLoadingReporte(false);
+        }
     };
 
     const clearFilters = () => {
@@ -190,10 +265,11 @@ export default function FacturacionView({ onClose }) {
                     /> */}
 
                     <Button
-                        label="Reporte de Cobertura"
-                        icon="pi pi-file"
+                        label={loadingReporte ? "Generando Reporte..." : "Reporte de Cobertura"}
+                        icon={loadingReporte ? "pi pi-spin pi-spinner" : "pi pi-file"}
                         className="p-button-info p-button-raised"
                         onClick={handleReporteCoberturaClick}
+                        disabled={loadingReporte}
                     />
                 </div>
             </div>

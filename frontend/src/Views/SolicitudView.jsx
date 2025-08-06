@@ -7,7 +7,6 @@ import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
 import { InputText } from 'primereact/inputtext';
 import { Card } from 'primereact/card';
-import { Badge } from 'primereact/badge';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
 import 'primereact/resources/primereact.min.css';
 import 'primeicons/primeicons.css';
@@ -101,37 +100,9 @@ export default function SolicitudView({ onClose }) {
         setShowDetalleDialog(true);
     };
 
-    // Template para mostrar el estado con colores
+    // Template para mostrar el estado sin colores
     const estadoBodyTemplate = (rowData) => {
-        let severity = 'info';
-        let icon = 'pi-info-circle';
-
-        switch (rowData.estado?.toLowerCase()) {
-            case 'activo':
-                severity = 'success';
-                icon = 'pi-check-circle';
-                break;
-            case 'pendiente':
-                severity = 'warning';
-                icon = 'pi-clock';
-                break;
-            case 'rechazado':
-            case 'inactivo':
-                severity = 'danger';
-                icon = 'pi-times-circle';
-                break;
-            default:
-                severity = 'info';
-                icon = 'pi-info-circle';
-        }
-
-        return (
-            <Badge
-                value={rowData.estado}
-                severity={severity}
-                className={`p-badge-${severity}`}
-            />
-        );
+        return rowData.estado || 'N/A';
     };
 
     // Template para mostrar el monto aprobado
@@ -281,7 +252,7 @@ export default function SolicitudView({ onClose }) {
                                     </div>
                                     <div className="field col-12 md:col-6">
                                         <label><strong>Estado:</strong></label>
-                                        <p>{estadoBodyTemplate(selectedSolicitud)}</p>
+                                        <p>{selectedSolicitud.estado || 'N/A'}</p>
                                     </div>
                                     <div className="field col-12">
                                         <label><strong>Descripción:</strong></label>
