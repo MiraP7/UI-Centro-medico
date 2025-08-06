@@ -25,6 +25,8 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
     const [apiMessage, setApiMessage] = useState(null);
     const [coverageMessage, setCoverageMessage] = useState(null);
     const [checkingCoverage, setCheckingCoverage] = useState(false);
+    const [coverageStatus, setCoverageStatus] = useState(null); // 'Aprobada', 'Pendiente', 'Rechazada'
+    const [coverageResult, setCoverageResult] = useState(null); // Guardar resultado completo
 
     // Estados para dropdowns
     const [patients, setPatients] = useState([]);
@@ -255,6 +257,8 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
                 aseguradoraId: selectedPatient.aseguradoraId || null
             }));
             setCoverageMessage(null); // Limpiar mensaje de cobertura al cambiar paciente
+            setCoverageStatus(null); // Limpiar estado de cobertura
+            setCoverageResult(null); // Limpiar resultado de cobertura
         }
     };
 
@@ -267,12 +271,16 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
                 costoProcedimiento: selectedProcedure.costo
             }));
             setCoverageMessage(null); // Limpiar mensaje de cobertura al cambiar procedimiento
+            setCoverageStatus(null); // Limpiar estado de cobertura
+            setCoverageResult(null); // Limpiar resultado de cobertura
         }
     };
 
     const handleInsurerChange = (e) => {
         setFormData(prev => ({ ...prev, aseguradoraId: e.value }));
         setCoverageMessage(null); // Limpiar mensaje de cobertura al cambiar aseguradora
+        setCoverageStatus(null); // Limpiar estado de cobertura
+        setCoverageResult(null); // Limpiar resultado de cobertura
     };
 
     // Función para verificar cobertura del procedimiento
@@ -288,6 +296,8 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
 
         setCheckingCoverage(true);
         setCoverageMessage(null);
+        setCoverageStatus(null);
+        setCoverageResult(null);
 
         try {
             console.log(`Verificando cobertura - Paciente: ${formData.cedulaPaciente}, Aseguradora: ${formData.aseguradoraId}, Procedimiento: ${formData.procedimiento}`);
@@ -301,9 +311,8 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
 
             // Preparar datos para la solicitud a la ARS
             const solicitudData = {
-                tipoDocumento: "CEDULA",
+                tipoDocumento: "",
                 numeroDocumento: cleanedCedula,
-                numeroPoliza: 0, // Se puede ajustar si tienes este dato
                 tipoSolicitud: procedureDescription.toUpperCase(),
                 descripcion: `Solicitud de cobertura para ${procedureDescription}`,
                 observaciones: `Verificación de cobertura para paciente ${formData.nombrePaciente}`,
@@ -311,6 +320,16 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
             };
 
             console.log("Datos de solicitud a enviar:", solicitudData);
+
+            // Imprimir detalles completos del request
+            console.log("📤 REQUEST DETAILS:");
+            console.log("   URL:", 'https://localhost:7256/api/ars/hacer-solicitud');
+            console.log("   Method:", 'POST');
+            console.log("   Headers:", {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+            });
+            console.log("   Body:", JSON.stringify(solicitudData, null, 2));
 
             const response = await fetch('https://localhost:7256/api/ars/hacer-solicitud', {
                 method: 'POST',
@@ -321,12 +340,24 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
                 body: JSON.stringify(solicitudData)
             });
 
+            // Imprimir detalles de la respuesta
+            console.log("📥 RESPONSE DETAILS:");
+            console.log("   Status:", response.status);
+            console.log("   Status Text:", response.statusText);
+            console.log("   Headers:", Object.fromEntries(response.headers.entries()));
+
             if (response.ok) {
                 const result = await response.json();
+                console.log("   Response Body:", JSON.stringify(result, null, 2));
                 console.log("Respuesta de solicitud ARS:", result);
 
+                // Guardar el estado y resultado completo
+                const estado = result.estado ? result.estado.toLowerCase() : null;
+                setCoverageStatus(estado);
+                setCoverageResult(result);
+
                 // Determinar el estado de la cobertura basado en la respuesta
-                if (result.estado && result.estado.toLowerCase() === 'aprobada') {
+                if (estado === 'aprobada') {
                     const montoAprobado = result.montoAprobado || 0;
                     const porcentajeCobertura = formData.costoProcedimiento > 0
                         ? Math.round((montoAprobado / formData.costoProcedimiento) * 100)
@@ -337,13 +368,13 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
                         summary: 'Solicitud Aprobada',
                         detail: `✅ Solicitud ${result.numeroSolicitud} aprobada. Monto aprobado: $${montoAprobado} (${porcentajeCobertura}% de cobertura). Póliza: ${result.numeroPoliza}`
                     });
-                } else if (result.estado && result.estado.toLowerCase() === 'rechazada') {
+                } else if (estado === 'rechazada') {
                     setCoverageMessage({
                         severity: 'error',
                         summary: 'Solicitud Rechazada',
-                        detail: `❌ Solicitud ${result.numeroSolicitud} rechazada por la ARS. Monto aprobado: $${result.montoAprobado || 0}. Póliza: ${result.numeroPoliza}`
+                        detail: `❌ Solicitud ${result.numeroSolicitud} rechazada por la ARS. Monto aprobado: $${result.montoAprobado || 0}. Póliza: ${result.numeroPoliza}. DEBE REMOVER LA ASEGURADORA para continuar.`
                     });
-                } else if (result.estado && result.estado.toLowerCase() === 'pendiente') {
+                } else if (estado === 'pendiente') {
                     setCoverageMessage({
                         severity: 'info',
                         summary: 'Solicitud Pendiente',
@@ -368,14 +399,20 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
 
             } else {
                 let errorMessage = 'Error al procesar la solicitud de cobertura.';
+                let errorData = null;
                 try {
-                    const errorData = await response.json();
+                    errorData = await response.json();
+                    console.log("   Error Response Body:", JSON.stringify(errorData, null, 2));
                     errorMessage = errorData.message || errorData.detail || errorMessage;
                 } catch (parseError) {
-                    console.log('No se pudo parsear el error response');
+                    console.log('   Error: No se pudo parsear el error response');
                 }
 
-                console.error('Error al hacer solicitud ARS:', response.status, errorMessage);
+                console.error('❌ ERROR RESPONSE:');
+                console.error('   Status:', response.status);
+                console.error('   Status Text:', response.statusText);
+                console.error('   Error Message:', errorMessage);
+                console.error('   Full Error Data:', errorData);
                 setCoverageMessage({
                     severity: 'error',
                     summary: 'Error en Solicitud',
@@ -394,12 +431,64 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
         }
     };
 
+    // Función para crear detalle de factura
+    const createFacturaDetail = async (facturaId, tratamientoId, monto) => {
+        try {
+            const detalleData = {
+                facturaId: Number(facturaId),
+                tratamientoId: Number(tratamientoId),
+                monto: Number(monto)
+            };
+
+            console.log("📤 CREANDO DETALLE DE FACTURA:");
+            console.log("   URL:", 'https://localhost:7256/api/DetalleFactura');
+            console.log("   Method:", 'POST');
+            console.log("   Body:", JSON.stringify(detalleData, null, 2));
+
+            const response = await fetch('https://localhost:7256/api/DetalleFactura', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                },
+                body: JSON.stringify(detalleData),
+            });
+
+            console.log("📥 RESPONSE DETALLE FACTURA:");
+            console.log("   Status:", response.status);
+
+            if (response.ok) {
+                const result = await response.json();
+                console.log("   Response Body:", JSON.stringify(result, null, 2));
+                console.log("✅ Detalle de factura creado exitosamente:", result);
+            } else {
+                const errorData = await response.json();
+                console.log("   Error Response Body:", JSON.stringify(errorData, null, 2));
+                console.error("❌ Error al crear detalle de factura:", response.status, errorData);
+
+                // Mostrar advertencia pero no bloquear el flujo principal
+                setApiMessage(prev => ({
+                    ...prev,
+                    detail: `${prev.detail} (Advertencia: No se pudo crear el detalle de factura)`
+                }));
+            }
+        } catch (error) {
+            console.error("❌ Error de conexión al crear detalle de factura:", error);
+
+            // Mostrar advertencia pero no bloquear el flujo principal
+            setApiMessage(prev => ({
+                ...prev,
+                detail: `${prev.detail} (Advertencia: Error de conexión al crear detalle)`
+            }));
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         setApiMessage(null);
 
-        // Validaciones
+        // Validaciones básicas
         if (!formData.pacienteId || !formData.procedimiento || !formData.costoProcedimiento) {
             setApiMessage({
                 severity: 'warn',
@@ -409,63 +498,168 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
             return;
         }
 
+        // Validaciones específicas por estado de cobertura
+        if (coverageStatus === 'rechazada' && formData.aseguradoraId) {
+            setApiMessage({
+                severity: 'error',
+                summary: 'Error de Validación',
+                detail: 'Debe eliminar la aseguradora ya que la solicitud fue rechazada por la ARS.'
+            });
+            return;
+        }
+
+        // Si hay aseguradora pero no se ha verificado la cobertura
+        if (formData.aseguradoraId && !coverageStatus) {
+            setApiMessage({
+                severity: 'warn',
+                summary: 'Verificación Requerida',
+                detail: 'Debe verificar la cobertura de la aseguradora antes de registrar la factura.'
+            });
+            return;
+        }
+
         setLoading(true);
 
-        const facturaDataToSend = {
-            pacienteId: Number(formData.pacienteId),
-            tratamientoId: Number(formData.procedimiento),
-            monto: Number(formData.costoProcedimiento),
-            fecha: new Date().toISOString().split('T')[0],
-            ...(formData.aseguradoraId && { aseguradoraId: Number(formData.aseguradoraId) }),
-        };
-
-        const method = initialData ? 'PUT' : 'POST';
-        const url = initialData
-            ? `https://localhost:7256/api/Factura/${initialData.facturaId}`
-            : 'https://localhost:7256/api/Factura';
-
         try {
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('authToken')}`
-                },
-                body: JSON.stringify(facturaDataToSend),
-            });
+            // Si el estado es Aprobada o Pendiente, usar el endpoint especial
+            if ((coverageStatus === 'aprobada' || coverageStatus === 'pendiente') && formData.aseguradoraId) {
+                console.log("📤 ENVIANDO A ENDPOINT ESPECIAL PARA COBERTURA:");
 
-            if (response.ok) {
-                const result = await response.json();
-                setApiMessage({
-                    severity: 'success',
-                    summary: 'Éxito',
-                    detail: `Factura ${initialData ? 'actualizada' : 'registrada'} exitosamente!`
+                const cleanedCedula = formData.cedulaPaciente.replace(/-/g, '');
+                const facturaEspecialData = {
+                    cedula: cleanedCedula,
+                    monto: Number(formData.costoProcedimiento)
+                };
+
+                console.log("   URL:", 'https://localhost:7256/api/Factura');
+                console.log("   Method:", 'POST');
+                console.log("   Body:", JSON.stringify(facturaEspecialData, null, 2));
+
+                const response = await fetch('https://localhost:7256/api/Factura', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify(facturaEspecialData),
                 });
-                console.log(`Factura ${initialData ? 'actualizada' : 'registrada'}:`, result);
 
-                onFacturaRegistered(result);
+                console.log("📥 RESPONSE ENDPOINT ESPECIAL:");
+                console.log("   Status:", response.status);
 
-                if (!initialData) {
-                    // Limpiar formulario
-                    setFormData({
-                        pacienteId: '',
-                        nombrePaciente: '',
-                        cedulaPaciente: '',
-                        procedimiento: null,
-                        costoProcedimiento: 0,
-                        aseguradoraId: null,
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log("   Response Body:", JSON.stringify(result, null, 2));
+
+                    setApiMessage({
+                        severity: 'success',
+                        summary: 'Éxito',
+                        detail: `Factura registrada exitosamente con cobertura ${coverageStatus}!`
                     });
-                    setCoverageMessage(null);
+                    console.log(`Factura registrada con cobertura:`, result);
+
+                    // Crear detalle de factura después del registro exitoso
+                    if (result && result.facturaId) {
+                        await createFacturaDetail(result.facturaId, formData.procedimiento, formData.costoProcedimiento);
+                    }
+
+                    onFacturaRegistered(result);
+
+                    if (!initialData) {
+                        // Limpiar formulario
+                        setFormData({
+                            pacienteId: '',
+                            nombrePaciente: '',
+                            cedulaPaciente: '',
+                            procedimiento: null,
+                            costoProcedimiento: 0,
+                            aseguradoraId: null,
+                        });
+                        setCoverageMessage(null);
+                        setCoverageStatus(null);
+                        setCoverageResult(null);
+                    }
+                } else {
+                    const errorData = await response.json();
+                    console.log("   Error Response Body:", JSON.stringify(errorData, null, 2));
+
+                    const errorMessage = errorData.message || 'Error desconocido al registrar factura con cobertura.';
+                    setApiMessage({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: `Fallo en el registro con cobertura: ${errorMessage}`
+                    });
+                    console.error('Error de API con cobertura:', response.status, errorData);
                 }
             } else {
-                const errorData = await response.json();
-                const errorMessage = errorData.message || `Error desconocido al ${initialData ? 'actualizar' : 'registrar'} factura.`;
-                setApiMessage({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: `Fallo en el ${initialData ? 'actualización' : 'registro'}: ${errorMessage}`
+                // Lógica original para facturas sin cobertura
+                const facturaDataToSend = {
+                    pacienteId: Number(formData.pacienteId),
+                    tratamientoId: Number(formData.procedimiento),
+                    monto: Number(formData.costoProcedimiento),
+                    fecha: new Date().toISOString().split('T')[0],
+                    ...(formData.aseguradoraId && { aseguradoraId: Number(formData.aseguradoraId) }),
+                };
+
+                const method = initialData ? 'PUT' : 'POST';
+                const url = initialData
+                    ? `https://localhost:7256/api/Factura/${initialData.facturaId}`
+                    : 'https://localhost:7256/api/Factura';
+
+                console.log("📤 ENVIANDO FACTURA NORMAL:");
+                console.log("   URL:", url);
+                console.log("   Method:", method);
+                console.log("   Body:", JSON.stringify(facturaDataToSend, null, 2));
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+                    },
+                    body: JSON.stringify(facturaDataToSend),
                 });
-                console.error('Error de API:', response.status, errorData);
+
+                if (response.ok) {
+                    const result = await response.json();
+                    setApiMessage({
+                        severity: 'success',
+                        summary: 'Éxito',
+                        detail: `Factura ${initialData ? 'actualizada' : 'registrada'} exitosamente!`
+                    });
+                    console.log(`Factura ${initialData ? 'actualizada' : 'registrada'}:`, result);
+
+                    // Crear detalle de factura después del registro exitoso (solo para nuevas facturas)
+                    if (!initialData && result && result.facturaId) {
+                        await createFacturaDetail(result.facturaId, formData.procedimiento, formData.costoProcedimiento);
+                    }
+
+                    onFacturaRegistered(result);
+
+                    if (!initialData) {
+                        // Limpiar formulario
+                        setFormData({
+                            pacienteId: '',
+                            nombrePaciente: '',
+                            cedulaPaciente: '',
+                            procedimiento: null,
+                            costoProcedimiento: 0,
+                            aseguradoraId: null,
+                        });
+                        setCoverageMessage(null);
+                        setCoverageStatus(null);
+                        setCoverageResult(null);
+                    }
+                } else {
+                    const errorData = await response.json();
+                    const errorMessage = errorData.message || `Error desconocido al ${initialData ? 'actualizar' : 'registrar'} factura.`;
+                    setApiMessage({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: `Fallo en el ${initialData ? 'actualización' : 'registro'}: ${errorMessage}`
+                    });
+                    console.error('Error de API:', response.status, errorData);
+                }
             }
         } catch (error) {
             setApiMessage({
@@ -562,7 +756,7 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
                                 optionLabel="label"
                                 optionValue="value"
                                 required
-                                disabled={proceduresLoading}
+                                disabled={proceduresLoading || coverageStatus !== null}
                                 className={proceduresError ? 'p-invalid' : ''}
                                 filter
                             />
@@ -580,7 +774,7 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
                                 currency="USD"
                                 locale="en-US"
                                 required
-                                disabled
+                                disabled={coverageStatus !== null}
                             />
                         </div>
                     </div>
@@ -602,10 +796,10 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
                                 placeholder={insurersLoading ? "Cargando aseguradoras..." : "Seleccione una aseguradora (opcional)"}
                                 optionLabel="label"
                                 optionValue="value"
-                                disabled={insurersLoading}
+                                disabled={insurersLoading || (coverageStatus === 'aprobada' || coverageStatus === 'pendiente')}
                                 className={insurersError ? 'p-invalid' : ''}
                                 filter
-                                showClear
+                                showClear={!(coverageStatus === 'aprobada' || coverageStatus === 'pendiente')}
                             />
                             {insurersError && <small className="p-error">{insurersError}</small>}
                         </div>

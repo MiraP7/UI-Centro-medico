@@ -5,6 +5,8 @@ import { ProgressSpinner } from 'primereact/progressspinner';
 import { Message } from 'primereact/message';
 import { Dialog } from 'primereact/dialog';
 import { Button } from 'primereact/button';
+import { InputText } from 'primereact/inputtext';
+import { Card } from 'primereact/card';
 import FacturaService from '/src/services/FacturaService';
 import PatientRegistrationForm from '/src/components/PatientRegistrationForm';
 import 'primereact/resources/themes/lara-light-indigo/theme.css';
@@ -18,6 +20,11 @@ export default function FacturacionView({ onClose }) {
     const [facturas, setFacturas] = useState([]);
     const [loadingFacturas, setLoadingFacturas] = useState(true);
     const [errorFacturas, setErrorFacturas] = useState(null);
+
+    // Estados para filtros de búsqueda
+    const [searchFacturaId, setSearchFacturaId] = useState('');
+    const [searchPaciente, setSearchPaciente] = useState('');
+    const [filteredFacturas, setFilteredFacturas] = useState([]);
 
     const [selectedFactura, setSelectedFactura] = useState(null); // Estado para la factura seleccionada
     const [detalleFactura, setDetalleFactura] = useState([]);
@@ -43,6 +50,32 @@ export default function FacturacionView({ onClose }) {
         };
         fetchFacturas();
     }, []);
+
+    // Efecto para filtrar facturas cuando cambian los términos de búsqueda
+    useEffect(() => {
+        if (!facturas || facturas.length === 0) {
+            setFilteredFacturas([]);
+            return;
+        }
+
+        let filtered = facturas;
+
+        // Filtrar por ID de factura
+        if (searchFacturaId) {
+            filtered = filtered.filter(factura =>
+                factura.facturaId?.toString().includes(searchFacturaId)
+            );
+        }
+
+        // Filtrar por nombre de paciente
+        if (searchPaciente) {
+            filtered = filtered.filter(factura =>
+                factura.pacienteNombre?.toLowerCase().includes(searchPaciente.toLowerCase())
+            );
+        }
+
+        setFilteredFacturas(filtered);
+    }, [facturas, searchFacturaId, searchPaciente]);
 
     // Nuevo efecto para cargar los detalles cuando selectedFactura cambia
     useEffect(() => {
@@ -138,6 +171,11 @@ export default function FacturacionView({ onClose }) {
         console.log("Generando reporte de cobertura...");
     };
 
+    const clearFilters = () => {
+        setSearchFacturaId('');
+        setSearchPaciente('');
+    };
+
     return (
         <div className="p-4">
             <div className="flex justify-content-between align-items-center mb-4">
@@ -160,6 +198,52 @@ export default function FacturacionView({ onClose }) {
                 </div>
             </div>
 
+            {/* Card de filtros de búsqueda */}
+            <Card title="Buscar Facturas" className="mb-4">
+                <div className="grid">
+                    <div className="field col-12 md:col-4">
+                        <label htmlFor="searchFacturaId">ID Factura</label>
+                        <InputText
+                            id="searchFacturaId"
+                            value={searchFacturaId}
+                            onChange={(e) => setSearchFacturaId(e.target.value)}
+                            placeholder="Buscar por ID de factura..."
+                            className="w-full"
+                        />
+                    </div>
+                    <div className="field col-12 md:col-4">
+                        <label htmlFor="searchPaciente">Paciente</label>
+                        <InputText
+                            id="searchPaciente"
+                            value={searchPaciente}
+                            onChange={(e) => setSearchPaciente(e.target.value)}
+                            placeholder="Buscar por nombre de paciente..."
+                            className="w-full"
+                        />
+                    </div>
+                    <div className="field col-12 md:col-4 flex align-items-end">
+                        <Button
+                            label="Limpiar Filtros"
+                            icon="pi pi-times"
+                            className="p-button-secondary"
+                            onClick={clearFilters}
+                            disabled={!searchFacturaId && !searchPaciente}
+                        />
+                    </div>
+                </div>
+
+                {/* Mostrar información de resultados */}
+                {(searchFacturaId || searchPaciente) && (
+                    <div className="mt-3">
+                        <small className="text-600">
+                            Mostrando {filteredFacturas.length} de {facturas.length} facturas
+                            {searchFacturaId && ` | ID: "${searchFacturaId}"`}
+                            {searchPaciente && ` | Paciente: "${searchPaciente}"`}
+                        </small>
+                    </div>
+                )}
+            </Card>
+
             {loadingFacturas && (
                 <div className="flex justify-content-center flex-column align-items-center p-5">
                     <ProgressSpinner />
@@ -175,9 +259,13 @@ export default function FacturacionView({ onClose }) {
                 <Message severity="info" summary="Información" text="No hay facturas registradas." className="mb-3 w-full" />
             )}
 
-            {!loadingFacturas && !errorFacturas && facturas.length > 0 && (
+            {!loadingFacturas && !errorFacturas && facturas.length > 0 && filteredFacturas.length === 0 && (searchFacturaId || searchPaciente) && (
+                <Message severity="warn" summary="Sin resultados" text="No se encontraron facturas que coincidan con los criterios de búsqueda." className="mb-3 w-full" />
+            )}
+
+            {!loadingFacturas && !errorFacturas && filteredFacturas.length > 0 && (
                 <div className="card">
-                    <DataTable value={facturas} paginator rows={10}
+                    <DataTable value={filteredFacturas} paginator rows={10}
                         rowsPerPageOptions={[5, 10, 25]}
                         paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
                         currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} facturas"

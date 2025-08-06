@@ -65,8 +65,8 @@ class FacturaService {
      */
     async getDetalleFacturaByFacturaId(facturaId) {
         try {
-            // Paso 1: Obtener el DetalleFactura usando el facturaId
-            const responseDetalle = await fetch(`${this.detalleFacturaBaseUrl}/${facturaId}`, {
+            // Paso 1: Obtener TODOS los DetalleFactura y filtrar por facturaId
+            const responseDetalle = await fetch(`${this.detalleFacturaBaseUrl}/all`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -80,30 +80,49 @@ class FacturaService {
             }
 
             const detalleFactura = await responseDetalle.json();
-            // Asume que la API de DetalleFactura puede devolver el objeto directamente o dentro de una propiedad 'data'
-            const detalle = detalleFactura.data || detalleFactura;
+            // La API de DetalleFactura devuelve todos los detalles, necesitamos filtrar por facturaId
+            let todosLosDetalles = detalleFactura.data || detalleFactura;
 
-            // Si no hay detalle, devolvemos un array vacío
-            if (!detalle || !detalle.tratamientoId) {
-                console.warn(`No se encontró DetalleFactura o tratamientoId para facturaId ${facturaId}.`);
+            // Asegurar que tenemos un array
+            if (!Array.isArray(todosLosDetalles)) {
+                todosLosDetalles = todosLosDetalles ? [todosLosDetalles] : [];
+            }
+
+            // Filtrar detalles que pertenecen a la factura específica
+            const detallesDeLaFactura = todosLosDetalles.filter(detalle =>
+                detalle.facturaId === Number(facturaId)
+            );
+
+            // Si no hay detalles para esta factura, devolvemos un array vacío
+            if (detallesDeLaFactura.length === 0) {
+                console.warn(`No se encontraron DetalleFactura para facturaId ${facturaId}.`);
                 return [];
             }
 
-            // Paso 2: Usar el tratamientoId del detalle para obtener la información del Tratamiento
-            const tratamiento = await this.getTratamientoById(detalle.tratamientoId);
+            // Paso 2: Para cada detalle, obtener la información del tratamiento
+            const tratamientosConDetalles = await Promise.all(
+                detallesDeLaFactura.map(async (detalle) => {
+                    if (!detalle.tratamientoId) {
+                        console.warn(`DetalleFactura sin tratamientoId encontrado para facturaId ${facturaId}.`);
+                        return null;
+                    }
 
-            // Combina la información del tratamiento con el monto específico del detalle de factura
-            // Ya que el `getDetalleFacturaByFacturaId` original devolvía un array,
-            // y tu ejemplo de retorno de `Tratamiento` es un solo objeto,
-            // asumimos que el detalle de una factura puede tener un solo tratamiento principal
-            // o que necesitas los datos del tratamiento enriquecidos con el monto del detalle.
-            // Si una factura puede tener múltiples detalles y tratamientos, esta lógica debería ser ajustada para un array.
-            // Para este caso, retornamos un array con un solo objeto que contiene la información del tratamiento
-            // y el monto del detalle.
-            return [{
-                ...tratamiento,
-                montoDetalle: detalle.monto // Añade el monto específico de este detalle de factura
-            }];
+                    try {
+                        const tratamiento = await this.getTratamientoById(detalle.tratamientoId);
+                        return {
+                            ...tratamiento,
+                            montoDetalle: detalle.monto,
+                            detalleFacturaId: detalle.detalleFacturaId || detalle.id
+                        };
+                    } catch (error) {
+                        console.warn(`Error al obtener tratamiento ${detalle.tratamientoId}:`, error);
+                        return null;
+                    }
+                })
+            );
+
+            // Filtrar los elementos nulos y devolver el resultado
+            return tratamientosConDetalles.filter(item => item !== null);
 
         } catch (error) {
             console.error(`Error en getDetalleFacturaByFacturaId para factura ${facturaId}:`, error);
@@ -212,8 +231,8 @@ class FacturaService {
      */
     async createDetalleFactura(detalleData) {
         try {
-            // Asume un endpoint para crear detalles, por ejemplo, /api/Factura/Detalle
-            const response = await fetch(`${this.baseUrl}/Detalle`, {
+            // Usar el endpoint correcto para DetalleFactura
+            const response = await fetch(`${this.detalleFacturaBaseUrl}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
