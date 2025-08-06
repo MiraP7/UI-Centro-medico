@@ -1,17 +1,23 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   UserIcon,
   LockIcon,
   DocumentIcon,
   SpinnerIcon,
 } from "../../components/common/Icons";
+import AuthService from "../../Services/AuthService";
+import { simulateLogin } from "../../utils/testUsers"; // Para testing
 import "./Login.css";
+
+const authService = new AuthService();
 
 export default function Login({ onLoginSuccess }) {
   const [usuario, setUsername] = useState("");
   const [clave, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const [isUsernameHovered, setIsUsernameHovered] = useState(false);
   const [isPasswordHovered, setIsPasswordHovered] = useState(false);
@@ -24,6 +30,24 @@ export default function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
+      // MODO TESTING: Primero intentar con usuarios de testing
+      const testResult = simulateLogin(usuario, clave);
+      if (testResult.isSuccess) {
+        const userData = {
+          nombre: testResult.userName,
+          apellido: testResult.lastName,
+          email: testResult.email,
+          rol: testResult.role
+        };
+        
+        authService.setAuthData(testResult.token, userData);
+        navigate('/');
+        onLoginSuccess && onLoginSuccess();
+        setLoading(false);
+        return;
+      }
+
+      // Si no es usuario de testing, intentar con API real
       const response = await fetch("https://localhost:7256/api/Auth/Login", {
         method: "POST",
         headers: {
@@ -36,10 +60,19 @@ export default function Login({ onLoginSuccess }) {
 
       if (response.ok) {
         if (data.isSuccess) {
-          localStorage.setItem("authToken", data.token);
-          localStorage.setItem("usuario", usuario);
-          localStorage.setItem("clave", clave);
-
+          // Usar AuthService para guardar los datos con rol
+          const userData = {
+            nombre: data.userName || 'Usuario',
+            apellido: data.lastName || '',
+            email: data.email || '',
+            rol: data.role || 'operador' // Por defecto operador si no viene el rol
+          };
+          
+          authService.setAuthData(data.token, userData);
+          
+          // Navegar al dashboard
+          navigate('/');
+          
           onLoginSuccess && onLoginSuccess();
         } else {
           setError(
@@ -141,6 +174,21 @@ export default function Login({ onLoginSuccess }) {
             </div>
 
             {error && <div className="error-message ">{error}</div>}
+
+            {/* Información de testing */}
+            <div className="test-info" style={{ 
+              backgroundColor: '#f8f9fa', 
+              border: '1px solid #dee2e6', 
+              borderRadius: '5px', 
+              padding: '10px', 
+              margin: '10px 0',
+              fontSize: '12px',
+              color: '#6c757d'
+            }}>
+              <strong>👨‍💻 Usuarios de Testing:</strong><br/>
+              <strong>Admin:</strong> usuario: <code>admin</code> | clave: <code>admin123</code><br/>
+              <strong>Operador:</strong> usuario: <code>operador</code> | clave: <code>operador123</code>
+            </div>
 
             <button
               type="submit"

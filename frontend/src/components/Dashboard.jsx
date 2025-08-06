@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from 'primereact/button';
 import { Dialog } from 'primereact/dialog';
 import { DataTable } from 'primereact/datatable';
@@ -22,6 +23,7 @@ import FacturacionView from '/src/Views/FacturacionView';
 import AseguradoraView from '/src/Views/AseguradoraView';
 import MedicoView from '/src/Views/MedicoView';
 import UserView from '/src/Views/UserView';
+import AuthService from '/src/Services/AuthService';
 
 // AÑADIDO: Importa el nuevo servicio de Citas
 import CitaService from '/src/Services/CitaService';
@@ -29,14 +31,14 @@ import CitaService from '/src/Services/CitaService';
 // Las citas iniciales hardcodeadas ya no son necesarias
 // const initialAppointments = [...];
 
-// Definición de los colores para facilitar la referencia
 const COLOR_AZUL_MARINO = '#2c3e50';
 const COLOR_AZUL_CLARO = '#3498db';
 const COLOR_BLANCO = '#ffffff';
 
 const citaService = new CitaService(); // Instancia del servicio de citas
+const authService = new AuthService(); // Instancia del servicio de autenticación
 
-export default function Dashboard({ onLogout }) {
+export default function Dashboard({ onLogout, initialView = 'home' }) {
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showAppointmentModal, setShowAppointmentModal] = useState(false);
   const [showBillingModal, setShowBillingModal] = useState(false);
@@ -48,11 +50,11 @@ export default function Dashboard({ onLogout }) {
   const [editingAppointment, setEditingAppointment] = useState(null); // Para editar citas
 
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [showPatientViewModal, setShowPatientViewModal] = useState(false);
-  const [showFacturacionViewModal, setShowFacturacionViewModal] = useState(false);
-  const [showAseguradoraViewModal, setShowAseguradoraViewModal] = useState(false);
-  const [showMedicoViewModal, setShowMedicoViewModal] = useState(false);
-  const [showUserViewModal, setShowUserViewModal] = useState(false);
+  const [currentView, setCurrentView] = useState(initialView); // Usar initialView como valor inicial
+  
+  const navigate = useNavigate();
+  const currentUser = authService.getCurrentUser();
+  const userRole = authService.getUserRole();
 
   const toast = useRef(null);
 
@@ -228,73 +230,275 @@ export default function Dashboard({ onLogout }) {
 
   // Función auxiliar para cerrar todos los modales de vista
   const closeAllViewModals = () => {
-    setShowPatientViewModal(false);
-    setShowFacturacionViewModal(false);
-    setShowAseguradoraViewModal(false);
-    setShowMedicoViewModal(false);
-    setShowUserViewModal(false);
     setShowBillingModal(false);
     setSidebarVisible(false);
   };
 
-  // Definición de los ítems del PanelMenu
-  const items = [
-    {
-      label: 'Home',
-      icon: 'pi pi-fw pi-home', // Eliminado 'icons-bar' de aquí
-      command: () => {
-        closeAllViewModals(); // Usa la función general para cerrar modales
-      },
-    },
-    {
-      label: 'Pacientes',
-      icon: 'pi pi-fw pi-users', // Eliminado 'icons-bar' de aquí
-      command: () => {
-        closeAllViewModals();
-        setShowPatientViewModal(true);
-      },
-    },
-    {
-      label: 'Facturación',
-      icon: 'pi pi-fw pi-money-bill', // Eliminado 'icons-bar' de aquí
-      command: () => {
-        closeAllViewModals();
-        setShowFacturacionViewModal(true);
-      },
-    },
-    {
-      label: 'Autorización',
-      icon: 'pi pi-fw pi-check-square', // Eliminado 'icons-bar' de aquí
-      command: () => {
-        closeAllViewModals();
-        // Lógica para Autorización
-      }
-    },
-    {
-      label: 'Medicos',
-      icon: 'pi pi-fw pi-user-md', // Eliminado 'icons-bar' de aquí
-      command: () => {
-        closeAllViewModals();
-        setShowMedicoViewModal(true); // Abre el modal de Médicos
-      }
-    },
-    {
-      label: 'Usuarios',
-      icon: 'pi pi-fw pi-id-card', // Eliminado 'icons-bar' de aquí
-      command: () => {
-        closeAllViewModals();
-        setShowUserViewModal(true); // Abre el modal de Usuarios
-      }
-    },
-    {
-      label: 'Aseguradora ',
-      icon: 'pi pi-fw pi-shield', // Eliminado 'icons-bar' de aquí
-      command: () => {
-        closeAllViewModals();
-        setShowAseguradoraViewModal(true);
-      }
+  // Función para cambiar la vista actual usando React Router
+  const navigateToView = (viewName) => {
+    const routeMap = {
+      'home': '/',
+      'patients': '/pacientes',
+      'billing': '/facturacion',
+      'authorization': '/autorizacion',
+      'medicos': '/medicos',
+      'users': '/usuarios',
+      'aseguradoras': '/aseguradoras'
+    };
+    
+    const route = routeMap[viewName] || '/';
+    navigate(route);
+    setSidebarVisible(false);
+  };
+
+  // Función para renderizar el contenido según la vista actual
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'patients':
+        return (
+          <div className="col-12">
+            <div className="flex justify-content-center">
+              <div className="w-full max-w-screen-xl">
+                <PatientView onClose={() => navigateToView('home')} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'billing':
+        return (
+          <div className="col-12">
+            <div className="flex justify-content-center">
+              <div className="w-full max-w-screen-xl">
+                <FacturacionView onClose={() => navigateToView('home')} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'aseguradoras':
+        return (
+          <div className="col-12">
+            <div className="flex justify-content-center">
+              <div className="w-full max-w-screen-xl">
+                <AseguradoraView onClose={() => navigateToView('home')} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'medicos':
+        return (
+          <div className="col-12">
+            <div className="flex justify-content-center">
+              <div className="w-full max-w-screen-xl">
+                <MedicoView onClose={() => navigateToView('home')} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'users':
+        return (
+          <div className="col-12">
+            <div className="flex justify-content-center">
+              <div className="w-full max-w-screen-xl">
+                <UserView onClose={() => navigateToView('home')} />
+              </div>
+            </div>
+          </div>
+        );
+      case 'authorization':
+        return (
+          <div className="col-12">
+            <div className="flex justify-content-center">
+              <div className="w-full max-w-screen-xl">
+                <div className="card p-4 shadow-1 border-round-md">
+                  <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>
+                    Módulo de Autorización
+                  </h2>
+                  <p className="text-center text-500">
+                    Esta funcionalidad estará disponible próximamente.
+                  </p>
+                  <div className="flex justify-content-center mt-3">
+                    <Button 
+                      label="Volver al Home" 
+                      icon="pi pi-arrow-left" 
+                      onClick={() => navigateToView('home')}
+                      className="p-button-outlined"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'home':
+      default:
+        return (
+          <div className="col-12">
+            <div className="flex justify-content-center">
+              <div className="w-full max-w-screen-xl">
+                <div className="container-citas">
+                  <div className="grid">
+                    {/* Columna izquierda - Tabla de Citas */}
+                    <div className="col-9">
+                      <div className="card p-2 shadow-1 border-round-md">
+                        <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas</h2>
+
+                        {/* Barra de búsqueda */}
+                        <div className="flex justify-content-between align-items-center mb-3">
+                          <div className="flex align-items-center gap-2">
+                            <i className="pi pi-search" style={{ color: COLOR_AZUL_MARINO }}></i>
+                            <InputText
+                              value={globalFilter}
+                              onChange={(e) => setGlobalFilter(e.target.value)}
+                              placeholder="Buscar..."
+                              className="w-full"
+                              style={{ minWidth: '300px' }}
+                            />
+                            {globalFilter && (
+                              <Button
+                                icon="pi pi-times"
+                                className="p-button-text p-button-sm"
+                                onClick={() => setGlobalFilter('')}
+                                tooltip="Limpiar búsqueda"
+                                tooltipOptions={{ position: 'top' }}
+                              />
+                            )}
+                          </div>
+                          {globalFilter && (
+                            <small className="text-500">
+                              {filteredAppointments.length} de {appointments.length} citas
+                            </small>
+                          )}
+                        </div>
+
+                        {loadingAppointments ? (
+                          <div className="flex justify-content-center flex-column align-items-center p-5">
+                            {/* <ProgressSpinner /> */}
+                            <p className="mt-3">Cargando citas...</p>
+                          </div>
+                        ) : errorAppointments ? (
+                          <Message severity="error" summary="Error" text={errorAppointments} className="mb-3 w-full" />
+                        ) : filteredAppointments.length === 0 && appointments.length === 0 ? (
+                          <Message severity="info" summary="Información" text="No hay citas programadas." className="mb-3 w-full" />
+                        ) : filteredAppointments.length === 0 && globalFilter ? (
+                          <Message severity="warn" summary="Sin resultados" text="No se encontraron citas que coincidan con la búsqueda." className="mb-3 w-full" />
+                        ) : (
+                          <DataTable value={filteredAppointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
+                            paginator
+                            rows={3}
+                            className=''
+                            rowsPerPageOptions={[5, 10, 25, 50]}
+                            paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
+                            currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas "
+                            stripedRows
+                            showGridlines
+                          >
+                            <Column field="date" header="Fecha"></Column>
+                            <Column field="time" header="Hora"></Column>
+                            <Column field="patient" header="Paciente"></Column>
+                            <Column field="medicoNombre" header="Médico"></Column>
+                            <Column field="motivoConsulta" header="Motivo"></Column>
+                            <Column field="estadoDescripcion" header="Estado"></Column>
+                            <Column
+                              header="Accion"
+                              body={actionTemplate}
+                              style={{ width: '200px', minWidth: '200px' }}
+                              frozen
+                              alignFrozen="right"
+                            />
+                          </DataTable>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Columna derecha - Acciones Rápidas */}
+                    <div className="col-3">
+                      <div className="card p-2 shadow-1 border-round-md">
+                        <h4 className="text-base font-semibold mb-2" style={{ color: COLOR_AZUL_MARINO, textAlign: 'center' }}>
+                          <i className="pi pi-bolt mr-1"></i>
+                          Acciones Rápidas
+                        </h4>
+                        <div className='bnt-registrar flex flex-column gap-2'>
+                          <Button
+                            label="Registrar Cita"
+                            icon="pi pi-calendar-plus"
+                            className="p-button-info p-button-raised p-1 w-full text-sm"
+                            onClick={handleCreateAppointment}
+                          />
+                          <Button
+                            label="Facturación"
+                            icon="pi pi-money-bill"
+                            className="p-button-success p-button-raised p-1 w-full text-sm"
+                            onClick={() => {
+                              closeAllViewModals();
+                              setShowBillingModal(true);
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
     }
-  ];
+  };
+
+  // Definición de los ítems del PanelMenu basado en roles
+  const getAllowedMenuItems = () => {
+    const allItems = [
+      {
+        label: 'Home',
+        icon: 'pi pi-fw pi-home',
+        command: () => navigateToView('home'),
+      },
+      {
+        label: 'Pacientes',
+        icon: 'pi pi-fw pi-users',
+        command: () => navigateToView('patients'),
+      },
+      {
+        label: 'Facturación',
+        icon: 'pi pi-fw pi-money-bill',
+        command: () => navigateToView('billing'),
+      },
+      {
+        label: 'Autorización',
+        icon: 'pi pi-fw pi-check-square',
+        command: () => navigateToView('authorization'),
+      },
+      {
+        label: 'Médicos',
+        icon: 'pi pi-fw pi-user-md',
+        command: () => navigateToView('medicos'),
+        adminOnly: true
+      },
+      {
+        label: 'Usuarios',
+        icon: 'pi pi-fw pi-id-card',
+        command: () => navigateToView('users'),
+        adminOnly: true
+      },
+      {
+        label: 'Aseguradoras',
+        icon: 'pi pi-fw pi-shield',
+        command: () => navigateToView('aseguradoras'),
+        adminOnly: true
+      }
+    ];
+
+    // Filtrar elementos según el rol
+    if (userRole === 'admin') {
+      return allItems; // Admin ve todo
+    } else if (userRole === 'operador') {
+      return allItems.filter(item => !item.adminOnly); // Operador solo ve elementos sin adminOnly
+    }
+    
+    return []; // Sin rol, sin acceso
+  };
+
+  const items = getAllowedMenuItems();
 
   const formatTime = (dateString) => {
     if (!dateString) return 'N/A';
@@ -388,18 +592,23 @@ export default function Dashboard({ onLogout }) {
 
 
   return (
-    <div className="">
+    <div className="dashboard-container" style={{ position: 'relative', overflow: 'hidden' }}>
       <Toast ref={toast} />
       <ConfirmDialog />
 
       {/* Sidebar para el PanelMenu */}
-      <Sidebar visible={sidebarVisible} onHide={() => setSidebarVisible(false)}
+      <Sidebar 
+        visible={sidebarVisible} 
+        onHide={() => setSidebarVisible(false)}
         showCloseIcon={true}
         baseZIndex={9999}
-        className="w-20rem icons-bar" // APLICA LA CLASE icons-bar AQUÍ
-      // style={{ backgroundColor: '#273747ff' }} // Puedes eliminar esto si icons-bar ya lo define
+        className="w-20rem icons-bar"
+        modal={true} // Esto añade el overlay oscuro automáticamente
+        blockScroll={true} // Evita el scroll cuando el sidebar está abierto
       >
-        <h3 className="mb-3 pl-3 text-2xl font-semibold" style={{ color: COLOR_BLANCO, textAlign: 'center' }}>Menú Principal</h3>
+        <h3 className="mb-3 pl-3 text-2xl font-semibold" style={{ color: COLOR_BLANCO, textAlign: 'center' }}>
+          Menú Principal
+        </h3>
         <PanelMenu model={items} className="w-full sidebar-panelmenu" />
       </Sidebar>
 
@@ -411,113 +620,41 @@ export default function Dashboard({ onLogout }) {
           <i className="pi pi-heart-fill" style={{ color: COLOR_AZUL_CLARO, fontSize: '2.5rem' }}></i>
           <h1 className="text-4xl font-bold m-0" style={{ color: COLOR_BLANCO }}>Health State</h1>
         </div>
-        <Button label="Cerrar Sesión" icon="pi pi-sign-out" className="p-button-danger p-button-sm" onClick={onLogout} />
+        
+        <div className="flex align-items-center gap-3">
+          {/* Información del usuario */}
+          <div className="flex flex-column align-items-end">
+            <span className="text-white text-sm font-semibold">
+              {currentUser?.nombre} {currentUser?.apellido}
+            </span>
+            <span className="text-blue-200 text-xs">
+              {userRole === 'admin' ? 'Administrador' : 'Operador'}
+            </span>
+          </div>
+          
+          <Button 
+            label="Cerrar Sesión" 
+            icon="pi pi-sign-out" 
+            className="p-button-danger p-button-sm" 
+            onClick={() => {
+              authService.logout();
+              if (onLogout) onLogout();
+              navigate('/login');
+            }} 
+          />
+        </div>
       </header>
 
-      <div className="grid m-4">
-        <div className="container-citas col-12">
-          <div className="grid">
-            {/* Columna izquierda - Tabla de Citas */}
-            <div className="col-9">
-              <div className="card p-2 shadow-1 border-round-md">
-                <h2 className="text-xl font-bold mb-3" style={{ color: COLOR_AZUL_CLARO, textAlign: 'center' }}>Citas</h2>
-
-                {/* Barra de búsqueda */}
-                <div className="flex justify-content-between align-items-center mb-3">
-                  <div className="flex align-items-center gap-2">
-                    <i className="pi pi-search" style={{ color: COLOR_AZUL_MARINO }}></i>
-                    <InputText
-                      value={globalFilter}
-                      onChange={(e) => setGlobalFilter(e.target.value)}
-                      placeholder="Buscar..."
-                      className="w-full"
-                      style={{ minWidth: '300px' }}
-                    />
-                    {globalFilter && (
-                      <Button
-                        icon="pi pi-times"
-                        className="p-button-text p-button-sm"
-                        onClick={() => setGlobalFilter('')}
-                        tooltip="Limpiar búsqueda"
-                        tooltipOptions={{ position: 'top' }}
-                      />
-                    )}
-                  </div>
-                  {globalFilter && (
-                    <small className="text-500">
-                      {filteredAppointments.length} de {appointments.length} citas
-                    </small>
-                  )}
-                </div>
-
-                {loadingAppointments ? (
-                  <div className="flex justify-content-center flex-column align-items-center p-5">
-                    {/* <ProgressSpinner /> */}
-                    <p className="mt-3">Cargando citas...</p>
-                  </div>
-                ) : errorAppointments ? (
-                  <Message severity="error" summary="Error" text={errorAppointments} className="mb-3 w-full" />
-                ) : filteredAppointments.length === 0 && appointments.length === 0 ? (
-                  <Message severity="info" summary="Información" text="No hay citas programadas." className="mb-3 w-full" />
-                ) : filteredAppointments.length === 0 && globalFilter ? (
-                  <Message severity="warn" summary="Sin resultados" text="No se encontraron citas que coincidan con la búsqueda." className="mb-3 w-full" />
-                ) : (
-                  <DataTable value={filteredAppointments} responsiveLayout="scroll" emptyMessage="No hay citas programadas para hoy."
-                    paginator
-                    rows={3}
-                    className=''
-                    rowsPerPageOptions={[5, 10, 25, 50]}
-                    paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-                    currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords} citas "
-                    stripedRows
-                    showGridlines
-                  >
-                    <Column field="date" header="Fecha"></Column>
-                    <Column field="time" header="Hora"></Column>
-                    <Column field="patient" header="Paciente"></Column>
-                    <Column field="medicoNombre" header="Médico"></Column>
-                    <Column field="motivoConsulta" header="Motivo"></Column>
-                    <Column field="estadoDescripcion" header="Estado"></Column>
-                    <Column
-                      header="Accion"
-                      body={actionTemplate}
-                      style={{ width: '200px', minWidth: '200px' }}
-                      frozen
-                      alignFrozen="right"
-                    />
-                  </DataTable>
-                )}
-              </div>
-            </div>
-
-            {/* Columna derecha - Acciones Rápidas */}
-            <div className="col-3">
-              <div className="card p-2 shadow-1 border-round-md">
-                <h4 className="text-base font-semibold mb-2" style={{ color: COLOR_AZUL_MARINO, textAlign: 'center' }}>
-                  <i className="pi pi-bolt mr-1"></i>
-                  Acciones Rápidas
-                </h4>
-                <div className='bnt-registrar flex flex-column gap-2'>
-                  <Button
-                    label="Registrar Cita"
-                    icon="pi pi-calendar-plus"
-                    className="p-button-info p-button-raised p-1 w-full text-sm"
-                    onClick={handleCreateAppointment}
-                  />
-                  <Button
-                    label="Facturación"
-                    icon="pi pi-money-bill"
-                    className="p-button-success p-button-raised p-1 w-full text-sm"
-                    onClick={() => {
-                      closeAllViewModals();
-                      setShowBillingModal(true);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Contenido principal */}
+      <div 
+        className="main-content"
+        style={{ 
+          padding: '1rem',
+          minHeight: 'calc(100vh - 120px)',
+          width: '100%'
+        }}
+      >
+        {renderCurrentView()}
       </div>
 
       {/* Dialog para Registrar/Editar Cita */}
@@ -553,61 +690,6 @@ export default function Dashboard({ onLogout }) {
           onFacturaRegistered={handleBillingRegistered}
           onCancel={() => setShowBillingModal(false)}
         />
-      </Dialog>
-
-      {/* Dialog para la Vista de Pacientes (PatientView) */}
-      <Dialog
-        header="Gestión de Pacientes"
-        visible={showPatientViewModal}
-        style={{ width: '90vw', minWidth: '900px', height: '90vh' }}
-        onHide={() => setShowPatientViewModal(false)}
-        modal
-      >
-        <PatientView onClose={() => setShowPatientViewModal(false)} />
-      </Dialog>
-
-      {/* Dialog para la Vista de Facturación (FacturacionView) */}
-      <Dialog
-        header="Módulo de Facturación"
-        visible={showFacturacionViewModal}
-        style={{ width: '90vw', minWidth: '800px', height: '90vh' }}
-        onHide={() => setShowFacturacionViewModal(false)}
-        modal
-      >
-        <FacturacionView onClose={() => setShowFacturacionViewModal(false)} />
-      </Dialog>
-
-      {/* Dialog para la Vista de Aseguradoras (AseguradoraView) */}
-      <Dialog
-        header="Listado de Aseguradoras"
-        visible={showAseguradoraViewModal}
-        style={{ width: '70vw', minWidth: '600px', height: '70vh' }}
-        onHide={() => setShowAseguradoraViewModal(false)}
-        modal
-      >
-        <AseguradoraView onClose={() => setShowAseguradoraViewModal(false)} />
-      </Dialog>
-
-      {/* AÑADIDO: Dialog para la Vista de Médicos (MedicoView) */}
-      <Dialog
-        header="Gestión de Médicos"
-        visible={showMedicoViewModal}
-        style={{ width: '80vw', minWidth: '700px', height: '80vh' }}
-        onHide={() => setShowMedicoViewModal(false)}
-        modal
-      >
-        <MedicoView onClose={() => setShowMedicoViewModal(false)} />
-      </Dialog>
-
-      {/* AÑADIDO: Dialog para la Vista de Usuarios (UserView) */}
-      <Dialog
-        header="Gestión de Usuarios"
-        visible={showUserViewModal}
-        style={{ width: '80vw', minWidth: '700px', height: '80vh' }}
-        onHide={() => setShowUserViewModal(false)}
-        modal
-      >
-        <UserView onClose={() => setShowUserViewModal(false)} />
       </Dialog>
 
     </div>
