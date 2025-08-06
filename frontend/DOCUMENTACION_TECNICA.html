@@ -269,6 +269,7 @@
                 <li><a href="#descripcion">1. Descripción General del Sistema</a></li>
                 <li><a href="#arquitectura">2. Arquitectura del Proyecto</a></li>
                 <li><a href="#modulos">3. Módulos Principales</a></li>
+                <li><a href="#casos-de-uso">3.1. Flujos y Casos de Uso</a></li>
                 <li><a href="#auth">4. Autenticación y Autorización</a></li>
                 <li><a href="#servicios">5. Servicios y APIs</a></li>
                 <li><a href="#componentes">6. Componentes Comunes</a></li>
@@ -542,6 +543,137 @@
             </div>
         </div>
 
+        <h1 id="casos-de-uso">🔄 3.1. Flujos y Casos de Uso del Sistema</h1>
+
+        <div class="module-section">
+            <div class="module-title">🔐 MÓDULO DE AUTENTICACIÓN</div>
+            <h4>Caso de Uso 1: Inicio de Sesión Exitoso</h4>
+            <ol>
+                <li><strong>Actor:</strong> Administrador / Operador</li>
+                <li><strong>Precondición:</strong> El usuario tiene credenciales válidas y está en la página de login.</li>
+                <li><strong>Flujo Principal:</strong>
+                    <ol type="a">
+                        <li>Usuario ingresa su nombre de usuario y contraseña.</li>
+                        <li>Usuario hace clic en "Iniciar Sesión".</li>
+                        <li>Sistema valida las credenciales contra la API.</li>
+                        <li>API devuelve un token JWT y los datos del usuario, incluyendo su rol.</li>
+                        <li>Sistema almacena el token y los datos en `localStorage`.</li>
+                        <li>Sistema redirige al usuario a la página principal (`/`).</li>
+                    </ol>
+                </li>
+                <li><strong>Postcondición:</strong> El usuario está autenticado y puede ver los módulos permitidos para su rol.</li>
+            </ol>
+            <h4>Caso de Uso 2: Inicio de Sesión Fallido</h4>
+            <ol>
+                <li><strong>Actor:</strong> Cualquier usuario</li>
+                <li><strong>Precondición:</strong> El usuario está en la página de login.</li>
+                <li><strong>Flujo Principal:</strong>
+                    <ol type="a">
+                        <li>Usuario ingresa credenciales incorrectas.</li>
+                        <li>Usuario hace clic en "Iniciar Sesión".</li>
+                        <li>Sistema valida las credenciales y la API devuelve un error 401.</li>
+                        <li>Sistema muestra una notificación de error: "Credenciales incorrectas".</li>
+                    </ol>
+                </li>
+                <li><strong>Postcondición:</strong> El usuario permanece en la página de login.</li>
+            </ol>
+        </div>
+
+        <div class="module-section">
+            <div class="module-title">👥 MÓDULO DE GESTIÓN DE PACIENTES</div>
+            <h4>Caso de Uso: Registrar un Nuevo Paciente</h4>
+            <ol>
+                <li><strong>Actor:</strong> Administrador / Operador</li>
+                <li><strong>Precondición:</strong> El usuario está autenticado y en la vista de "Pacientes".</li>
+                <li><strong>Flujo Principal:</strong>
+                    <ol type="a">
+                        <li>Usuario hace clic en "Registrar Paciente".</li>
+                        <li>Se abre un formulario modal.</li>
+                        <li>Usuario completa los campos: Nombre, Apellido, Cédula, Fecha de Nacimiento, etc.</li>
+                        <li>El sistema valida los datos en tiempo real (ej. formato de cédula).</li>
+                        <li>Usuario hace clic en "Guardar".</li>
+                        <li>Sistema envía los datos a la API para crear el paciente.</li>
+                        <li>API confirma la creación y devuelve los datos del nuevo paciente.</li>
+                        <li>El formulario se cierra y la tabla de pacientes se actualiza automáticamente.</li>
+                        <li>Sistema muestra una notificación de éxito: "Paciente registrado correctamente".</li>
+                    </ol>
+                </li>
+                <li><strong>Postcondición:</strong> El nuevo paciente aparece en la lista general.</li>
+            </ol>
+        </div>
+
+        <div class="module-section">
+            <div class="module-title">📅 MÓDULO DE GESTIÓN DE CITAS</div>
+            <h4>Caso de Uso: Programar una Nueva Cita</h4>
+            <ol>
+                <li><strong>Actor:</strong> Administrador / Operador</li>
+                <li><strong>Precondición:</strong> El usuario está en la página principal (Home).</li>
+                <li><strong>Flujo Principal:</strong>
+                    <ol type="a">
+                        <li>Usuario busca un paciente por cédula.</li>
+                        <li>Sistema muestra los datos del paciente encontrado.</li>
+                        <li>Usuario selecciona un médico de la lista desplegable.</li>
+                        <li>Usuario selecciona una fecha y hora disponibles en el calendario.</li>
+                        <li>Usuario ingresa el motivo de la cita.</li>
+                        <li>Usuario hace clic en "Programar Cita".</li>
+                        <li>Sistema envía los datos a la API.</li>
+                        <li>API confirma la creación de la cita.</li>
+                        <li>La nueva cita aparece en la tabla de "Citas Programadas".</li>
+                        <li>Sistema muestra una notificación de éxito.</li>
+                    </ol>
+                </li>
+                <li><strong>Postcondición:</strong> La cita queda registrada y visible en el sistema.</li>
+            </ol>
+        </div>
+
+        <div class="module-section">
+            <div class="module-title">💰 MÓDULO DE FACTURACIÓN</div>
+            <h4>Caso de Uso: Generar una Factura Médica</h4>
+            <ol>
+                <li><strong>Actor:</strong> Administrador</li>
+                <li><strong>Precondición:</strong> El usuario está autenticado con rol de Administrador y en la vista de "Facturación".</li>
+                <li><strong>Flujo Principal:</strong>
+                    <ol type="a">
+                        <li>Usuario busca un paciente por cédula.</li>
+                        <li>Sistema obtiene los datos del paciente.</li>
+                        <li>Usuario hace clic en "Verificar ARS" para validar la cobertura del seguro.</li>
+                        <li>Sistema confirma que la cobertura está activa.</li>
+                        <li>Usuario selecciona uno o varios procedimientos médicos del catálogo.</li>
+                        <li>Sistema calcula automáticamente el monto total, el descuento del seguro y el copago del paciente.</li>
+                        <li>Usuario hace clic en "Generar Factura".</li>
+                        <li>Sistema crea la factura y los detalles asociados a través de la API.</li>
+                        <li>La factura se agrega a la lista de facturas pendientes de pago.</li>
+                        <li>Sistema muestra una notificación de éxito: "Factura generada correctamente".</li>
+                    </ol>
+                </li>
+                <li><strong>Postcondición:</strong> La factura está creada y lista para el procesamiento de pago.</li>
+            </ol>
+        </div>
+
+        <div class="module-section">
+            <div class="module-title">👑 MÓDULOS DE ADMINISTRACIÓN (Usuarios, Médicos, Aseguradoras)</div>
+            <h4>Caso de Uso General: Gestionar una Entidad (Ej: Médico)</h4>
+            <ol>
+                <li><strong>Actor:</strong> Administrador</li>
+                <li><strong>Precondición:</strong> El usuario está en la vista del módulo correspondiente (ej. "Médicos").</li>
+                <li><strong>Flujo Principal (Crear):</strong>
+                    <ol type="a">
+                        <li>Usuario hace clic en "Nuevo Médico".</li>
+                        <li>Completa el formulario con los datos del médico (nombre, especialidad, etc.).</li>
+                        <li>Hace clic en "Guardar". El nuevo médico aparece en la lista.</li>
+                    </ol>
+                </li>
+                <li><strong>Flujo Principal (Editar):</strong>
+                    <ol type="a">
+                        <li>Usuario selecciona un médico de la tabla y hace clic en "Editar".</li>
+                        <li>Modifica los datos en el formulario.</li>
+                        <li>Hace clic en "Actualizar". Los datos se actualizan en la tabla.</li>
+                    </ol>
+                </li>
+                <li><strong>Postcondición:</strong> La lista de entidades (médicos, usuarios, etc.) está actualizada.</li>
+            </ol>
+        </div>
+        
         <h1 id="auth">🔐 4. Autenticación y Autorización</h1>
 
         <h3>👑 Sistema de Roles</h3>
