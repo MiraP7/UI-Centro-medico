@@ -93,7 +93,7 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
             setProceduresLoading(true);
             setProceduresError(null);
             try {
-                const response = await fetch('https://localhost:7256/api/Tratamiento/all', {
+                const response = await fetch('https://localhost:7256/api/Tratamiento/all?Take=20', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -592,21 +592,35 @@ export default function FacturacionRegistrationForm({ onFacturaRegistered, onCan
                     console.error('Error de API con cobertura:', response.status, errorData);
                 }
             } else {
-                // Lógica original para facturas sin cobertura
-                const facturaDataToSend = {
-                    pacienteId: Number(formData.pacienteId),
-                    tratamientoId: Number(formData.procedimiento),
-                    monto: Number(formData.costoProcedimiento),
-                    fecha: new Date().toISOString().split('T')[0],
-                    ...(formData.aseguradoraId && { aseguradoraId: Number(formData.aseguradoraId) }),
-                };
+                // Lógica para facturas sin cobertura
+                let facturaDataToSend;
+                let requestUrl = 'https://localhost:7256/api/Factura';
+
+                if (!formData.aseguradoraId || formData.aseguradoraId === null || formData.aseguradoraId === '') {
+                    // Sin aseguradora: usar estructura simplificada con cedula y monto
+                    const cleanedCedula = formData.cedulaPaciente.replace(/-/g, '');
+                    facturaDataToSend = {
+                        cedula: cleanedCedula,
+                        monto: Number(formData.costoProcedimiento)
+                    };
+                } else {
+                    // Con aseguradora: usar estructura completa
+                    facturaDataToSend = {
+                        pacienteId: Number(formData.pacienteId),
+                        tratamientoId: Number(formData.procedimiento),
+                        monto: Number(formData.costoProcedimiento),
+                        fecha: new Date().toISOString().split('T')[0],
+                        aseguradoraId: Number(formData.aseguradoraId)
+                    };
+                }
 
                 const method = initialData ? 'PUT' : 'POST';
                 const url = initialData
                     ? `https://localhost:7256/api/Factura/${initialData.facturaId}`
-                    : 'https://localhost:7256/api/Factura';
+                    : requestUrl;
 
-                console.log("📤 ENVIANDO FACTURA NORMAL:");
+                console.log("📤 ENVIANDO FACTURA:");
+                console.log("   Tipo:", !formData.aseguradoraId ? "SIN ASEGURADORA (cedula/monto)" : "CON ASEGURADORA (estructura completa)");
                 console.log("   URL:", url);
                 console.log("   Method:", method);
                 console.log("   Body:", JSON.stringify(facturaDataToSend, null, 2));
